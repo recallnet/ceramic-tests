@@ -1,0 +1,8 @@
+[package]
+name = "rust-ceramic-migration-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tracing = "0.1"
+tracing-test = "0.2"
