@@ -7,6 +7,9 @@
 .PHONY: all
 all: check-fmt check-clippy test
 
+.PHONY: build
+build: release
+
 .PHONY: release
 release:
 	$(eval BIN=$(shell sh -c "RUSTFLAGS='-D warnings' cargo test --no-run --locked --release -q --message-format=json | jq -r 'select(.executable != null) | .executable'"))
@@ -19,10 +22,7 @@ debug:
 
 .PHONY: test
 test:
-	# Test with default features
-	cargo test --locked
-	# Test with all features
-	cargo test --locked --all-features
+	cargo test --locked --all-features -- --nocapture
 
 .PHONY: check-fmt
 check-fmt:
