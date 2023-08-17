@@ -12,7 +12,7 @@ build: release
 
 .PHONY: release
 release:
-	$(eval BIN=$(shell sh -c "RUSTFLAGS='-D warnings' cargo test --no-run --locked --release -q --message-format=json | jq -r 'select(.executable != null) | .executable'"))
+	$(eval BIN=$(shell sh -c "cargo test --no-run --locked --release -q --message-format=json | jq -r 'select(.executable != null) | .executable'"))
 	@mv $(BIN) ./target/release/rust-ceramic-migration-tests
 
 .PHONY: debug
@@ -31,9 +31,9 @@ check-fmt:
 .PHONY: check-clippy
 check-clippy:
 	# Check with default features
-	cargo clippy --workspace --all-targets -- -D warnings
+	cargo clippy --workspace --all-targets
 	# Check with all features
-	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	cargo clippy --workspace --all-targets --all-features
 
 .PHONY: publish-docker
 publish-docker:

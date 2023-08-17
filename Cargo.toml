@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+async-once-cell = "0.5.3"
+async-std = "1.12.0"
+ceramic-http-client = { git = "https://github.com/3box/ceramic-http-client-rs.git", branch = "feat/healthcheck" }
 dotenvy = "0.15.7"
-rstest = "0.18.2"
+tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
 tracing-test = "0.2"
+url = { version = "2.2.2" }
