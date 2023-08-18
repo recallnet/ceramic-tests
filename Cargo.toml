@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dotenvy = "0.15.7"
+rstest = "0.18.2"
 tracing = "0.1"
 tracing-test = "0.2"

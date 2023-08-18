@@ -26,7 +26,7 @@ jobs:
         # default: "v0-rust"
         prefix-key: "v2"
     - name: Build
-      run: make release
+      run: make build
     - name: Check fmt
       run: make check-fmt
     - name: Check clippy

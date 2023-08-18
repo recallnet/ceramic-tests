@@ -23,9 +23,10 @@ RUN --mount=type=cache,target=/home/builder/.cargo,uid=$UID,gid=$GID \
 
 FROM ubuntu:latest as tester
 
+COPY --from=builder /home/builder/rust-ceramic-migration-tests/env/.env /usr/bin/.env
 COPY --from=builder /home/builder/rust-ceramic-migration-tests/rust-ceramic-migration-tests /usr/bin
 
 ENV RUST_BACKTRACE=1
-ENV CERAMIC_URLS=""
+ENV ENV_PATH="/usr/bin/.env"
 
 ENTRYPOINT ["/usr/bin/rust-ceramic-migration-tests"]
