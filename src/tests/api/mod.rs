@@ -36,10 +36,10 @@ pub mod tests {
                 init_env();
                 // Parse Ceramic URLs and create clients
                 let urls = env::var(COMPOSEDB_URLS).unwrap_or_default();
-                let urls = urls.split(',').map(Url::parse);
+                let urls = urls.split(',').filter_map(|url| Url::parse(url).ok());
                 let mut clients = Vec::new();
                 for url in urls {
-                    clients.push(composedb_client(url.unwrap()).await);
+                    clients.push(composedb_client(url).await);
                 }
                 clients
             })
