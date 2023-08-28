@@ -4,10 +4,10 @@ use ceramic_http_client::{
 };
 use url::Url;
 
-pub type CeramicClient = CeramicRemoteHttpClient<JwkSigner>;
+pub type ComposeDbClient = CeramicRemoteHttpClient<JwkSigner>;
 
-pub async fn ceramic_client(url: Url) -> CeramicClient {
-    CeramicClient::new(signer().await, url)
+pub async fn composedb_client(url: Url) -> ComposeDbClient {
+    ComposeDbClient::new(signer().await, url)
 }
 
 async fn signer() -> JwkSigner {
