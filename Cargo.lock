@@ -167,12 +167,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-once-cell"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9338790e78aa95a416786ec8389546c4b6a1dfc3dc36071ed9518a9413a542eb"
-
-[[package]]
 name = "async-std"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -542,7 +536,7 @@ dependencies = [
 [[package]]
 name = "ceramic-http-client"
 version = "0.1.0"
-source = "git+https://github.com/3box/ceramic-http-client-rs.git?branch=feat/healthcheck#ce6306c10b60c7c480093e4e11d596f930bf9cea"
+source = "git+https://github.com/3box/ceramic-http-client-rs.git?branch=main#991d5acf20ac8218b738dbbaa9418059f9be671f"
 dependencies = [
  "anyhow",
  "ceramic-event",
@@ -2997,8 +2991,6 @@ dependencies = [
 name = "rust-ceramic-migration-tests"
 version = "0.1.0"
 dependencies = [
- "async-once-cell",
- "async-std",
  "ceramic-http-client",
  "dotenvy",
  "tokio",
