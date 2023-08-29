@@ -18,15 +18,15 @@ COPY . .
 #   docker builder prune --filter type=exec.cachemount
 RUN --mount=type=cache,target=/home/builder/.cargo,uid=$UID,gid=$GID \
 	--mount=type=cache,target=/home/builder/rust-ceramic-migration-tests/target,uid=$UID,gid=$GID \
-    make $BUILD_MODE && \
-    cp ./target/release/rust-ceramic-migration-tests ./
+    make $BUILD_MODE
 
 FROM ubuntu:latest as tester
 
 COPY --from=builder /home/builder/rust-ceramic-migration-tests/env/.env /usr/bin/.env
-COPY --from=builder /home/builder/rust-ceramic-migration-tests/rust-ceramic-migration-tests /usr/bin
+COPY --from=builder /home/builder/rust-ceramic-migration-tests/test-binaries /test-binaries
+COPY --from=builder /home/builder/rust-ceramic-migration-tests/entrypoint.sh /usr/bin/entrypoint.sh
 
 ENV RUST_BACKTRACE=1
 ENV ENV_PATH="/usr/bin/.env"
 
-ENTRYPOINT ["/usr/bin/rust-ceramic-migration-tests"]
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
