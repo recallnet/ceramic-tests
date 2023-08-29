@@ -5,8 +5,26 @@ edition = "2021"
 
 [dependencies]
 ceramic-http-client = { git = "https://github.com/3box/ceramic-http-client-rs.git", branch = "main" }
+ceramic-api-server = { git = "https://github.com/3box/rust-ceramic", branch = "main", default-features = false, features = [
+    "client",
+    # TODO: We do not need the server but the generated feature flags are broken
+    # percent-encoding dep is not included with client feature alone.
+    "server",
+] }
+ceramic-kubo-rpc-server = { git = "https://github.com/3box/rust-ceramic", branch = "main", default-features = false, features = [
+    "client",
+    # TODO: We do not need the server but the generated feature flags are broken
+    # percent-encoding dep is not included with client feature alone.
+    "server",
+] }
 dotenvy = "0.15.7"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
 tracing-test = "0.2"
 url = { version = "2.2.2" }
+swagger = "6.3.0"
+hyper = { version = "0.14.27", features = ["client"] }
+
+#[patch."https://github.com/3box/rust-ceramic"]
+#ceramic-api-server = { path = "../rust-ceramic/api-server" }
+#ceramic-kubo-rpc-server = { path = "../rust-ceramic/kubo-rpc-server" }
