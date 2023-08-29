@@ -12,13 +12,11 @@ build: release
 
 .PHONY: release
 release:
-	$(eval BIN=$(shell sh -c "RUSTFLAGS='-D warnings' cargo test --no-run --locked --release -q --message-format=json | jq -r 'select(.executable != null) | .executable'"))
-	@mv $(BIN) ./target/release/rust-ceramic-migration-tests
+	./ci-scripts/build-test-binaries.sh release
 
 .PHONY: debug
 debug:
-	$(eval BIN=$(shell sh -c "cargo test --no-run --locked -q --message-format=json | jq -r 'select(.executable != null) | .executable'"))
-	@mv $(BIN) ./target/debug/rust-ceramic-migration-tests
+	./ci-scripts/build-test-binaries.sh debug
 
 .PHONY: test
 test:

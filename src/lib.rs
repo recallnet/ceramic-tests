@@ -1,3 +1,1 @@
-#![allow(dead_code)]
-mod ceramic;
-mod tests;
+pub mod ceramic;
