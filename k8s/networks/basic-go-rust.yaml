@@ -1,0 +1,12 @@
+---
+apiVersion: "keramik.3box.io/v1alpha1"
+kind: Network
+metadata:
+  name: basic-go-rust
+spec:
+  replicas: 2
+  ceramic:
+    - ipfs:
+        go: {}
+    - ipfs:
+        rust: {}

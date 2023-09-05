@@ -641,6 +641,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ceramic-tests"
+version = "0.1.0"
+dependencies = [
+ "ceramic-api-server",
+ "ceramic-http-client",
+ "ceramic-kubo-rpc-server",
+ "dotenvy",
+ "hyper",
+ "swagger",
+ "tokio",
+ "tracing",
+ "tracing-test",
+ "url",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3370,22 +3386,6 @@ dependencies = [
  "smallvec",
  "subtle",
  "zeroize",
-]
-
-[[package]]
-name = "rust-ceramic-migration-tests"
-version = "0.1.0"
-dependencies = [
- "ceramic-api-server",
- "ceramic-http-client",
- "ceramic-kubo-rpc-server",
- "dotenvy",
- "hyper",
- "swagger",
- "tokio",
- "tracing",
- "tracing-test",
- "url",
 ]
 
 [[package]]

@@ -12,7 +12,7 @@ use tokio::sync::OnceCell;
 use tracing_test::traced_test;
 use url::Url;
 
-use rust_ceramic_migration_tests::ceramic::{composedb_client, ComposeDbClient};
+use ceramic_tests::ceramic::{composedb_client, ComposeDbClient};
 
 const CERAMIC_URLS: &str = "CERAMIC_URLS";
 const COMPOSEDB_URLS: &str = "COMPOSEDB_URLS";
