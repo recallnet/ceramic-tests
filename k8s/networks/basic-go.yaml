@@ -5,6 +5,7 @@ metadata:
   name: basic-go
 spec:
   replicas: 2
+  privateKeySecret: "ceramic-tests-admin-did"
   ceramic:
     - ipfs:
         go: {}

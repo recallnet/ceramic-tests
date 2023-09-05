@@ -1,6 +1,11 @@
 #!/bin/bash
 
-BUILD_MODE=$1
+# Exit if any command in any pipe fails.
+# This is needed to catch compilation errors.
+set -e
+set -o pipefail
+
+BUILD_MODE=${1-dev}
 if [ -z $BUILD_MODE ]
 then
     echo "Must pass build mode arg"
