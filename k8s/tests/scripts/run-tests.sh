@@ -20,10 +20,14 @@ then
   exit 1
 fi
 
-# Create the test job
-yq "
-  .spec.template.spec.serviceAccountName = \"keramik-prop-$1$TEST_SUFFIX\"
-" ../manifests/prop.yaml | kubectl apply -n "keramik-prop-$1$TEST_SUFFIX" -f - >/dev/null
+# Delete and recreate the test job so that tests are rerun even if they've been run against this network in the past
+test_spec=$(
+  yq "
+    .spec.template.spec.serviceAccountName = \"keramik-prop-$1$TEST_SUFFIX\"
+  " ../manifests/prop.yaml
+)
+echo "$test_spec" | kubectl delete -n "keramik-prop-$1$TEST_SUFFIX" -f - >/dev/null
+echo "$test_spec" | kubectl apply -n "keramik-prop-$1$TEST_SUFFIX" -f - >/dev/null
 
 # Wait for tests to complete then collect the results
 while true; do
