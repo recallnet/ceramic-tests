@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create namespace and setup RBAC
-kubectl create namespace "keramik-smoke-$1" >/dev/null
+kubectl create namespace "keramik-smoke-$1" >/dev/null 2>/dev/null
 yq "
  .metadata.name* = \"keramik-smoke-$1\" |
  (select(.subjects[] | length) | .subjects[0].name*) = \"keramik-smoke-$1\" |
@@ -9,7 +9,7 @@ yq "
 " ../manifests/setup.yaml | kubectl apply -f - >/dev/null
 
 # Create the network.
-kubectl create configmap process-peers --from-file=process-peers.sh -n "keramik-smoke-$1" >/dev/null
+kubectl create configmap process-peers --from-file=process-peers.sh -n "keramik-smoke-$1" >/dev/null 2>/dev/null
 yq "
   .metadata.name = \"smoke-$1\"
 " ../../networks/"$1".yaml | kubectl apply -f - >/dev/null
