@@ -1,7 +1,6 @@
 name: Run property-based tests
 
 on:
-  push: # TODO: remove after testing
   pull_request:
   merge_group:
     types: [checks_requested]

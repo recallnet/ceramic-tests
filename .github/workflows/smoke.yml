@@ -1,7 +1,6 @@
 name: Run smoke tests
 
 on:
-  push: # TODO: remove after testing
   schedule:
     # Run every midnight UTC
     - cron: "0 0 * * *"
