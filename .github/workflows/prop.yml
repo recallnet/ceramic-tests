@@ -53,7 +53,7 @@ jobs:
         name: Setup test env
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          TEST_SUFFIX="$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
+          TEST_SUFFIX="-$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
           echo "TEST_SUFFIX=$TEST_SUFFIX" >> $GITHUB_ENV
       -
         name: Test ${{ matrix.networks }}
