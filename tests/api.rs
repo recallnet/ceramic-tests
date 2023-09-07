@@ -2,7 +2,9 @@ use std::env;
 use std::path::Path;
 use std::sync::Once;
 
-use ceramic_api_server::ApiNoContext as CeramicApi;
+// TODO: Add Ceramic API tests back when we start testing Recon. Also add pattern matching to skip them when running
+// against Kubo-only or mixed networks since Kubo nodes will not support Ceramic APIs.
+// use ceramic_api_server::ApiNoContext as CeramicApi;
 use ceramic_kubo_rpc_server::ApiNoContext as KuboRpcApi;
 
 use swagger::{
@@ -21,7 +23,7 @@ const ENV_PATH: &str = "ENV_PATH";
 
 static INIT_ENV: Once = Once::new();
 static COMPOSEDB_CLIENTS: OnceCell<Vec<ComposeDbClient>> = OnceCell::const_new();
-static CERAMIC_CLIENTS: OnceCell<Vec<CeramicClient>> = OnceCell::const_new();
+// static CERAMIC_CLIENTS: OnceCell<Vec<CeramicClient>> = OnceCell::const_new();
 static KUBO_RPC_CLIENTS: OnceCell<Vec<KuboRpcClient>> = OnceCell::const_new();
 
 type ClientContext = swagger::make_context_ty!(
@@ -30,18 +32,18 @@ type ClientContext = swagger::make_context_ty!(
     Option<AuthData>,
     XSpanIdString
 );
-type CeramicClient = Box<
-    ContextWrapper<
-        ceramic_api_server::Client<
-            DropContextService<
-                hyper::client::Client<hyper::client::connect::HttpConnector>,
-                ClientContext,
-            >,
-            ClientContext,
-        >,
-        ClientContext,
-    >,
->;
+// type CeramicClient = Box<
+//     ContextWrapper<
+//         ceramic_api_server::Client<
+//             DropContextService<
+//                 hyper::client::Client<hyper::client::connect::HttpConnector>,
+//                 ClientContext,
+//             >,
+//             ClientContext,
+//         >,
+//         ClientContext,
+//     >,
+// >;
 type KuboRpcClient = Box<
     ContextWrapper<
         ceramic_kubo_rpc_server::Client<
@@ -83,36 +85,37 @@ async fn get_composedb_clients() -> &'static Vec<ComposeDbClient> {
         .await
 }
 
-async fn get_ceramic_clients() -> &'static Vec<CeramicClient> {
-    CERAMIC_CLIENTS
-        .get_or_init(|| async {
-            init_env();
-            // Parse Ceramic URLs and create clients
-            let urls = env::var(CERAMIC_URLS).unwrap_or_default();
-            let urls = urls.split(',');
-            let mut clients = Vec::new();
+// async fn get_ceramic_clients() -> &'static Vec<CeramicClient> {
+//     CERAMIC_CLIENTS
+//         .get_or_init(|| async {
+//             init_env();
+//             // Parse Ceramic URLs and create clients
+//             let urls = env::var(CERAMIC_URLS).unwrap_or_default();
+//             let urls = urls.split(',');
+//             let mut clients = Vec::new();
+//
+//             for url in urls {
+//                 if url.is_empty() {
+//                     continue;
+//                 }
+//                 let context: ClientContext = swagger::make_context!(
+//                     ContextBuilder,
+//                     EmptyContext,
+//                     None as Option<AuthData>,
+//                     XSpanIdString::default()
+//                 );
+//                 let client = ceramic_api_server::Client::try_new_http(url)
+//                     .expect("Failed to create HTTP client");
+//                 clients.push(Box::new(
+//                     ceramic_api_server::ContextWrapperExt::with_context(client, context),
+//                 ))
+//             }
+//
+//             clients
+//         })
+//         .await
+// }
 
-            for url in urls {
-                if url.is_empty() {
-                    continue;
-                }
-                let context: ClientContext = swagger::make_context!(
-                    ContextBuilder,
-                    EmptyContext,
-                    None as Option<AuthData>,
-                    XSpanIdString::default()
-                );
-                let client = ceramic_api_server::Client::try_new_http(url)
-                    .expect("Failed to create HTTP client");
-                clients.push(Box::new(
-                    ceramic_api_server::ContextWrapperExt::with_context(client, context),
-                ))
-            }
-
-            clients
-        })
-        .await
-}
 async fn get_kubo_rpc_clients() -> &'static Vec<KuboRpcClient> {
     KUBO_RPC_CLIENTS
         .get_or_init(|| async {
@@ -146,7 +149,7 @@ async fn get_kubo_rpc_clients() -> &'static Vec<KuboRpcClient> {
 
 #[tokio::test]
 #[traced_test]
-async fn hello_composedb() {
+async fn composedb_hello() {
     let composedb_clients = get_composedb_clients().await;
     for (idx, client) in composedb_clients.iter().enumerate() {
         println!(
@@ -157,20 +160,20 @@ async fn hello_composedb() {
     }
 }
 
-#[tokio::test]
-#[traced_test]
-async fn hello_ceramic() {
-    let ceramic_clients = get_ceramic_clients().await;
-    assert!(!ceramic_clients.is_empty());
-    for c in ceramic_clients {
-        let version = c.version_post().await.unwrap();
-        println!("{version:?}");
-    }
-}
+// #[tokio::test]
+// #[traced_test]
+// async fn ceramic_hello() {
+//     let ceramic_clients = get_ceramic_clients().await;
+//     assert!(!ceramic_clients.is_empty());
+//     for c in ceramic_clients {
+//         let version = c.version_post().await.unwrap();
+//         println!("{version:?}");
+//     }
+// }
 
 #[tokio::test]
 #[traced_test]
-async fn hello_kubo_rpc() {
+async fn kubo_rpc_hello() {
     let kubo_rpc_clients = get_kubo_rpc_clients().await;
     assert!(!kubo_rpc_clients.is_empty());
     for c in kubo_rpc_clients {
