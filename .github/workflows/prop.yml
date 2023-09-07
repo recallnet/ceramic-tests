@@ -50,15 +50,11 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ secrets.GKE_ZONE }}
       -
+        # Add a "_sha_runId" suffix to differentiate PR test runs
         name: Setup test env
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
-          if [[ ${{ github.event_name }} == "pull_request" ]]; then
-            # Add a "_sha_runId" suffix to differentiate PR test runs
-            TEST_SUFFIX="-prop-$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
-          else
-            # All other workflow triggers will run the tests against persistent networks
-            TEST_SUFFIX="prop"
-          fi
+          TEST_SUFFIX="$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
           echo "TEST_SUFFIX=$TEST_SUFFIX" >> $GITHUB_ENV
       -
         name: Test ${{ matrix.networks }}
