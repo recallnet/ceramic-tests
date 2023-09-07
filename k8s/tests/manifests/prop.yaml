@@ -1,0 +1,63 @@
+# Property-based test configuration
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: tests
+spec:
+  template:
+    spec:
+      serviceAccountName: tests-sa
+      initContainers:
+        - name: init-tests
+          image: linkyard/kubectl@sha256:14d0fa56b6041b466a9fb8d027108bfede72d9a192d940f9c5bef5aed073982f
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "/network/check-network.sh"
+          volumeMounts:
+            - name: check-network
+              mountPath: /network
+            - name: peers-volume
+              mountPath: /peers
+            - name: config-volume
+              mountPath: /config
+          envFrom:
+            - configMapRef:
+                name: keramik-peers
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+      restartPolicy: OnFailure
+      containers:
+        - name: tests
+          image: public.ecr.aws/r5b3e0r5/3box/ceramic-tests
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 1Gi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+          env:
+            - name: ENV_PATH
+              value: "/config/.env"
+      volumes:
+        - name: check-network
+          configMap:
+            name: check-network
+            defaultMode:
+              0755
+        - name: peers-volume
+          configMap:
+            name: keramik-peers
+        - name: config-volume
+          emptyDir: {}

@@ -1,8 +1,9 @@
+# Smoke test configuration
 ---
 kind: Job
 apiVersion: batch/v1
 metadata:
-  name: ceramic-tests
+  name: tests
 spec:
   template:
     spec:
@@ -31,8 +32,20 @@ spec:
                   fieldPath: metadata.namespace
       restartPolicy: OnFailure
       containers:
-        - name: ceramic-tests
-          image: public.ecr.aws/r5b3e0r5/3box/ceramic-tests
+        - name: db
+          image: localstack/localstack
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 1Gi
+        - name: tests
+          image: public.ecr.aws/r5b3e0r5/3box/ceramic-smoke-tests
           imagePullPolicy: Always
           resources:
             limits:
@@ -46,9 +59,22 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
+          # Keep the container running so that we can keep rerunning tests but also allow it to shut down as needed
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "trap : TERM INT; sleep infinity & wait"
           env:
             - name: ENV_PATH
               value: "/config/.env"
+            - name: AWS_ACCESS_KEY_ID
+              value: .
+            - name: AWS_SECRET_ACCESS_KEY
+              value: .
+            - name: DB_ENDPOINT
+              value: http://localhost:4566
+            - name: JEST_ARGS
+              value: --reporters=default --detectOpenHandles
       volumes:
         - name: check-network
           configMap:

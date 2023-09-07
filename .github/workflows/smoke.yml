@@ -1,0 +1,50 @@
+name: Run smoke tests
+
+on:
+  push:
+  workflow_dispatch: # manually triggered
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      networks: ${{ steps.generate-matrix.outputs.networks }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Generate network matrix
+        id: generate-matrix
+        run: |
+          NETWORKS=$(ls k8s/networks | jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
+          echo ${NETWORKS}
+          echo ::set-output name=networks::${NETWORKS}
+
+  run-tests:
+    runs-on: ubuntu-latest
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        networks: ${{ fromJSON(needs.generate-matrix.outputs.networks) }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      -
+        name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_ZONE }}
+      -
+        # Don't clean up networks afterward so that these tests can run longer term
+        name: Test ${{ matrix.networks }}
+        working-directory: k8s/tests/scripts
+        run: ./run-smoke-tests.sh ${{ matrix.networks }}
