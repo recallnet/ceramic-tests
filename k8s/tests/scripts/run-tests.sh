@@ -1,30 +1,45 @@
 #!/bin/bash
 
 # Create namespace and setup RBAC
-kubectl create namespace "keramik-$1$TEST_SUFFIX" >/dev/null
+kubectl create namespace "keramik-prop-$1$TEST_SUFFIX" >/dev/null
 yq "
- .metadata.name* = \"keramik-$1$TEST_SUFFIX\" |
- (select(.subjects[] | length) | .subjects[0].name*) = \"keramik-$1$TEST_SUFFIX\" |
- (select(.roleRef) | .roleRef.name) = \"keramik-$1$TEST_SUFFIX\"
+ .metadata.name* = \"keramik-prop-$1$TEST_SUFFIX\" |
+ (select(.subjects[] | length) | .subjects[0].name*) = \"keramik-prop-$1$TEST_SUFFIX\" |
+ (select(.roleRef) | .roleRef.name) = \"keramik-prop-$1$TEST_SUFFIX\"
 " ../manifests/setup.yaml | kubectl apply -f - >/dev/null
 
 # Create the network.
-kubectl create configmap check-network --from-file=check-network.sh -n "keramik-$1$TEST_SUFFIX" >/dev/null
+kubectl create configmap process-peers --from-file=process-peers.sh -n "keramik-prop-$1$TEST_SUFFIX" >/dev/null
 yq "
-  .metadata.name = \"$1$TEST_SUFFIX\"
+  .metadata.name = \"prop-$1$TEST_SUFFIX\"
 " ../../networks/"$1".yaml | kubectl apply -f - >/dev/null
+
+# Wait for the network to be up
+if ! NAMESPACE="keramik-prop-$1$TEST_SUFFIX" ./check-network.sh
+then
+  exit 1
+fi
 
 # Create the test job
 yq "
-  .spec.template.spec.serviceAccountName = \"keramik-$1$TEST_SUFFIX\"
-" ../manifests/prop.yaml | kubectl apply -n "keramik-$1$TEST_SUFFIX" -f - >/dev/null
+  .spec.template.spec.serviceAccountName = \"keramik-prop-$1$TEST_SUFFIX\"
+" ../manifests/prop.yaml | kubectl apply -n "keramik-prop-$1$TEST_SUFFIX" -f - >/dev/null
 
 # Wait for tests to complete then collect the results
-kubectl wait --for=condition=complete job/tests -n "keramik-$1$TEST_SUFFIX" --timeout=20m >/dev/null
-TEST_RESULTS=$(kubectl logs job.batch/tests -c tests -n "keramik-$1$TEST_SUFFIX")
-echo "$TEST_RESULTS"
-# Return a failure from here instead of from the tests. The test job is setup to restart on failure, which is needed for
-# it to be setup correctly with the right Ceramic/ComposeDB URLs.
-if [[ "$TEST_RESULTS" =~ "FAILED" ]]; then
-   exit 1
+while true; do
+  if kubectl wait --for=condition=complete --timeout=0 job/tests -n "keramik-prop-$1$TEST_SUFFIX" >/dev/null 2>/dev/null; then
+    job_result=0
+    break
+  fi
+  if kubectl wait --for=condition=failed --timeout=0 job/tests -n "keramik-prop-$1$TEST_SUFFIX" >/dev/null 2>/dev/null; then
+    job_result=1
+    break
+  fi
+  sleep 3
+done
+
+kubectl logs job.batch/tests -c tests -n "keramik-prop-$1$TEST_SUFFIX"
+
+if [[ $job_result -eq 1 ]]; then
+    exit 1
 fi

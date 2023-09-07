@@ -1,7 +1,13 @@
 name: Run property-based tests
 
 on:
-  push:
+  push: # TODO: remove after testing
+  pull_request:
+  merge_group:
+    types: [checks_requested]
+  schedule:
+    # Run every midnight UTC
+    - cron: "0 0 * * *"
   workflow_dispatch: # manually triggered
 
 jobs:
@@ -44,18 +50,26 @@ jobs:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ secrets.GKE_ZONE }}
       -
-        # Add a "_sha_runId" suffix to differentiate test runs
         name: Setup test env
         run: |
-          TEST_SUFFIX="-$(echo ${{ github.sha }} | head -c 12)-${{ github.run_id }}"
+          if [[ ${{ github.event_name }} == "pull_request" ]]; then
+            # Add a "_sha_runId" suffix to differentiate PR test runs
+            TEST_SUFFIX="-prop-$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
+          else
+            # All other workflow triggers will run the tests against persistent networks
+            TEST_SUFFIX="prop"
+          fi
           echo "TEST_SUFFIX=$TEST_SUFFIX" >> $GITHUB_ENV
       -
         name: Test ${{ matrix.networks }}
         working-directory: k8s/tests/scripts
         run: ./run-tests.sh ${{ matrix.networks }}
       -
-        # Always cleanup resources at the end, whether the tests pass or fail.
+        # Always cleanup resources at the end of PR test runs, whether the tests pass or fail.
         name: Delete ${{ matrix.networks }}
         if: always()
         working-directory: k8s/tests/scripts
-        run: ./delete-tests.sh ${{ matrix.networks }}
+        run: |
+          if [[ ${{ github.event_name }} == "pull_request" ]]; then
+            ./delete-tests.sh ${{ matrix.networks }}
+          fi

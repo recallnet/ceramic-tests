@@ -5,6 +5,7 @@ apiVersion: batch/v1
 metadata:
   name: tests
 spec:
+  backoffLimit: 0
   template:
     spec:
       serviceAccountName: tests-sa
@@ -14,9 +15,9 @@ spec:
           command:
             - "/bin/bash"
             - "-c"
-            - "/network/check-network.sh"
+            - "/network/process-peers.sh"
           volumeMounts:
-            - name: check-network
+            - name: process-peers
               mountPath: /network
             - name: peers-volume
               mountPath: /peers
@@ -30,7 +31,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-      restartPolicy: OnFailure
+      restartPolicy: Never
       containers:
         - name: db
           image: localstack/localstack
@@ -76,9 +77,9 @@ spec:
             - name: JEST_ARGS
               value: --reporters=default --detectOpenHandles
       volumes:
-        - name: check-network
+        - name: process-peers
           configMap:
-            name: check-network
+            name: process-peers
             defaultMode:
               0755
         - name: peers-volume
