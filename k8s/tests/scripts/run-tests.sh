@@ -10,11 +10,14 @@ yq "
 
 # Create the network.
 kubectl create configmap check-network --from-file=check-network.sh -n "keramik-$1$TEST_SUFFIX" >/dev/null
-yq ".metadata.name = \"$1$TEST_SUFFIX\"" ../../networks/"$1".yaml | kubectl apply -f - >/dev/null
+yq "
+  .metadata.name = \"$1$TEST_SUFFIX\"
+" ../../networks/"$1".yaml | kubectl apply -f - >/dev/null
 
 # Create the test job
-yq ".spec.template.spec.serviceAccountName = \"keramik-$1$TEST_SUFFIX\"" ../manifests/tests.yaml |
- kubectl apply -n "keramik-$1$TEST_SUFFIX" -f - >/dev/null
+yq "
+  .spec.template.spec.serviceAccountName = \"keramik-$1$TEST_SUFFIX\"
+" ../manifests/tests.yaml | kubectl apply -n "keramik-$1$TEST_SUFFIX" -f - >/dev/null
 
 # Wait for tests to complete then collect the results
 kubectl wait --for=condition=complete job/ceramic-tests -n "keramik-$1$TEST_SUFFIX" --timeout=20m >/dev/null

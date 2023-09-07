@@ -8,7 +8,9 @@ yq "
 " ../manifests/setup.yaml | kubectl delete -f - >/dev/null
 
 # Delete the test network
-yq ".metadata.name = \"$1$TEST_SUFFIX\"" ../../networks/"$1".yaml | kubectl delete -f - >/dev/null
+yq "
+  .metadata.name = \"$1$TEST_SUFFIX\"
+" ../../networks/"$1".yaml | kubectl delete -f - >/dev/null
 
 # Wait for namespace to get deleted
 kubectl wait --for=delete namespace/"keramik-$1$TEST_SUFFIX" --timeout=10m >/dev/null
