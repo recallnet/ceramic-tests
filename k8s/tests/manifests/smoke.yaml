@@ -11,7 +11,7 @@ spec:
       serviceAccountName: tests-sa
       initContainers:
         - name: init-tests
-          image: linkyard/kubectl@sha256:14d0fa56b6041b466a9fb8d027108bfede72d9a192d940f9c5bef5aed073982f
+          image: stedolan/jq
           command:
             - "/bin/bash"
             - "-c"
