@@ -163,19 +163,8 @@ async fn hello_ceramic() {
     let ceramic_clients = get_ceramic_clients().await;
     assert!(!ceramic_clients.is_empty());
     for c in ceramic_clients {
-        // TODO(nathanielc): change this to a version call once https://github.com/3box/rust-ceramic/pull/83
-        // merges
-        let _ = c
-            .subscribe_sort_key_sort_value_get(
-                "model".to_string(),
-                "sort_value".to_string(),
-                None,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        let version = c.version_post().await.unwrap();
+        println!("{version:?}");
     }
 }
 
