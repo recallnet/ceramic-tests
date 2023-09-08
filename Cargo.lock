@@ -68,6 +68,9 @@ name = "anyhow"
 version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
+dependencies = [
+ "backtrace",
+]
 
 [[package]]
 name = "arrayref"
@@ -534,7 +537,7 @@ dependencies = [
 [[package]]
 name = "ceramic-api-server"
 version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#98eba07600f1fb3d2831d1c8849ba714915ad2b6"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#27b197e70245bd5017d35326943d17e07e18477b"
 dependencies = [
  "async-trait",
  "chrono",
@@ -559,7 +562,7 @@ dependencies = [
 [[package]]
 name = "ceramic-core"
 version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#98eba07600f1fb3d2831d1c8849ba714915ad2b6"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#27b197e70245bd5017d35326943d17e07e18477b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -585,7 +588,7 @@ dependencies = [
 [[package]]
 name = "ceramic-event"
 version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#98eba07600f1fb3d2831d1c8849ba714915ad2b6"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#27b197e70245bd5017d35326943d17e07e18477b"
 dependencies = [
  "anyhow",
  "ceramic-core",
@@ -616,7 +619,7 @@ dependencies = [
 [[package]]
 name = "ceramic-kubo-rpc-server"
 version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#98eba07600f1fb3d2831d1c8849ba714915ad2b6"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#27b197e70245bd5017d35326943d17e07e18477b"
 dependencies = [
  "async-trait",
  "chrono",
