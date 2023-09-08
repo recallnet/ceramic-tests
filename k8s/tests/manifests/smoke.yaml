@@ -1,3 +1,77 @@
+# Localstack configuration
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: test-db
+  labels:
+    app: test-db
+spec:
+  replicas: 1
+  serviceName: test-db
+  selector:
+    matchLabels:
+      app: test-db
+  template:
+    metadata:
+      labels:
+        app: test-db
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 512Mi
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              ephemeral-storage: 512Mi
+              memory: 1Gi
+          ports:
+            - containerPort: 4566
+          readinessProbe:
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            timeoutSeconds: 30
+            exec:
+              command:
+                - "bash"
+                - "-c"
+                - "awslocal dynamodb list-tables && awslocal es list-domain-names && awslocal s3 ls && awslocal sqs list-queues"
+          volumeMounts:
+            - name: test-data
+              mountPath: /tmp/localstack
+      volumes:
+        - name: test-data
+          persistentVolumeClaim:
+            claimName: test-data
+  volumeClaimTemplates:
+    - metadata:
+        name: test-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: test-db
+  labels:
+    app: test-db
+spec:
+  ports:
+    - port: 4566
+      targetPort: 4566
+      protocol: TCP
+      name: test-db
+  selector:
+    app: test-db
+  type: NodePort
+
 # Smoke test configuration
 ---
 kind: Job
@@ -33,18 +107,6 @@ spec:
                   fieldPath: metadata.namespace
       restartPolicy: Never
       containers:
-        - name: db
-          image: localstack/localstack
-          imagePullPolicy: IfNotPresent
-          resources:
-            limits:
-              cpu: 250m
-              ephemeral-storage: 1Gi
-              memory: 1Gi
-            requests:
-              cpu: 250m
-              ephemeral-storage: 1Gi
-              memory: 1Gi
         - name: tests
           image: public.ecr.aws/r5b3e0r5/3box/ceramic-smoke-tests
           imagePullPolicy: Always
@@ -60,22 +122,17 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /config
-          # Keep the container running so that we can keep rerunning tests but also allow it to shut down as needed
-          command:
-            - "/bin/sh"
-            - "-c"
-            - "trap : TERM INT; sleep infinity & wait"
           env:
             - name: ENV_PATH
               value: "/config/.env"
             - name: AWS_ACCESS_KEY_ID
-              value: .
+              value: "."
             - name: AWS_SECRET_ACCESS_KEY
-              value: .
+              value: "."
             - name: DB_ENDPOINT
-              value: http://localhost:4566
+              value: "http://test-db:4566"
             - name: JEST_ARGS
-              value: --reporters=default --detectOpenHandles
+              value: "--reporters=default --detectOpenHandles"
       volumes:
         - name: process-peers
           configMap:

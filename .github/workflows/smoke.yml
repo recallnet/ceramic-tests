@@ -49,4 +49,4 @@ jobs:
         # Don't clean up networks afterward so that these tests can run longer term
         name: Test ${{ matrix.networks }}
         working-directory: k8s/tests/scripts
-        run: ./run-smoke-tests.sh ${{ matrix.networks }}
+        run: ./run-tests.sh ${{ matrix.networks }} smoke
