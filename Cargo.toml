@@ -1,5 +1,5 @@
 [package]
-name = "rust-ceramic-migration-tests"
+name = "ceramic-tests"
 version = "0.1.0"
 edition = "2021"
 
@@ -28,3 +28,6 @@ hyper = { version = "0.14.27", features = ["client"] }
 #[patch."https://github.com/3box/rust-ceramic"]
 #ceramic-api-server = { path = "../rust-ceramic/api-server" }
 #ceramic-kubo-rpc-server = { path = "../rust-ceramic/kubo-rpc-server" }
+
+#[patch."https://github.com/3box/ceramic-http-client-rs"]
+#ceramic-http-client = { path = "../ceramic-http-client-rs" }

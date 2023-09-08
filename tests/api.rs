@@ -12,7 +12,7 @@ use tokio::sync::OnceCell;
 use tracing_test::traced_test;
 use url::Url;
 
-use rust_ceramic_migration_tests::ceramic::{composedb_client, ComposeDbClient};
+use ceramic_tests::ceramic::{composedb_client, ComposeDbClient};
 
 const CERAMIC_URLS: &str = "CERAMIC_URLS";
 const COMPOSEDB_URLS: &str = "COMPOSEDB_URLS";
@@ -113,6 +113,7 @@ async fn get_ceramic_clients() -> &'static Vec<CeramicClient> {
         })
         .await
 }
+
 async fn get_kubo_rpc_clients() -> &'static Vec<KuboRpcClient> {
     KUBO_RPC_CLIENTS
         .get_or_init(|| async {
@@ -146,7 +147,7 @@ async fn get_kubo_rpc_clients() -> &'static Vec<KuboRpcClient> {
 
 #[tokio::test]
 #[traced_test]
-async fn hello_composedb() {
+async fn composedb_hello() {
     let composedb_clients = get_composedb_clients().await;
     for (idx, client) in composedb_clients.iter().enumerate() {
         println!(
@@ -159,29 +160,19 @@ async fn hello_composedb() {
 
 #[tokio::test]
 #[traced_test]
-async fn hello_ceramic() {
+#[ignore]
+async fn ceramic_hello() {
     let ceramic_clients = get_ceramic_clients().await;
     assert!(!ceramic_clients.is_empty());
     for c in ceramic_clients {
-        // TODO(nathanielc): change this to a version call once https://github.com/3box/rust-ceramic/pull/83
-        // merges
-        let _ = c
-            .subscribe_sort_key_sort_value_get(
-                "model".to_string(),
-                "sort_value".to_string(),
-                None,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        let version = c.version_post().await.unwrap();
+        println!("{version:?}");
     }
 }
 
 #[tokio::test]
 #[traced_test]
-async fn hello_kubo_rpc() {
+async fn kubo_rpc_hello() {
     let kubo_rpc_clients = get_kubo_rpc_clients().await;
     assert!(!kubo_rpc_clients.is_empty());
     for c in kubo_rpc_clients {
