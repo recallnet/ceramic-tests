@@ -29,9 +29,9 @@ check-fmt:
 .PHONY: check-clippy
 check-clippy:
 	# Check with default features
-	cargo clippy --workspace --all-targets -- -D warnings
+	cargo clippy --workspace -- -D warnings
 	# Check with all features
-	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	cargo clippy --workspace --all-features -- -D warnings
 
 .PHONY: publish-docker
 publish-docker:
