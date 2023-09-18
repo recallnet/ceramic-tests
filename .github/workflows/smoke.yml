@@ -6,12 +6,18 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch: # manually triggered
 
+env:
+  CARGO_TERM_COLOR: always
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+
 jobs:
   generate-matrix:
     name: Generate Matrix
     runs-on: ubuntu-latest
     outputs:
       networks: ${{ steps.generate-matrix.outputs.networks }}
+      build_tag: ${{ steps.generate-matrix.outputs.build_tag }}
     steps:
       -
         name: Checkout
@@ -20,14 +26,43 @@ jobs:
         name: Generate network matrix
         id: generate-matrix
         run: |
-          NETWORKS=$(ls k8s/networks | jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
+          NETWORKS=$(ls networks | jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
+          echo "Networks:"
           echo ${NETWORKS}
-          echo ::set-output name=networks::${NETWORKS}
-
+          echo "networks=${NETWORKS}" >> $GITHUB_OUTPUT
+          # Choose unique name for this build
+          BUILD_TAG="$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
+          echo "Build tag:"
+          echo ${BUILD_TAG}
+          echo "build_tag=${BUILD_TAG}" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+  build-driver:
+    name: Build 'ceramic-tests-driver' binary
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      with:
+        # The prefix cache key, this can be changed to start a new cache manually.
+        # default: "v0-rust"
+        prefix-key: v0
+        # Cache only the cargo registry
+        cache-targets: false
+    - uses: mozilla-actions/sccache-action@v0.0.3
+    - name: Build Tester
+      run: make BUILD_PROFILE=release driver
+    - uses: actions/upload-artifact@master
+      with:
+        name: ceramic-tests-driver
+        path: ./target/release/ceramic-tests-driver
+        retention-days: 1
   run-tests:
     name: Test
     runs-on: ubuntu-latest
-    needs: generate-matrix
+    needs:
+      - generate-matrix
+      - build-driver
     strategy:
       fail-fast: false
       matrix:
@@ -47,11 +82,17 @@ jobs:
         with:
           cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ secrets.GKE_ZONE }}
+      - uses: actions/download-artifact@master
+        with:
+          name: ceramic-tests-driver
+          path: ./bin
       -
-        # Don't clean up networks afterward so that these tests can run longer term
         name: Test ${{ matrix.networks }}
-        working-directory: k8s/tests/scripts
-        run: ./run-tests.sh ${{ matrix.networks }} smoke
+        run: |
+          export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
+          export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
+          chmod +x ./bin/ceramic-tests-driver
+          make DRIVER_CMD=./bin/ceramic-tests-driver smoke-test
 
   collect-results:
     name: Results

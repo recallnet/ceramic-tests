@@ -17,7 +17,7 @@ use swagger::{
 use tokio::sync::OnceCell;
 use url::Url;
 
-use ceramic_tests::ceramic::{composedb_client, ComposeDbClient, SmallModel};
+use ceramic_tests_property::ceramic::{composedb_client, ComposeDbClient, SmallModel};
 
 // Use test_log to intialize trace logging.
 // For example use this to get debug logging for these tests:

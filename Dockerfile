@@ -7,8 +7,8 @@ WORKDIR /home/builder/ceramic-tests
 ARG UID=1001
 ARG GID=1001
 
-# Define the type of build to make. One of release or debug.
-ARG BUILD_MODE=release
+# Define the type of build to make. One of release or dev.
+ARG BUILD_PROFILE=release
 
 # Copy in source code
 COPY . .
@@ -18,11 +18,11 @@ COPY . .
 #   docker builder prune --filter type=exec.cachemount
 RUN --mount=type=cache,target=/home/builder/.cargo,uid=$UID,gid=$GID \
 	--mount=type=cache,target=/home/builder/ceramic-tests/target,uid=$UID,gid=$GID \
-    make $BUILD_MODE
+    make $BUILD_PROFILE
 
 FROM ubuntu:latest as tester
 
-COPY --from=builder /home/builder/ceramic-tests/env/.env /usr/bin/.env
+COPY --from=builder /home/builder/ceramic-tests/property/env/.env /usr/bin/.env
 COPY --from=builder /home/builder/ceramic-tests/test-binaries /test-binaries
 COPY --from=builder /home/builder/ceramic-tests/entrypoint.sh /usr/bin/entrypoint.sh
 

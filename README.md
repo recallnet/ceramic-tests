@@ -4,6 +4,35 @@ Tests needed to verify the migration from [Kubo](https://github.com/ceramicnetwo
 [rust-ceramic](https://github.com/3box/rust-ceramic) when used with
 [Ceramic](https://github.com/ceramicnetwork/js-ceramic) nodes.
 
+## Design
+
+This crate provides two entities:
+
+* A test driver (`ceramic-tests-driver`).
+* A set of tests to run (`ceramic-tests-property`).
+
+The `ceramic-tests-driver` handles creating a network and running an test image against the network.
+
+The set of tests are compiled into a docker image that can run as a job within the network.
+If the job exits without error the tests have passed.
+
+## Flavors
+
+There are several test flavors:
+
+* Property based tests
+* Smoke tests
+
+More will be added over time.
+
+The property based tests, test a specific property of a network (i.e. writes can be read).
+These tests do not assume any network topology.
+Property tests live in this repo as Rust integration tests, see the `/property/tests` directory.
+
+The smoke tests, test specific behaviors of a network end to end.
+These tests do not assume any network topology.
+Smoke tests live outside of this repo.
+
 
 ## Running tests locally
 
@@ -11,7 +40,7 @@ Tests are run in CI via the build docker image. However locally its useful to be
 There are some helpful scripts in this repo to make testing locally possible:
 
     # Create the network
-    kubectl apply -f network.yaml
+    kubectl apply -f networks/basic-rust.yaml
 
     # Wait for network to be ready then,
     # port forward local ports into each ceramic node.
@@ -19,11 +48,15 @@ There are some helpful scripts in this repo to make testing locally possible:
     source ./port-forward.sh
 
     # Run cargo test locally using the newly exported env vars.
+    # Optionaly you can use `make test`
     cargo test
 
 >NOTE: The port-forward script will leave `kubectl` process running in the background to forward the ports.
 The script kills those processes and creates new ones. However if you need you can kill them directly.
 The script should be run anytime a pod in the network restarts.
+
+
+### Visualizing Topology
 
 When debugging a test failure it can be helpful to visualize the current network topology.
 Use this script:
@@ -32,6 +65,10 @@ Use this script:
 
 The script will create a `topology.svg` (view it in a browser) of how each of the nodes are connected to one another.
 
+## Using make
+
+Make provides targets for each flavor of test, i.e. `make smoke-test` or `make prop-test`.
+These targets leverage the `ceramic-tests-driver` to create the network and run the test image.
 
 ## Contributing
 
