@@ -5,23 +5,31 @@
 set -e
 set -o pipefail
 
-BUILD_MODE=${1-dev}
-if [ -z $BUILD_MODE ]
+BUILD_PROFILE=${1-dev}
+if [ -z $BUILD_PROFILE ]
 then
-    echo "Must pass build mode arg"
+    echo "Must pass build profile arg"
     exit 1
 fi
 rm -rf test-binaries/
 mkdir test-binaries
 
-for b in $(RUSTFLAGS='-D warnings' cargo test \
+temp=$(mktemp)
+RUSTFLAGS='-D warnings' cargo test -p ceramic-tests-property \
     --no-run \
     --locked \
-    --profile $BUILD_MODE \
+    --profile $BUILD_PROFILE \
     -q \
-    --message-format=json \
-    | jq -r 'select(.executable != null) | .executable')
+    --message-format=json > $temp
+
+# Copy only binaries built for integration tests
+for b in  $(cat $temp | jq -r 'select(.target.kind != null) |
+        select(.target.kind | contains(["test"])) |
+        select( .executable != null) |
+            .executable')
 do
     echo $b
     cp $b test-binaries/
 done
+
+rm $temp

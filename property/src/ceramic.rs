@@ -7,8 +7,10 @@ use ceramic_http_client::{
 use rand::{thread_rng, Rng};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use tracing::debug;
 use url::Url;
+
+pub const DID_PRIVATE_KEY: &str =
+    "c864a33033626b448912a19509992552283fd463c143bdc4adc75f807b7a4dce";
 
 pub type ComposeDbClient = CeramicRemoteHttpClient<JwkSigner>;
 
@@ -21,9 +23,7 @@ async fn signer() -> JwkSigner {
         .unwrap_or_else(|_| "did:key:z6MknX8LH956AZnat7haydYdeJTFXPwgQZypuZL4TtXUfLqw".to_owned());
     JwkSigner::new(
         DidDocument::new(&s),
-        &std::env::var("DID_PRIVATE_KEY").unwrap_or_else(|_| {
-            "c864a33033626b448912a19509992552283fd463c143bdc4adc75f807b7a4dce".to_owned()
-        }),
+        &std::env::var("DID_PRIVATE_KEY").unwrap_or_else(|_| DID_PRIVATE_KEY.to_owned()),
     )
     .await
     .unwrap()
@@ -52,20 +52,7 @@ impl SmallModel {
     }
 }
 
-impl GetRootSchema for SmallModel {
-    fn root_schema() -> schemars::schema::RootSchema {
-        let settings = schemars::gen::SchemaSettings::default().with(|s| {
-            s.meta_schema = Some("https://json-schema.org/draft/2020-12/schema".to_string());
-            s.option_nullable = true;
-            s.option_add_null_type = false;
-        });
-        let gen = settings.into_generator();
-        let root = gen.into_root_schema_for::<Self>();
-        let root_json = serde_json::to_string_pretty(&root).unwrap();
-        debug!(root_json, "root schema");
-        root
-    }
-}
+impl GetRootSchema for SmallModel {}
 
 impl TryFrom<StreamsResponse> for SmallModel {
     type Error = anyhow::Error;
