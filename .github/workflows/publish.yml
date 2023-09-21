@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  publish-tests:
+  publish-tests-property:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -19,21 +19,22 @@ jobs:
         password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       env:
         AWS_REGION: us-east-1
-    - name: Build and Publish
-      run: make BUILD_TAG=latest publish-tests
-  publish-tester:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    - name: Login to Public ECR
-      uses: docker/login-action@v2
+    - name: Cache cargo
+      uses: actions/cache@v3
       with:
-        registry: public.ecr.aws
-        username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      env:
-        AWS_REGION: us-east-1
+        path: cargo-cache
+        key: cargo-cache-${{ github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          cargo-cache-${{ github.ref_name }}
+          cargo-cache
+    - name: Inject cargo-cache into docker
+      run: |
+        mkdir -p cargo-cache
+        cd cargo-cache
+        ../ci-scripts/inject_docker_mount_cache.sh
     - name: Build and Publish
-      run: make BUILD_TAG=latest publish-tester
+      run: make BUILD_TAG=latest publish-tests-property
+    - name: Extact cargo-cache from docker
+      run: |
+        cd cargo-cache
+        ../ci-scripts/extract_docker_mount_cache.sh
