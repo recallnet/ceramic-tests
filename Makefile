@@ -22,13 +22,15 @@ CARGO_BUILD = ${CARGO} build --locked --profile ${BUILD_PROFILE}
 
 # Command to run the hermetic driver
 # Defaults to using cargo run
-HERMETIC_CMD ?= ${CARGO_RUN} --bin ceramic-tests-hermetic-driver --
+HERMETIC_CMD ?= ${CARGO_RUN} --bin hermetic-driver --
+
+PNPM = pnpm
 
 .PHONY: all
 all: check-fmt check-clippy test
 
 .PHONY: build
-build: release driver
+build: release driver suite
 
 .PHONY: release
 release:
@@ -44,7 +46,11 @@ test:
 
 .PHONY: driver
 driver:
-	${CARGO_BUILD} -p ceramic-tests-hermetic-driver
+	${CARGO_BUILD} -p hermetic-driver
+
+.PHONY: suite
+suite:
+	cd suite && ${PNPM} install && ${PNPM} run build
 
 .PHONY: check-fmt
 check-fmt:
@@ -56,6 +62,10 @@ check-clippy:
 	${CARGO} clippy --workspace
 	# Check with all features
 	${CARGO} clippy --workspace --all-features
+
+.PHONY: check-suite
+check-suite:
+	./ci-scripts/check_deps.sh
 
 .PHONY: build-suite
 build-suite:

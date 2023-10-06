@@ -1,5 +1,5 @@
 [package]
-name = "ceramic-tests-hermetic-driver"
+name = "hermetic-driver"
 description = "Test driver against hermetic infrastructure"
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,6 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 publish = false
-
 
 [dependencies]
 anyhow = "1.0.75"

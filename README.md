@@ -106,6 +106,8 @@ Using this workflow you can build the test suite image locally, load the image i
     # Build and run the hermetic test driver using the test suite image
     make hermetic-tests
 
+Using make is not required, feel free to peak inside the Makefile in order to call the test driver directly for whatever workflow you may need.
+
 ## Contributing
 
 We are happy to accept small and large contributions, feel free to make a suggestion or submit a pull request.

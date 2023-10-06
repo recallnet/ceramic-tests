@@ -1,4 +1,4 @@
-name: Rust
+name: Check/Build/Test
 
 on:
   push:
@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2
+      with:
+        package_json_file: suite/package.json
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
       with:
@@ -31,11 +34,16 @@ jobs:
       run: make check-fmt
     - name: Check clippy
       run: make check-clippy
+    - name: Check test suite
+      run: make check-suite
 
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2
+      with:
+        package_json_file: suite/package.json
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
       with:

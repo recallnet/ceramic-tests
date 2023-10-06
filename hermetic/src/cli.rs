@@ -46,7 +46,7 @@ pub struct TestOpts {
     network_timeout: u32,
 
     /// Number of seconds to wait for the test job to finish.
-    #[arg(long, default_value_t = 180)]
+    #[arg(long, default_value_t = 300)]
     job_timeout: u32,
 }
 

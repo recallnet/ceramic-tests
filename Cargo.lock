@@ -719,24 +719,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ceramic-tests-hermetic-driver"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ceramic-tests-property",
- "clap",
- "env_logger",
- "futures",
- "k8s-openapi",
- "keramik-operator",
- "kube",
- "log 0.4.20",
- "serde",
- "serde_yaml 0.8.26",
- "tokio",
-]
-
-[[package]]
 name = "ceramic-tests-property"
 version = "0.1.0"
 dependencies = [
@@ -1869,6 +1851,24 @@ name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
+
+[[package]]
+name = "hermetic-driver"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ceramic-tests-property",
+ "clap",
+ "env_logger",
+ "futures",
+ "k8s-openapi",
+ "keramik-operator",
+ "kube",
+ "log 0.4.20",
+ "serde",
+ "serde_yaml 0.8.26",
+ "tokio",
+]
 
 [[package]]
 name = "hermit-abi"

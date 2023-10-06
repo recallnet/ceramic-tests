@@ -58,7 +58,7 @@ jobs:
     - name: Build and Publish
       run: make BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }} publish-suite
   build-driver:
-    name: Build 'ceramic-tests-hermetic-driver' binary
+    name: Build 'hermetic-driver' binary
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -75,8 +75,8 @@ jobs:
       run: make BUILD_PROFILE=release driver
     - uses: actions/upload-artifact@master
       with:
-        name: ceramic-tests-hermetic-driver
-        path: ./target/release/ceramic-tests-hermetic-driver
+        name: hermetic-driver
+        path: ./target/release/hermetic-driver
         retention-days: 1
   run-tests:
     name: Test
@@ -106,15 +106,15 @@ jobs:
           location: ${{ secrets.GKE_ZONE }}
       - uses: actions/download-artifact@master
         with:
-          name: ceramic-tests-hermetic-driver
+          name: hermetic-driver
           path: ./bin
       -
         name: Test ${{ matrix.networks }}
         run: |
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
-          chmod +x ./bin/ceramic-tests-hermetic-driver
-          make HERMETIC_CMD=./bin/ceramic-tests-hermetic-driver hermetic-tests
+          chmod +x ./bin/hermetic-driver
+          make HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
 
   collect-results:
     name: Results

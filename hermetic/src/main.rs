@@ -1,6 +1,6 @@
 use anyhow::Result;
-use ceramic_tests_hermetic_driver::cli;
 use clap::Parser;
+use hermetic_driver::cli;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<()> {
