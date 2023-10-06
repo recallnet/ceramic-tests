@@ -10,9 +10,18 @@
 #
 # to login to docker. That password will be valid for 12h.
 
+# Change to the suite directory
+cd $(dirname $0)/../suite
+
 tag=${1-latest}
 BUILD_PROFILE=${BUILD_PROFILE-release}
-IMAGE_NAME=${IMAGE_NAME-public.ecr.aws/r5b3e0r5/3box/ceramic-tests-property}
+IMAGE_NAME=${IMAGE_NAME-public.ecr.aws/r5b3e0r5/3box/ceramic-tests-suite}
+
+PUSH_ARGS="--push"
+if [ "$NO_PUSH" = "true" ]
+then
+    PUSH_ARGS=""
+fi
 
 CACHE_ARGS=""
 if [ -n "$ACTIONS_CACHE_URL" ]
@@ -22,8 +31,8 @@ then
 fi
 
 docker buildx build \
-    --push \
+    $PUSH_ARGS \
     $CACHE_ARGS \
     --build-arg BUILD_PROFILE=${BUILD_PROFILE} \
-    -t $IMAGE_NAME:$tag \
+    -t ${IMAGE_NAME}:$tag \
     .

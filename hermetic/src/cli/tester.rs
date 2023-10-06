@@ -40,7 +40,7 @@ const KERAMIK_NAMESPACE: &str = "keramik";
 const CERAMIC_ADMIN_DID_SECRET: &str = "ceramic-tests-admin-did";
 const SERVICE_ACCOUNT_NAME: &str = "ceramic-tests-service-account";
 const CLUSTER_ROLE_NAME: &str = "ceramic-tests-cluster-role";
-const LOCALSTACK_SERVICE_NAME: &str = "localstack";
+const LOCALSTACK_SERVICE_NAME: &str = "ceramic-tests-localstack";
 const LOCALSTACK_DATA_NAME: &str = "localstack-data";
 const PROCESS_PEERS_NAME: &str = "process-peers";
 
@@ -684,7 +684,7 @@ fn job_init() -> Container {
 fn localstack_stateful_set(namespace: &str) -> StatefulSet {
     StatefulSet {
         metadata: ObjectMeta {
-            name: Some("localstack".to_owned()),
+            name: Some(LOCALSTACK_SERVICE_NAME.to_owned()),
             namespace: Some(namespace.to_owned()),
             ..Default::default()
         },

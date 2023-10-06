@@ -1,22 +1,27 @@
-# Rust Ceramic Migration Tests
+# Ceramic End To End Tests
 
-Tests needed to verify the migration from [Kubo](https://github.com/ceramicnetwork/go-ipfs-daemon) to
-[rust-ceramic](https://github.com/3box/rust-ceramic) when used with
-[Ceramic](https://github.com/ceramicnetwork/js-ceramic) nodes.
+This repo contains an end to end test suite for the [Ceramic Network](https://github.com/ceramicnetwork/js-ceramic) and [ComposeDB](https://github.com/ceramicnetwork/js-composedb).
 
 ## Design
 
-This crate provides two entities:
+This crate provides three entities:
 
-* A test driver (`ceramic-tests-driver`).
-* A set of tests to run (`ceramic-tests-property`).
+* A test suite of end to end tests.
+* A hermetic test driver, which runs the test suite against isolated infrastructure.
+* A durable test driver, which runs the test suite against live public network infrastructure.
 
-The `ceramic-tests-driver` handles creating a network and running an test image against the network.
+The test suite is compiled into a docker image and expects to be configured with the endpoints of the infrastructure to test against.
+The test drivers run the test image providing the correct configuration for their intended infrastructure.
 
-The set of tests are compiled into a docker image that can run as a job within the network.
-If the job exits without error the tests have passed.
+Hermetic infrastructure refers to infrastructure this is isolated from the rest of the world. In other words it controls all of its dependencies.
+Testing against hermetic infrastructure allows for easier debugging as all dependencies are controlled and can be isolated for potential bugs.
+
+Durable infrastructure refers to infrastructure running connected to the rest of the world. For example other anonymous Ceramic nodes may connect to this infrastructure and it relies on a public Etherium blockchain.
+Testing against durable infrastructure allows for better coverage of real world edge cases.
 
 ## Flavors
+
+> Flavors are deprecated and will be removed in favor of a single test suite and multiple drivers design.
 
 There are several test flavors:
 
@@ -32,6 +37,20 @@ Property tests live in this repo as Rust integration tests, see the `/property/t
 The smoke tests, test specific behaviors of a network end to end.
 These tests do not assume any network topology.
 Smoke tests live outside of this repo.
+
+## Environment Variables
+
+The test suite is configured via environment variables.
+
+| Env Var        | Description                                             |
+| -------        | -----------                                             |
+| COMPOSEDB_URLS | Comma separated list of URLs to ComposeDB API endpoints |
+| CERAMIC_URLS   | Comma separated list of URLs to Ceramic API endpoints   |
+
+Note, these names use the new API boundaries being currently constructed.
+So confusingly the `js-ceramic` process exposes the `ComposeDB API` while the `rust-ceramic` process exposes the `Ceramic API`.
+
+Eventually we expect the `js-ceramic` repo/process to be renamed to `js-composedb` and the `js-composedb` repo being renamed to `js-compsedb-client` or other similar names.
 
 
 ## Running tests locally
@@ -49,7 +68,7 @@ There are some helpful scripts in this repo to make testing locally possible:
 
     # Run cargo test locally using the newly exported env vars.
     # Optionaly you can use `make test`
-    cargo test
+    cd test-suite && pnpm run start
 
 >NOTE: The port-forward script will leave `kubectl` process running in the background to forward the ports.
 The script kills those processes and creates new ones. However if you need you can kill them directly.
@@ -65,10 +84,27 @@ Use this script:
 
 The script will create a `topology.svg` (view it in a browser) of how each of the nodes are connected to one another.
 
+>NOTE: The topology.mjs script expects the same environment variables to exist in order to communicate with the nodes to determine their topology.
+Source the `port-forward.sh` script in order to expose the environment locally.
+
 ## Using make
 
-Make provides targets for each flavor of test, i.e. `make smoke-test` or `make prop-test`.
-These targets leverage the `ceramic-tests-driver` to create the network and run the test image.
+Make provides targets for each test driver and the intermediate steps to build all dependencies.
+
+The make file exposes variables that can be set in the environment to control how it performs each task.
+
+### Example workflow
+
+Using this workflow you can build the test suite image locally, load the image into kind and then invoke the driver to run the tests in the network.
+
+    # Choose a meaningful but local name for the image
+    export TEST_SUITE_IMAGE_NAME=3box/ceramic-tests-suite
+    # Build the test suite image locally, do not publish
+    make build-suite
+    # Load the built image into kind
+    kind load docker-image 3box/ceramic-tests-suite:dev-run
+    # Build and run the hermetic test driver using the test suite image
+    make hermetic-tests
 
 ## Contributing
 

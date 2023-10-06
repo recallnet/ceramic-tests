@@ -1,0 +1,24 @@
+{
+    "clearMocks": true,
+    "collectCoverage": false,
+    "extensionsToTreatAsEsm": [".ts"],
+    "globals": {
+        "ts-jest": {
+            "useESM": true
+        }
+    },
+    "moduleFileExtensions": ["ts", "js", "json"],
+    "modulePathIgnorePatterns": ["node_modules"],
+    "moduleNameMapper": {
+        "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "preset": "ts-jest/presets/default-esm",
+    "reporters": ["default", "<rootDir>/.build/utils/reporter.js"],
+    "testEnvironment": "node",
+    "testRegex": "(/__tests__/.*(\\.|/)(test|spec))\\.ts$",
+    "testTimeout": 600000,
+    "transform": {
+        "^.+\\.ts?$": "ts-jest"
+    },
+    "verbose": true
+}

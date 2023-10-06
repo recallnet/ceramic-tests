@@ -77,7 +77,7 @@ jobs:
         cd cargo-cache
         ../ci-scripts/extract_docker_mount_cache.sh
   build-driver:
-    name: Build 'ceramic-tests-driver' binary
+    name: Build 'ceramic-tests-hermetic-driver' binary
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -94,8 +94,8 @@ jobs:
       run: make BUILD_PROFILE=release driver
     - uses: actions/upload-artifact@master
       with:
-        name: ceramic-tests-driver
-        path: ./target/release/ceramic-tests-driver
+        name: ceramic-tests-hermetic-driver
+        path: ./target/release/ceramic-tests-hermetic-driver
         retention-days: 1
   run-tests:
     name: Test
@@ -125,15 +125,15 @@ jobs:
           location: ${{ secrets.GKE_ZONE }}
       - uses: actions/download-artifact@master
         with:
-          name: ceramic-tests-driver
+          name: ceramic-tests-hermetic-driver
           path: ./bin
       -
         name: Test ${{ matrix.networks }}
         run: |
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
-          chmod +x ./bin/ceramic-tests-driver
-          make DRIVER_CMD=./bin/ceramic-tests-driver prop-test
+          chmod +x ./bin/ceramic-tests-hermetic-driver
+          make HERMETIC_CMD=./bin/ceramic-tests-hermetic-driver prop-test
 
   collect-results:
     name: Results

@@ -719,7 +719,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ceramic-tests-driver"
+name = "ceramic-tests-hermetic-driver"
 version = "0.1.0"
 dependencies = [
  "anyhow",

@@ -1,5 +1,6 @@
 [package]
-name = "ceramic-tests-driver"
+name = "ceramic-tests-hermetic-driver"
+description = "Test driver against hermetic infrastructure"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

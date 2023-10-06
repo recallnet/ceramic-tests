@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["property", "driver"]
+members = ["property", "hermetic"]
 
 [workspace.dependencies]
-ceramic-tests-driver = { path = "./driver/" }
+ceramic-tests-hermetic-driver = { path = "./hermetic/" }
 ceramic-tests-property = { path = "./property/" }
 
 [workspace.package]

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ceramic_tests_driver::cli;
+use ceramic_tests_hermetic_driver::cli;
 use clap::Parser;
 
 #[tokio::main(flavor = "multi_thread")]
