@@ -2443,7 +2443,7 @@ dependencies = [
 [[package]]
 name = "keramik-common"
 version = "0.1.0"
-source = "git+https://github.com/3box/keramik.git?branch=main#8bc1fc4b16f68b8fec0fd07840931e468a9622c5"
+source = "git+https://github.com/3box/keramik.git?branch=main#0281df48a11055652488d9fc3a76e8a72130eab1"
 dependencies = [
  "anyhow",
  "gethostname",
@@ -2454,7 +2454,7 @@ dependencies = [
 [[package]]
 name = "keramik-operator"
 version = "0.0.1"
-source = "git+https://github.com/3box/keramik.git?branch=main#8bc1fc4b16f68b8fec0fd07840931e468a9622c5"
+source = "git+https://github.com/3box/keramik.git?branch=main#0281df48a11055652488d9fc3a76e8a72130eab1"
 dependencies = [
  "k8s-openapi",
  "keramik-common",
@@ -2493,11 +2493,13 @@ dependencies = [
  "http",
  "http-body",
  "hyper",
+ "hyper-openssl",
  "hyper-rustls",
  "hyper-timeout",
  "jsonpath_lib",
  "k8s-openapi",
  "kube-core",
+ "openssl",
  "pem",
  "pin-project",
  "rustls",
