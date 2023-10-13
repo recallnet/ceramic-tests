@@ -15,11 +15,11 @@ services:
     networks:
       - internal
 
-  smoke-tests:
+  test-suite:
     build:
       context: ./
-    container_name: smoke-tests
-    image: smoke
+    container_name: test-suite
+    image: test-suite
     environment:
       - AWS_ACCESS_KEY_ID=.
       - AWS_REGION=us-east-1
@@ -27,7 +27,7 @@ services:
       - DB_ENDPOINT=http://localstack:4566
       - DOCKER_HOST=unix:///var/run/docker.sock
       # Overrides the Jest reporters to only use the default and not the custom (ECS) reporter
-      - JEST_ARGS=--reporters=default --detectOpenHandles
+      - JEST_ARGS=--reporters=default
       - COMPOSEDB_URLS=https://ceramic-private-dev.3boxlabs.com,https://ceramic-dev.3boxlabs.com
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"

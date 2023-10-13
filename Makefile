@@ -19,10 +19,12 @@ CARGO = RUSTFLAGS="-D warnings" cargo
 CARGO_RUN = ${CARGO} run --locked --profile ${BUILD_PROFILE}
 CARGO_BUILD = ${CARGO} build --locked --profile ${BUILD_PROFILE}
 
-
 # Command to run the hermetic driver
 # Defaults to using cargo run
 HERMETIC_CMD ?= ${CARGO_RUN} --bin hermetic-driver --
+
+# Environment to run durable tests against
+DURABLE_ENV ?= dev
 
 PNPM = pnpm
 
@@ -88,6 +90,10 @@ hermetic-tests:
 		--suffix "${BUILD_TAG}" \
 		--clean-up \
 		--test-image ${TEST_SUITE_IMAGE}
+
+.PHONY: durable-tests
+durable-tests:
+	BUILD_TAG="${BUILD_TAG}" IMAGE_NAME="${TEST_SUITE_IMAGE_NAME}" ./durable/durable-driver.sh ${DURABLE_ENV}
 
 # TODO Remove this target:
 # Remove flavor concept from driver.
