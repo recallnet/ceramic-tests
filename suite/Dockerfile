@@ -16,7 +16,4 @@ COPY src/ ./src
 
 RUN pnpm run build
 
-ENV SUITE "all"
-ENV DELAY 0
-
 ENTRYPOINT ["/app/entrypoint.sh", "run", "start"]

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Check if the test suite is using latest deps.
 # By adding this check in CI we can ensure that the tests are not getting to far behind.
-# The test drive will update the deps regarless, however this keeps the code base itself closer to latest.
+# The test driver will update the deps regardless, however this keeps the code base itself closer to latest.
 
 set -e
 

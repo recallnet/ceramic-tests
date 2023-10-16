@@ -34,8 +34,9 @@ jobs:
       run: make check-fmt
     - name: Check clippy
       run: make check-clippy
-    - name: Check test suite
-      run: make check-suite
+    # Do not run this check in CI because it always fails if any transitive dep publishes new version
+    #- name: Check test suite
+    #  run: make check-suite
 
   build:
     runs-on: ubuntu-latest
