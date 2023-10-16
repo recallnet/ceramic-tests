@@ -611,8 +611,8 @@ dependencies = [
 
 [[package]]
 name = "ceramic-api-server"
-version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#1df2b8b03ff8085ee44daea63f4397b1914f6cd9"
+version = "0.1.1"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#bf8ae1adbee659a54ed7f2ecbd3baba157264a43"
 dependencies = [
  "async-trait",
  "chrono",
@@ -636,8 +636,8 @@ dependencies = [
 
 [[package]]
 name = "ceramic-core"
-version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#1df2b8b03ff8085ee44daea63f4397b1914f6cd9"
+version = "0.6.0"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#bf8ae1adbee659a54ed7f2ecbd3baba157264a43"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -656,14 +656,14 @@ dependencies = [
  "serde_bytes",
  "serde_ipld_dagcbor",
  "serde_json",
- "ssi 0.6.0",
+ "ssi",
  "unsigned-varint",
 ]
 
 [[package]]
 name = "ceramic-event"
 version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#1df2b8b03ff8085ee44daea63f4397b1914f6cd9"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#bf8ae1adbee659a54ed7f2ecbd3baba157264a43"
 dependencies = [
  "anyhow",
  "ceramic-core",
@@ -672,7 +672,7 @@ dependencies = [
  "once_cell",
  "rand 0.8.5",
  "serde",
- "ssi 0.6.0",
+ "ssi",
 ]
 
 [[package]]
@@ -687,14 +687,14 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "ssi 0.7.0",
+ "ssi",
  "url",
 ]
 
 [[package]]
 name = "ceramic-kubo-rpc-server"
-version = "0.1.0"
-source = "git+https://github.com/3box/rust-ceramic?branch=main#1df2b8b03ff8085ee44daea63f4397b1914f6cd9"
+version = "0.1.1"
+source = "git+https://github.com/3box/rust-ceramic?branch=main#bf8ae1adbee659a54ed7f2ecbd3baba157264a43"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4510,28 +4510,6 @@ dependencies = [
 
 [[package]]
 name = "ssi"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a74add6dcfc3599495a73e953a7126ea19e9a0fc81860f5d593cabf1322cdf9"
-dependencies = [
- "ssi-caips",
- "ssi-core",
- "ssi-crypto",
- "ssi-dids",
- "ssi-json-ld",
- "ssi-jwk",
- "ssi-jws",
- "ssi-jwt",
- "ssi-ldp 0.2.1",
- "ssi-ssh",
- "ssi-tzkey",
- "ssi-ucan",
- "ssi-vc 0.1.3",
- "ssi-zcap-ld",
-]
-
-[[package]]
-name = "ssi"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d6e7ea685d83ca9683a0c7876c6b99196049d000dc22dfabb1398603b935e56"
@@ -4544,11 +4522,11 @@ dependencies = [
  "ssi-jwk",
  "ssi-jws",
  "ssi-jwt",
- "ssi-ldp 0.3.0",
+ "ssi-ldp",
  "ssi-ssh",
  "ssi-tzkey",
  "ssi-ucan",
- "ssi-vc 0.2.0",
+ "ssi-vc",
  "ssi-zcap-ld",
 ]
 
@@ -4711,42 +4689,6 @@ dependencies = [
 
 [[package]]
 name = "ssi-ldp"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de930bb18e3ed3c1f7b0a2b2b4fdba2887dffff34bb5f44b9967a983fea2d60c"
-dependencies = [
- "async-trait",
- "bs58",
- "chrono",
- "grdf",
- "hex",
- "iref",
- "json-syntax",
- "k256",
- "keccak-hash",
- "lazy_static",
- "locspan",
- "multibase 0.8.0",
- "p256",
- "rdf-types",
- "serde",
- "serde_jcs",
- "serde_json",
- "ssi-caips",
- "ssi-contexts",
- "ssi-core",
- "ssi-crypto",
- "ssi-dids",
- "ssi-json-ld",
- "ssi-jwk",
- "ssi-jws",
- "ssi-tzkey",
- "static-iref",
- "thiserror",
-]
-
-[[package]]
-name = "ssi-ldp"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb057ad335a08d78deca3a7cf8f8393087ca99d64c038e97ff844ea66fbd475"
@@ -4829,35 +4771,6 @@ dependencies = [
 
 [[package]]
 name = "ssi-vc"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd7a9a9dc254d976962fea4501ed40097b8a7c23c15f076a7f46fa97ed886bc7"
-dependencies = [
- "async-trait",
- "base64 0.12.3",
- "bitvec",
- "cacaos",
- "chrono",
- "flate2",
- "iref",
- "libipld",
- "multihash 0.16.3",
- "reqwest",
- "serde",
- "serde_json",
- "siwe-recap",
- "ssi-core",
- "ssi-dids",
- "ssi-json-ld",
- "ssi-jwk",
- "ssi-jws",
- "ssi-jwt",
- "ssi-ldp 0.2.1",
- "thiserror",
-]
-
-[[package]]
-name = "ssi-vc"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66e7a8fdaad27ffd172183d6bd605cd77c28c5378e8184a462ebc8df8c06f212"
@@ -4881,7 +4794,7 @@ dependencies = [
  "ssi-jwk",
  "ssi-jws",
  "ssi-jwt",
- "ssi-ldp 0.3.0",
+ "ssi-ldp",
  "thiserror",
 ]
 
@@ -4899,7 +4812,7 @@ dependencies = [
  "ssi-dids",
  "ssi-json-ld",
  "ssi-jwk",
- "ssi-ldp 0.3.0",
+ "ssi-ldp",
  "thiserror",
 ]
 
