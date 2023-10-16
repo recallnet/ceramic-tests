@@ -1,8 +1,9 @@
-/target
-*/target
-
 .DS_Store
 .idea
 
 /test-binaries
+/target
+*/target
 /topology.svg
+node_modules/
+/suite/.build/

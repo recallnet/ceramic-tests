@@ -1,6 +1,10 @@
-name: Run smoke tests
+name: Run Hermetic tests
 
 on:
+  pull_request:
+    branches: [ "main" ]
+  merge_group:
+    branches: [ "main" ]
   schedule:
     # Run every midnight UTC
     - cron: "0 0 * * *"
@@ -36,8 +40,25 @@ jobs:
           echo ${BUILD_TAG}
           echo "build_tag=${BUILD_TAG}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
+  publish-suite:
+    runs-on: ubuntu-latest
+    needs: generate-matrix
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Public ECR
+      uses: docker/login-action@v2
+      with:
+        registry: public.ecr.aws
+        username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      env:
+        AWS_REGION: us-east-1
+    - name: Build and Publish
+      run: make BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }} publish-suite
   build-driver:
-    name: Build 'ceramic-tests-driver' binary
+    name: Build 'hermetic-driver' binary
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -54,8 +75,8 @@ jobs:
       run: make BUILD_PROFILE=release driver
     - uses: actions/upload-artifact@master
       with:
-        name: ceramic-tests-driver
-        path: ./target/release/ceramic-tests-driver
+        name: hermetic-driver
+        path: ./target/release/hermetic-driver
         retention-days: 1
   run-tests:
     name: Test
@@ -63,6 +84,7 @@ jobs:
     needs:
       - generate-matrix
       - build-driver
+      - publish-suite
     strategy:
       fail-fast: false
       matrix:
@@ -84,15 +106,15 @@ jobs:
           location: ${{ secrets.GKE_ZONE }}
       - uses: actions/download-artifact@master
         with:
-          name: ceramic-tests-driver
+          name: hermetic-driver
           path: ./bin
       -
         name: Test ${{ matrix.networks }}
         run: |
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
-          chmod +x ./bin/ceramic-tests-driver
-          make DRIVER_CMD=./bin/ceramic-tests-driver smoke-test
+          chmod +x ./bin/hermetic-driver
+          make HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
 
   collect-results:
     name: Results
