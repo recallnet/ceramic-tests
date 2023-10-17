@@ -587,7 +587,7 @@ fn smoke_job(namespace: &str, image: Option<String>) -> Job {
                             },
                             EnvVar {
                                 name: "JEST_ARGS".to_owned(),
-                                value: Some("--reporters=default --detectOpenHandles".to_owned()),
+                                value: Some("--reporters=default".to_owned()),
                                 ..Default::default()
                             },
                         ]),
