@@ -58,13 +58,9 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     let mut network: Network = serde_yaml::from_str(&fs::read_to_string(&opts.network).await?)?;
     debug!("input network {:#?}", network);
 
-    if opts.clean_up {
-        // If the test driver fails for any reason the network will not be cleaned up.
-        // As such we set an expiration of the network.
-        // This gives devs time to investigate the cause of the failure.
-        // The TTL can also be extended at any time, if more time is needed.
-        network.spec.ttl_seconds = Some(8 * 60 * 60);
-    }
+    // The test driver relies on the Keramik operator network TTL to clean up the network, with an 8 hour default that
+    // allows devs to investigate any failures. The TTL can also be extended at any time, if more time is needed.
+    network.spec.ttl_seconds = Some(opts.network_ttl);
 
     let mut network_name = format!(
         "{}-{}",
@@ -76,7 +72,9 @@ pub async fn run(opts: TestOpts) -> Result<()> {
             .expect("network should have a defined name in metadata")
     );
     if let Some(suffix) = &opts.suffix {
-        network_name = format!("{network_name}-{suffix}");
+        if !suffix.is_empty() {
+            network_name = format!("{network_name}-{suffix}");
+        }
     }
     network.metadata.name = Some(network_name.clone());
     debug!("configured network {:#?}", network);
@@ -138,8 +136,7 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     )
     .await?;
 
-    let result = match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await?
-    {
+    match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
         (JobResult::Pass, logs) => {
             println!("Passed:\n {logs}");
             Ok(())
@@ -148,11 +145,7 @@ pub async fn run(opts: TestOpts) -> Result<()> {
             println!("Failed:\n {logs}");
             Err(anyhow!("Tests Failed"))
         }
-    };
-    if opts.clean_up {
-        delete_network(client.clone(), &network_name).await?;
     }
-    result
 }
 
 async fn wait_for_network(client: Client, network_name: &str, timeout_seconds: u32) -> Result<()> {

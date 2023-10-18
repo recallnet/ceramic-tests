@@ -23,6 +23,12 @@ CARGO_BUILD = ${CARGO} build --locked --profile ${BUILD_PROFILE}
 # Defaults to using cargo run
 HERMETIC_CMD ?= ${CARGO_RUN} --bin hermetic-driver --
 
+# Suffix to use for hermetic tests
+HERMETIC_SUFFIX ?= ${BUILD_TAG}
+
+# TTL for cleaning up network after tests (defaults to 8 hours)
+HERMETIC_TTL ?= 28800
+
 # Environment to run durable tests against
 DURABLE_ENV ?= dev
 
@@ -87,9 +93,9 @@ hermetic-tests:
 	${HERMETIC_CMD} test \
 		--network "${TEST_NETWORK}" \
 		--flavor smoke \
-		--suffix "${BUILD_TAG}" \
-		--clean-up \
-		--test-image ${TEST_SUITE_IMAGE}
+		--suffix "${HERMETIC_SUFFIX}" \
+		--network-ttl ${HERMETIC_TTL} \
+		--test-image "${TEST_SUITE_IMAGE}"
 
 .PHONY: durable-tests
 durable-tests:
@@ -106,5 +112,4 @@ prop-test:
 		--network "${TEST_NETWORK}" \
 		--flavor prop \
 		--suffix "${BUILD_TAG}" \
-		--clean-up \
 		--test-image public.ecr.aws/r5b3e0r5/3box/ceramic-tests-property:${BUILD_TAG}
