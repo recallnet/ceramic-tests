@@ -22,7 +22,7 @@ use k8s_openapi::{
     },
     ClusterResourceScope, NamespaceResourceScope,
 };
-use keramik_operator::network::{CeramicSpec, IpfsSpec, Network, RustIpfsSpec};
+use keramik_operator::network::Network;
 use kube::{
     api::{
         Api, DeleteParams, ListParams, LogParams, ObjectMeta, Patch, PatchParams, PostParams,
@@ -57,10 +57,14 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     // Parse network file
     let mut network: Network = serde_yaml::from_str(&fs::read_to_string(&opts.network).await?)?;
     debug!("input network {:#?}", network);
-    network.spec.ceramic.push(CeramicSpec {
-        ipfs: Some(IpfsSpec::Rust(RustIpfsSpec::default())),
-        ..Default::default()
-    });
+
+    if opts.clean_up {
+        // If the test driver fails for any reason the network will not be cleaned up.
+        // As such we set an expiration of the network.
+        // This gives devs time to investigate the cause of the failure.
+        // The TTL can also be extended at any time, if more time is needed.
+        network.spec.ttl_seconds = Some(8 * 60 * 60);
+    }
 
     let mut network_name = format!(
         "{}-{}",
