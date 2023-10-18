@@ -37,9 +37,9 @@ pub struct TestOpts {
     #[arg(short, long)]
     suffix: Option<String>,
 
-    /// If set, clean up and destroy the network once the test is complete
-    #[arg(long, default_value_t = false)]
-    clean_up: bool,
+    /// Number of seconds after which the network should get cleaned up.
+    #[arg(long, default_value_t = 8 * 60 * 60)]
+    network_ttl: u64,
 
     /// Number of seconds to wait for network to become ready.
     #[arg(long, default_value_t = 600)]
