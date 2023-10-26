@@ -46,7 +46,7 @@ pub struct TestOpts {
     network_timeout: u32,
 
     /// Number of seconds to wait for the test job to finish.
-    #[arg(long, default_value_t = 300)]
+    #[arg(long, default_value_t = 60 * 60 * 3)]
     job_timeout: u32,
 
     /// Path regex passed to Jest to select which tests to run.
