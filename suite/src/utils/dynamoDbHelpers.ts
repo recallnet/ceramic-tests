@@ -1,4 +1,9 @@
-import { CreateTableInput, DescribeTableInput, DynamoDB, ScanCommandInput } from '@aws-sdk/client-dynamodb'
+import {
+  CreateTableInput,
+  DescribeTableInput,
+  DynamoDB,
+  ScanCommandInput,
+} from '@aws-sdk/client-dynamodb'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DateTime, Duration } from 'luxon'
 
@@ -6,161 +11,164 @@ import { utilities } from './common.js'
 const delay = utilities.delay
 
 const Region = process.env.REGION || process.env.AWS_REGION || 'us-east-1'
-const DbEndpoint = process.env.DB_ENDPOINT ? process.env.DB_ENDPOINT : `https://dynamodb.${Region}.amazonaws.com`
+const DbEndpoint = process.env.DB_ENDPOINT
+  ? process.env.DB_ENDPOINT
+  : `https://dynamodb.${Region}.amazonaws.com`
 const Stage = process.env.STAGE || 'dev'
 const AnchorTable = `ceramic-smoke-tests-${Stage}-anchor`
 
-export const AnchorInterval = Duration.fromObject({ minutes: Number(process.env.ANCHOR_INTERVAL_MIN) || 720 }) // 12 hour default
+export const AnchorInterval = Duration.fromObject({
+  minutes: Number(process.env.ANCHOR_INTERVAL_MIN) || 720,
+}) // 12 hour default
 
 export const DynamoClient = new DynamoDB({
-    region: Region,
-    endpoint: DbEndpoint
+  region: Region,
+  endpoint: DbEndpoint,
 })
 
 export const cleanup = async () => {
-    DynamoClient.destroy()
+  DynamoClient.destroy()
 }
 
 const DEFAULT_STREAM_TTL_MINS = 60 * 24 * 7 // 1 week
-export const StreamTTL = Duration.fromObject({ minutes: Number(process.env.STREAM_TTL_MIN || DEFAULT_STREAM_TTL_MINS) })
+export const StreamTTL = Duration.fromObject({
+  minutes: Number(process.env.STREAM_TTL_MIN || DEFAULT_STREAM_TTL_MINS),
+})
 // Usually streams will be cleaned up by the garbage collection test process. But if something slips
 // through the cracks, we set a TTL at the database layer of 2x the expected TTL
 const DatabaseTTL = StreamTTL.plus(StreamTTL)
 
 // This function will block until the table is ready
 export const createAnchorTable = async () => {
-    const describeIn: DescribeTableInput = {
+  const describeIn: DescribeTableInput = {
+    TableName: AnchorTable,
+  }
+  while (1) {
+    try {
+      const describeTableOut = await DynamoClient.describeTable(describeIn)
+      if (describeTableOut.Table?.TableStatus === 'ACTIVE') {
+        console.log('Test table ready')
+        return
+      }
+      console.log('Test table not ready...')
+      await delay(5)
+      continue
+    } catch (e) {
+      console.log('Test table does not exist', e)
+    }
+    try {
+      console.log('Creating test table...')
+      const createTableIn: CreateTableInput = {
+        AttributeDefinitions: [
+          {
+            AttributeName: 'StreamId',
+            AttributeType: 'S',
+          },
+        ],
+        KeySchema: [
+          {
+            AttributeName: 'StreamId',
+            KeyType: 'HASH',
+          },
+        ],
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 1,
+          WriteCapacityUnits: 1,
+        },
         TableName: AnchorTable,
+      }
+      await DynamoClient.createTable(createTableIn)
+    } catch (e) {
+      console.log('Could not create table', e)
     }
-    while (1) {
-        try {
-            const describeTableOut = await DynamoClient.describeTable(describeIn)
-            if (describeTableOut.Table?.TableStatus === "ACTIVE") {
-                console.log("Test table ready")
-                return
-            }
-            console.log("Test table not ready...")
-            await delay(5)
-            continue
-        } catch (e) {
-            console.log("Test table does not exist", e)
-        }
-        try {
-            console.log("Creating test table...")
-            const createTableIn: CreateTableInput = {
-                AttributeDefinitions: [
-                    {
-                        AttributeName: 'StreamId',
-                        AttributeType: 'S'
-                    },
-                ],
-                KeySchema: [
-                    {
-                        AttributeName: 'StreamId',
-                        KeyType: 'HASH'
-                    },
-                ],
-                ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
-                },
-                TableName: AnchorTable
-            }
-            await DynamoClient.createTable(createTableIn)
-        } catch (e) {
-            console.log("Could not create table", e)
-        }
-        await delay(5)
-    }
+    await delay(5)
+  }
 }
 
 export const storeStreamReq = async (streamId: StreamID) => {
-    try {
-        const now = DateTime.utc()
-        await DynamoClient.putItem({
-            TableName: AnchorTable,
-            Item: {
-                StreamId: {
-                    S: streamId.toString()
-                },
-                Creation: {
-                    N: now.toSeconds().toString()
-                },
-                Expiration: {
-                    N: now
-                        .plus(DatabaseTTL)
-                        .toSeconds()
-                        .toString()
-                },
-                Anchored: {
-                    BOOL: false
-                }
-            }
-        })
-    } catch (err) {
-        throw ('unexpected error: ' + err)
-    }
+  try {
+    const now = DateTime.utc()
+    await DynamoClient.putItem({
+      TableName: AnchorTable,
+      Item: {
+        StreamId: {
+          S: streamId.toString(),
+        },
+        Creation: {
+          N: now.toSeconds().toString(),
+        },
+        Expiration: {
+          N: now.plus(DatabaseTTL).toSeconds().toString(),
+        },
+        Anchored: {
+          BOOL: false,
+        },
+      },
+    })
+  } catch (err) {
+    throw 'unexpected error: ' + err
+  }
 }
 
 export const fetchUnanchoredStreamReqs = async (pageSize: number | null = null) => {
-    const args: ScanCommandInput = {
-        TableName: AnchorTable,
-        FilterExpression: "Anchored = :anchored",
-        ExpressionAttributeValues: { ":anchored": { BOOL: false } },
-    }
-    return dynamoScan(args, pageSize)
+  const args: ScanCommandInput = {
+    TableName: AnchorTable,
+    FilterExpression: 'Anchored = :anchored',
+    ExpressionAttributeValues: { ':anchored': { BOOL: false } },
+  }
+  return dynamoScan(args, pageSize)
 }
 
 export const fetchAnchoredStreamReqs = async (pageSize: number | null = null) => {
-    const args: ScanCommandInput = {
-        TableName: AnchorTable,
-        FilterExpression: "Anchored = :anchored",
-        ExpressionAttributeValues: { ":anchored": { BOOL: true } },
-    }
-    return dynamoScan(args, pageSize)
+  const args: ScanCommandInput = {
+    TableName: AnchorTable,
+    FilterExpression: 'Anchored = :anchored',
+    ExpressionAttributeValues: { ':anchored': { BOOL: true } },
+  }
+  return dynamoScan(args, pageSize)
 }
 
 export const fetchExpiredStreamReqs = async (pageSize: number | null = null) => {
-    const now = DateTime.utc()
-    const expired = now.minus(StreamTTL).toSeconds().toString()
-    const args: ScanCommandInput = {
-        TableName: AnchorTable,
-        FilterExpression: "Creation < :expired",
-        ExpressionAttributeValues: { ":expired": { N: expired } }
-    }
-    return dynamoScan(args, pageSize)
+  const now = DateTime.utc()
+  const expired = now.minus(StreamTTL).toSeconds().toString()
+  const args: ScanCommandInput = {
+    TableName: AnchorTable,
+    FilterExpression: 'Creation < :expired',
+    ExpressionAttributeValues: { ':expired': { N: expired } },
+  }
+  return dynamoScan(args, pageSize)
 }
 
 export const deleteStreamReq = async (streamId: StreamID) => {
-    try {
-        return (await DynamoClient.deleteItem({
-            TableName: AnchorTable,
-            Key: {
-                StreamId: {
-                    S: streamId.toString()
-                }
-            }
-        }))
-    } catch (err) {
-        throw ('unexpected error: ' + err)
-    }
+  try {
+    return await DynamoClient.deleteItem({
+      TableName: AnchorTable,
+      Key: {
+        StreamId: {
+          S: streamId.toString(),
+        },
+      },
+    })
+  } catch (err) {
+    throw 'unexpected error: ' + err
+  }
 }
 
 export const markStreamReqAsAnchored = async (streamId: StreamID) => {
-    try {
-        return (await DynamoClient.updateItem({
-            TableName: AnchorTable,
-            Key: {
-                StreamId: {
-                    S: streamId.toString()
-                }
-            },
-            UpdateExpression: "set Anchored = :anchored",
-            ExpressionAttributeValues: { ":anchored": { BOOL: true } }
-        }))
-    } catch (err) {
-        throw ('unexpected error: ' + err)
-    }
+  try {
+    return await DynamoClient.updateItem({
+      TableName: AnchorTable,
+      Key: {
+        StreamId: {
+          S: streamId.toString(),
+        },
+      },
+      UpdateExpression: 'set Anchored = :anchored',
+      ExpressionAttributeValues: { ':anchored': { BOOL: true } },
+    })
+  } catch (err) {
+    throw 'unexpected error: ' + err
+  }
 }
 
 /**
@@ -170,23 +178,23 @@ export const markStreamReqAsAnchored = async (streamId: StreamID) => {
  * garbage collection.
  */
 export const makeStreamReqAppearExpired_FOR_TESTING_ONLY = async (streamId: StreamID) => {
-    try {
-        const now = DateTime.utc()
-        const expired = now.minus(StreamTTL).minus(Duration.fromMillis(1000)).toSeconds().toString()
+  try {
+    const now = DateTime.utc()
+    const expired = now.minus(StreamTTL).minus(Duration.fromMillis(1000)).toSeconds().toString()
 
-        return (await DynamoClient.updateItem({
-            TableName: AnchorTable,
-            Key: {
-                StreamId: {
-                    S: streamId.toString()
-                }
-            },
-            UpdateExpression: "set Creation = :creation",
-            ExpressionAttributeValues: { ":creation": { N: expired } }
-        }))
-    } catch (err) {
-        throw ('unexpected error: ' + err)
-    }
+    return await DynamoClient.updateItem({
+      TableName: AnchorTable,
+      Key: {
+        StreamId: {
+          S: streamId.toString(),
+        },
+      },
+      UpdateExpression: 'set Creation = :creation',
+      ExpressionAttributeValues: { ':creation': { N: expired } },
+    })
+  } catch (err) {
+    throw 'unexpected error: ' + err
+  }
 }
 
 // we want to avoid trying to load too many database records into memory all at once
@@ -201,31 +209,32 @@ const MAX_SCAN_RESULTS = 10 * 1000
  * and getting throttled by Amazon, decreasing the pageSize we use may help keep us under the limit.
  */
 const dynamoScan = async (args: ScanCommandInput, pageSize: number | null = null) => {
-    if (pageSize) {
-        args.Limit = pageSize
-    }
-    try {
-        const results = []
-        let lastEvaluatedKey = null
-        while (results.length < MAX_SCAN_RESULTS) {
-            if (lastEvaluatedKey) {
-                args.ExclusiveStartKey = lastEvaluatedKey // start from where previous scan left off
-            }
+  if (pageSize) {
+    args.Limit = pageSize
+  }
+  try {
+    const results = []
+    let lastEvaluatedKey = null
+    while (results.length < MAX_SCAN_RESULTS) {
+      if (lastEvaluatedKey) {
+        args.ExclusiveStartKey = lastEvaluatedKey // start from where previous scan left off
+      }
 
-            const scanResult = await DynamoClient.scan(args)
-            if (!scanResult.Items) {
-                return results
-            }
-            results.push(...scanResult.Items)
-
-            if (scanResult.LastEvaluatedKey) { // there are more results
-                lastEvaluatedKey = scanResult.LastEvaluatedKey
-            } else {
-                return results
-            }
-        }
+      const scanResult = await DynamoClient.scan(args)
+      if (!scanResult.Items) {
         return results
-    } catch (err) {
-        throw ('unexpected error: ' + err)
+      }
+      results.push(...scanResult.Items)
+
+      if (scanResult.LastEvaluatedKey) {
+        // there are more results
+        lastEvaluatedKey = scanResult.LastEvaluatedKey
+      } else {
+        return results
+      }
     }
+    return results
+  } catch (err) {
+    throw 'unexpected error: ' + err
+  }
 }

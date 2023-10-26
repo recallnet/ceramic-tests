@@ -12,11 +12,11 @@ const did = new DID({ provider, resolver })
 export const metadata = { controllers: [] }
 
 export const newCeramic = async (apiUrl: string) => {
-    const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
-    if (!did.authenticated) {
-        await did.authenticate();
-        (metadata.controllers as string[]) = [did.id]
-    }
-    await ceramic.setDID(did)
-    return ceramic
+  const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
+  if (!did.authenticated) {
+    await did.authenticate()
+    ;(metadata.controllers as string[]) = [did.id]
+  }
+  await ceramic.setDID(did)
+  return ceramic
 }
