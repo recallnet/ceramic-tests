@@ -3,9 +3,9 @@ import { afterAll, beforeAll, describe, test } from '@jest/globals'
 
 // Internal dependencies
 import CeramicClient from '@ceramicnetwork/http-client'
-import { StreamID } from "@ceramicnetwork/streamid";
-import { newCeramic } from '../utils/ceramicHelpers.js';
-import * as helpers from '../utils/dynamoDbHelpers.js';
+import { StreamID } from '@ceramicnetwork/streamid'
+import { newCeramic } from '../utils/ceramicHelpers.js'
+import * as helpers from '../utils/dynamoDbHelpers.js'
 
 // Environment variables
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
@@ -26,29 +26,28 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
  * involves unpinning them from all nodes, and removing the corresponding entry from the database.
  */
 describe.skip('garbage collect old streams created by tests', () => {
+  let ceramicConnections: CeramicClient.CeramicClient[] = []
 
-    let ceramicConnections: CeramicClient.CeramicClient[] = []
+  beforeAll(async () => {
+    for (const url of ComposeDbUrls) {
+      const ceramic = await newCeramic(url)
+      ceramicConnections.push(ceramic)
+    }
+  })
 
-    beforeAll(async () => {
-        for (const url of ComposeDbUrls) {
-            const ceramic = await newCeramic(url)
-            ceramicConnections.push(ceramic)
-        }
-    })
+  afterAll(async () => await helpers.cleanup())
 
-    afterAll(async () => await helpers.cleanup())
+  test('garbage collection', async () => {
+    const expiredReqs = await helpers.fetchExpiredStreamReqs()
+    console.log(`Found ${expiredReqs.length} expired streams in database to garbage collect`)
 
-    test('garbage collection', async () => {
-        const expiredReqs = await helpers.fetchExpiredStreamReqs()
-        console.log(`Found ${expiredReqs.length} expired streams in database to garbage collect`)
+    for (const req of expiredReqs) {
+      const streamId = StreamID.fromString(<string>req.StreamId.S)
+      for (const ceramic of ceramicConnections) {
+        await ceramic.pin.rm(streamId)
+      }
 
-        for (const req of expiredReqs) {
-            const streamId = StreamID.fromString(<string>req.StreamId.S)
-            for (const ceramic of ceramicConnections) {
-                await ceramic.pin.rm(streamId)
-            }
-
-            await helpers.deleteStreamReq(streamId)
-        }
-    })
+      await helpers.deleteStreamReq(streamId)
+    }
+  })
 })
