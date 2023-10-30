@@ -101,6 +101,10 @@ hermetic-tests:
 durable-tests:
 	BUILD_TAG="${BUILD_TAG}" IMAGE_NAME="${TEST_SUITE_IMAGE_NAME}" ./durable/durable-driver.sh ${DURABLE_ENV}
 
+.PHONY: schedule-durable-tests
+schedule-durable-tests:
+	BUILD_TAG="${BUILD_TAG}" ./ci-scripts/schedule_durable_tests.sh ${DURABLE_ENV}
+
 # TODO Remove this target:
 # Remove flavor concept from driver.
 # We should have a single test suite with different kinds of tests
