@@ -38,6 +38,13 @@ The smoke tests, test specific behaviors of a network end to end.
 These tests do not assume any network topology.
 Smoke tests live outside of this repo.
 
+## Prerequisites
+
+These test assume you have already set up Keramik.  If you are not also making changes to Keramik itself,
+you will likely want to configure Keramik to always use the 'latest' imageTag.  See comments in k8s/operator/kustomization.yaml
+for instructions on how to do that.
+
+
 ## Environment Variables
 
 The test suite is configured via environment variables.
@@ -107,6 +114,25 @@ Using this workflow you can build the test suite image locally, load the image i
     make hermetic-tests
 
 Using make is not required, feel free to peak inside the Makefile in order to call the test driver directly for whatever workflow you may need.
+
+
+### Debugging failures
+
+If you want to get the logs from any process started as part of running tests (the ceramic node, the CAS, the test output itself), you can use:
+`kubectl logs -n <namespace> <pod name>`
+
+You can see a list of running kubernetes pods and their namespace and pod name by running `k9s`.
+
+
+### Cleaning up
+
+To tear down all the pods created by running the tests, you can delete the network that they were set up in.
+
+    > kubectl get networks # Look up the network name
+    NAME                          AGE
+    smoke-basic-go-rust-dev-run   33m
+
+    > kubectl delete network smoke-basic-go-rust-dev-run # delete the network and all pods within it.
 
 ## Contributing
 
