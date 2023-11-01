@@ -1,5 +1,5 @@
 import { StreamID } from '@ceramicnetwork/streamid'
-import { afterAll, describe, expect, test } from '@jest/globals'
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals'
 
 import * as helpers from '../utils/dynamoDbHelpers.js'
 
@@ -16,6 +16,7 @@ const streamID1 = StreamID.fromString(
  * during development.
  */
 describe('tests helpers functions for interacting with DynamoDB', () => {
+  beforeAll(async () => await helpers.createAnchorTable())
   afterAll(async () => {
     await helpers.deleteStreamReq(streamID0)
     await helpers.deleteStreamReq(streamID1)

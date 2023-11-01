@@ -1,7 +1,7 @@
 import { CeramicApi, SyncOptions } from '@ceramicnetwork/common'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { afterAll, describe, expect, test } from '@jest/globals'
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals'
 
 import * as helpers from '../utils/dynamoDbHelpers.js'
 import { utilities } from '../utils/common.js'
@@ -17,6 +17,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 ///////////////////////////////////////////////////////////////////////////////
 
 describe('update', () => {
+  beforeAll(async () => await helpers.createAnchorTable())
   afterAll(async () => await helpers.cleanup())
 
   const firstRwUrl = ComposeDbUrls[0]

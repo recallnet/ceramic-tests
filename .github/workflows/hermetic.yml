@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "0 0/8 * * *" # Every 8 hours
   workflow_dispatch: # manually triggered
+    test_selector:
+      type: string
+      description: Path regex passed to Jest to select which tests to run
+      required: true
+      default: .
 
 env:
   CARGO_TERM_COLOR: always
@@ -117,7 +122,15 @@ jobs:
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
           chmod +x ./bin/hermetic-driver
-          make HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+
+          # For schedule events, "test_selector" will be null, so default to running all tests.
+          test_selector=${{ github.event.inputs.test_selector || '.' }}
+          # TODO: Uncomment once we have "fast" tests
+          # For PR and merge group events, run only "fast" tests.
+          # if [[ ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }} ]]; then
+          #     test_selector="fast"          
+          # fi
+          make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
 
   collect-results:
     name: Hermetic Test Results

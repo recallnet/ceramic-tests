@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 0/8 * * *" # Every 8 hours
   workflow_dispatch: # manually triggered
+    test_selector:
+      type: string
+      description: Path regex passed to Jest to select which tests to run
+      required: true
+      default: .
 
 env:
   CARGO_TERM_COLOR: always
@@ -113,9 +118,13 @@ jobs:
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
           chmod +x ./bin/hermetic-driver
+
+          # For schedule events, "test_selector" will be null, so default to running all tests.
+          test_selector=${{ github.event.inputs.test_selector || '.' }}
+
           # Clear the test suffix and set a 2 week TTL so that the latest suite image runs against the same long-lived
           # networks for 2 weeks before the network is cleaned up and recreated.
-          make HERMETIC_SUFFIX= HERMETIC_TTL=1209600 HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+          make TEST_SELECTOR="$test_selector" HERMETIC_SUFFIX= HERMETIC_TTL=1209600 HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
 
   collect-results:
     name: Long-Lived Hermetic Test Results

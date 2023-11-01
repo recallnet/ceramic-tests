@@ -4,7 +4,6 @@
   "description": "Ceramic Node.js Utilities",
   "type": "module",
   "scripts": {
-    "start": "NODE_OPTIONS=--experimental-vm-modules node ./.build/handlers/test-api.js",
     "build": "tsc",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },

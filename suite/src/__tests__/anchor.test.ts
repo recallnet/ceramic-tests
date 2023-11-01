@@ -1,6 +1,6 @@
 import { AnchorStatus, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { afterAll, describe, expect, test } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 import { DateTime } from 'luxon'
 
 import { newCeramic } from '../utils/ceramicHelpers.js'
@@ -9,6 +9,7 @@ import * as helpers from '../utils/dynamoDbHelpers.js'
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 describe('anchor', () => {
+  beforeAll(async () => await helpers.createAnchorTable())
   afterAll(async () => await helpers.cleanup())
 
   test('test anchors', async () => {

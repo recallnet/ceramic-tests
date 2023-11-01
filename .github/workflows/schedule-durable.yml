@@ -9,13 +9,18 @@ on:
         type: choice
         description: Durable infrastructure to run tests against
         required: true
-        default: all
+        default: dev
         options:
           - dev
           - qa
           - tnet
           - prod
           - all
+      test_selector:
+        type: string
+        description: Path regex passed to Jest to select which tests to run
+        required: true
+        default: .
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -70,8 +75,28 @@ jobs:
       -
         uses: actions/checkout@v3
       -
+        name: Get branch name
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: get_branch
+      -
         name: Schedule ${{ matrix.network }}
-        if: ${{ github.event.inputs.environment == 'all' || github.event.inputs.environment == matrix.network }}
+        # A scheduled run will not include any inputs, so we treat it as needing to test "all" networks.
+        if: ${{ github.event.inputs.environment == null || github.event.inputs.environment == 'all' || github.event.inputs.environment == matrix.network }}
         env:
           BUILD_TAG: ${{ needs.publish-suite.outputs.build_tag }}
-        run: make DURABLE_ENV=${{ matrix.network }} schedule-durable-tests
+          DURABLE_ENV: ${{ matrix.network }}
+          # This allows running durable tests using the "run-durable.yml" workflow from the same branch. If there are no
+          # changes to that workflow, then it'll be the same as "main", but if there are changes, we want the two
+          # workflows to run as a pair. The CD manager will pass the branch name along as an input to the
+          # "workflow_dispatch" API call.
+          DURABLE_TEST_BRANCH: ${{ steps.get_branch.outputs.branch }}
+        run: |
+          # For schedule events, "test_selector" will be null. Run all tests for QA but only "fast" ones for other envs.
+          test_selector=${{ github.event.inputs.test_selector || '.' }}
+          # TODO: Uncomment once we have "fast" tests
+          # if [[ -z ${{ github.event.inputs.test_selector }} ]]; then
+          #   if [[ ${{ matrix.network != 'qa' }} ]]; then
+          #     test_selector="fast"
+          #   fi
+          # fi 
+          make TEST_SELECTOR="$test_selector" schedule-durable-tests
