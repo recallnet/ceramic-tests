@@ -3,9 +3,9 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {afterAll, beforeAll, describe, expect, test} from '@jest/globals'
 
-import * as helpers from '../utils/dynamoDbHelpers.js'
-import { utilities } from '../utils/common.js'
-import { newCeramic, metadata } from '../utils/ceramicHelpers.js'
+import * as helpers from '../../utils/dynamoDbHelpers.js'
+import { utilities } from '../../utils/common.js'
+import { newCeramic, metadata } from '../../utils/ceramicHelpers.js'
 
 const delay = utilities.delay
 
@@ -32,7 +32,7 @@ describe('update', () => {
       anchor: false,
     })
     console.log(
-      `Created stream on ${firstRwUrl}: ${firstTile.id.toString()} with step ${content.step}`,
+      `Created stream on ${firstRwUrl}: ${firstTile.id.toString()} with step ${content.step}`
     )
   })
 
@@ -40,7 +40,7 @@ describe('update', () => {
     content.step++
     await firstTile.update(content, undefined, { anchor: false })
     console.log(
-      `Updated stream on ${firstRwUrl}: ${firstTile.id.toString()} with step ${content.step}`,
+      `Updated stream on ${firstRwUrl}: ${firstTile.id.toString()} with step ${content.step}`
     )
   })
 
@@ -53,14 +53,14 @@ describe('update', () => {
       await delay(5)
       const ceramic = await newCeramic(apiUrl)
       console.log(
-        `Loading stream ${firstTile.id.toString()} on ${apiUrl} with step ${content.step}`,
+        `Loading stream ${firstTile.id.toString()} on ${apiUrl} with step ${content.step}`
       )
       tile = await TileDocument.load(ceramic, firstTile.id)
       expect(tile.content).toEqual(content)
       console.log(
         `Loaded stream on ${apiUrl}: ${firstTile.id.toString()} successfully with step ${
           content.step
-        }`,
+        }`
       )
     })
     test(`sync stream on ${apiUrl}`, async () => {
@@ -73,7 +73,7 @@ describe('update', () => {
       console.log(
         `Updating stream ${firstTile.id.toString()} on ${firstRwUrl} so we can sync it on ${apiUrl} with step ${
           content.step
-        }`,
+        }`
       )
       await firstTile.update(content, undefined, { anchor: isFinalWriter })
       console.log(`Updating complete, sleeping 5 seconds before syncing`)
@@ -84,7 +84,7 @@ describe('update', () => {
       console.log(
         `Synced stream on ${apiUrl}: ${firstTile.id.toString()} successfully with step ${
           content.step
-        }`,
+        }`
       )
 
       if (isFinalWriter) {

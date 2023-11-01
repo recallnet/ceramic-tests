@@ -3,8 +3,8 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 
-import { newCeramic } from '../utils/ceramicHelpers.js'
-import * as helpers from '../utils/dynamoDbHelpers.js'
+import { newCeramic } from '../../utils/ceramicHelpers.js'
+import * as helpers from '../../utils/dynamoDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
@@ -49,8 +49,8 @@ describe('longevity', () => {
             `Loading commit ${prevCommitId} on ${apiUrl} for stream state:\n${JSON.stringify(
               StreamUtils.serializeState(tile.state),
               null,
-              2,
-            )}`,
+              2
+            )}`
           )
           const tileAtPrevCommitId = await TileDocument.load(ceramic, prevCommitId)
 
@@ -64,8 +64,8 @@ describe('longevity', () => {
             `Test failed. StreamID: ${tile.id.toString()}, state:\n${JSON.stringify(
               StreamUtils.serializeState(tile.state),
               null,
-              2,
-            )}`,
+              2
+            )}`
           )
 
           // If the test failed, we don't want to leave this stream in the database,

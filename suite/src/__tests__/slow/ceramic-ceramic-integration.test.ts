@@ -1,7 +1,7 @@
 import { CeramicApi, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { jest, describe, test, beforeAll, expect } from '@jest/globals'
-import { newCeramic, waitForAnchor, waitForCondition } from '../utils/ceramicHelpers.js'
+import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramicHelpers.js'
 
 const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from one node to another
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')

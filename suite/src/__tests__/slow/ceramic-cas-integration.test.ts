@@ -1,7 +1,7 @@
 import { AnchorStatus, CeramicApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { jest, describe, test, beforeAll, expect } from '@jest/globals'
-import { newCeramic, waitForAnchor } from '../utils/ceramicHelpers.js'
+import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
