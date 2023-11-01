@@ -30,7 +30,7 @@ docker run --rm -i \
         \"workflow\": {\"S\": \"run-durable.yml\"}, \
         \"inputs\":   {                             \
           \"M\": {                                  \
-            \"build_tag\": {\"S\": \"$tag\"},       \
+            \"build_tag\": {\"S\": \"$tag\"}        \
           }                                         \
         }                                           \
       }                                             \
