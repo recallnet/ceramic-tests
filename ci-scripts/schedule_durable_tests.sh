@@ -25,8 +25,7 @@ curl -s https://raw.githubusercontent.com/3box/pipeline-tools/develop/ci/scripts
         \"workflow\": {\"S\": \"run-durable.yml\"}, \
         \"inputs\":   {                             \
           \"M\": {                                  \
-            \"build_tag\":   {\"S\": \"$tag\"},     \
-            \"environment\": {\"S\": \"$network\"}  \
+            \"build_tag\": {\"S\": \"$tag\"},       \
           }                                         \
         }                                           \
       }                                             \
