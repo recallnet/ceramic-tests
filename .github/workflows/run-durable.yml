@@ -1,0 +1,69 @@
+name: Run Durable tests
+
+on:
+  # "workflow_dispatch" allows this workflow to be triggered manually or via API through the CD manager
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Durable infrastructure to run tests against
+        required: true
+        default: "dev"
+        options:
+          - dev
+          - qa
+          - tnet
+          - prod
+      build_tag:
+        type: string
+        description: Build tag for image used for running tests
+        required: true
+        default: "latest"
+      # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
+      # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
+      # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
+      # workflow runs and identify which one corresponds to a particular job so that it can be tracked.
+      # Ref: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
+      job_id:
+        type: string
+        description: Test job identifier
+        required: true
+        default: "manual"
+
+jobs:
+  run-tests:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        network: [dev, qa, tnet, prod]
+    steps:
+      -
+        # We're piggybacking on this step to inject the CD manager job ID into this workflow
+        name: ${{ github.event.inputs.job_id }}
+        uses: actions/checkout@v3
+      -
+        name: Test ${{ matrix.network }}
+        if: ${{ github.event.inputs.environment == matrix.network }}
+        env:
+          BUILD_TAG: ${{ github.event.inputs.build_tag }}
+        run: |
+          if [[ -z "$BUILD_TAG" ]]; then
+            BUILD_TAG=latest
+          fi
+          make DURABLE_ENV=${{ matrix.network }} durable-tests
+
+  collect-results:
+    name: Durable Test Results
+    if: ${{ github.event.inputs.job_id != null }}
+    runs-on: ubuntu-latest
+    needs: [run-tests]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+               contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+          }}
