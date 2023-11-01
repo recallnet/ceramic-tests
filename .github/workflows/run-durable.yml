@@ -1,10 +1,24 @@
 name: Run Durable tests
 
 on:
-  # "workflow_dispatch" allows this workflow to be triggered manually or via API. This workflow is only meant for the CD
-  # manager to invoke and monitor.
+  # "workflow_dispatch" allows this workflow to be triggered manually or via API through the CD manager
   workflow_dispatch:
     inputs:
+      environment:
+        type: choice
+        description: Durable infrastructure to run tests against
+        required: true
+        default: "dev"
+        options:
+          - dev
+          - qa
+          - tnet
+          - prod
+      build_tag:
+        type: string
+        description: Build tag for image used for running tests
+        required: true
+        default: "latest"
       # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
       # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
       # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
@@ -12,27 +26,9 @@ on:
       # Ref: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
       job_id:
         type: string
-        description: ⚠️ DO NOT SPECIFY MANUALLY ⚠️
+        description: Test job identifier
         required: true
-      # The "environment" input is used by the CD manager to target the right durable environment when initiating a test
-      # run. This value is communicated to the CD manager when a workflow job is scheduled, then sent back for this
-      # workflow to use when running tests.
-      environment:
-        type: choice
-        description: ⚠️ DO NOT SPECIFY MANUALLY ⚠️
-        required: true
-        options:
-          - dev
-          - qa
-          - tnet
-          - prod
-      # The "build_tag" input is used by the CD manager to use the right build image when initiating a test run. This
-      # value is communicated to the CD manager when a workflow job is scheduled, then sent back for this workflow to
-      # use when running tests.
-      build_tag:
-        type: string
-        description: ⚠️ DO NOT SPECIFY MANUALLY ⚠️
-        required: false
+        default: "manual"
 
 jobs:
   run-tests:
