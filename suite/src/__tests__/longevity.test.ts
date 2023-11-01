@@ -19,6 +19,7 @@ describe('longevity', () => {
   let streamIds: Array<StreamID> = []
 
   beforeAll(async () => {
+    await helpers.createAnchorTable()
     const anchoredReqs = await helpers.fetchAnchoredStreamReqs()
     console.log(`Found ${anchoredReqs.length} already anchored streams in the database to load`)
     streamIds = anchoredReqs.map((req) => {

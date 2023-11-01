@@ -129,12 +129,9 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     wait_for_network(client.clone(), &network_name, opts.network_timeout).await?;
 
     // Create the job
-    let job_name = create_resource_namespaced(
-        client.clone(),
-        &namespace,
-        job(&opts.flavor, &namespace, opts.test_image),
-    )
-    .await?;
+    let job_name =
+        create_resource_namespaced(client.clone(), &namespace, job(&namespace, opts.clone()))
+            .await?;
 
     match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
         (JobResult::Pass, logs) => {
@@ -442,10 +439,10 @@ fn process_peers() -> ConfigMap {
     }
 }
 
-fn job(flavor: &Flavor, namespace: &str, image: Option<String>) -> Job {
-    match flavor {
-        Flavor::Property => property_job(namespace, image),
-        Flavor::Smoke => smoke_job(namespace, image),
+fn job(namespace: &str, opts: TestOpts) -> Job {
+    match &opts.flavor {
+        Flavor::Property => property_job(namespace, opts.test_image),
+        Flavor::Smoke => smoke_job(namespace, opts.test_image, opts.test_selector),
     }
 }
 
@@ -514,7 +511,7 @@ fn property_job(namespace: &str, image: Option<String>) -> Job {
     }
 }
 
-fn smoke_job(namespace: &str, image: Option<String>) -> Job {
+fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> Job {
     let (image, image_pull_policy) = if let Some(image) = image {
         (Some(image), Some("IfNotPresent".to_owned()))
     } else {
@@ -545,12 +542,12 @@ fn smoke_job(namespace: &str, image: Option<String>) -> Job {
                         image_pull_policy,
                         resources: Some(ResourceRequirements {
                             limits: Some(BTreeMap::from_iter([
-                                ("cpu".to_owned(), Quantity("250m".to_owned())),
+                                ("cpu".to_owned(), Quantity("500m".to_owned())),
                                 ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
                                 ("memory".to_owned(), Quantity("1Gi".to_owned())),
                             ])),
                             requests: Some(BTreeMap::from_iter([
-                                ("cpu".to_owned(), Quantity("250m".to_owned())),
+                                ("cpu".to_owned(), Quantity("500m".to_owned())),
                                 ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
                                 ("memory".to_owned(), Quantity("1Gi".to_owned())),
                             ])),
@@ -563,7 +560,7 @@ fn smoke_job(namespace: &str, image: Option<String>) -> Job {
                         }]),
                         env: Some(vec![
                             EnvVar {
-                                name: "ENV_PATH".to_owned(),
+                                name: "DOTENV_CONFIG_PATH".to_owned(),
                                 value: Some("/config/.env".to_owned()),
                                 ..Default::default()
                             },
@@ -583,8 +580,8 @@ fn smoke_job(namespace: &str, image: Option<String>) -> Job {
                                 ..Default::default()
                             },
                             EnvVar {
-                                name: "JEST_ARGS".to_owned(),
-                                value: Some("--reporters=default".to_owned()),
+                                name: "TEST_SELECTOR".to_owned(),
+                                value: Some(test_selector),
                                 ..Default::default()
                             },
                         ]),

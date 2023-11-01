@@ -13,7 +13,16 @@ RUN pnpm install
 
 # copy all files not excluded by .dockerignore of current directory to docker container
 COPY src/ ./src
+COPY env/ ./env
 
 RUN pnpm run build
 
-ENTRYPOINT ["/app/entrypoint.sh", "run", "start"]
+ENV STAGE "dev"
+
+# Set the default .env path for Jest to load
+ENV DOTENV_CONFIG_PATH "./env/.env.$STAGE"
+
+# Select all tests by default
+ENV TEST_SELECTOR "."
+
+ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--runInBand", "--reporters", "default", "--setupFiles", "dotenv/config", "--testPathPattern", "$TEST_SELECTOR"]

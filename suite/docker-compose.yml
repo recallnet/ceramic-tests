@@ -26,9 +26,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=.
       - DB_ENDPOINT=http://localstack:4566
       - DOCKER_HOST=unix:///var/run/docker.sock
-      # Overrides the Jest reporters to only use the default and not the custom (ECS) reporter
-      - JEST_ARGS=--reporters=default
-      - COMPOSEDB_URLS=https://ceramic-private-dev.3boxlabs.com,https://ceramic-dev.3boxlabs.com
+      - STAGE=dev
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     depends_on:

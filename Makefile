@@ -32,6 +32,12 @@ HERMETIC_TTL ?= 28800
 # Environment to run durable tests against
 DURABLE_ENV ?= dev
 
+# Branch from which to use the durable test workflow
+DURABLE_TEST_BRANCH ?= main
+
+# Test selector
+TEST_SELECTOR ?= .
+
 PNPM = pnpm
 
 .PHONY: all
@@ -95,15 +101,16 @@ hermetic-tests:
 		--flavor smoke \
 		--suffix "${HERMETIC_SUFFIX}" \
 		--network-ttl ${HERMETIC_TTL} \
-		--test-image "${TEST_SUITE_IMAGE}"
+		--test-image "${TEST_SUITE_IMAGE}" \
+		--test-selector "${TEST_SELECTOR}"
 
 .PHONY: durable-tests
 durable-tests:
-	BUILD_TAG="${BUILD_TAG}" IMAGE_NAME="${TEST_SUITE_IMAGE_NAME}" ./durable/durable-driver.sh ${DURABLE_ENV}
+	BUILD_TAG="${BUILD_TAG}" IMAGE_NAME="${TEST_SUITE_IMAGE_NAME}" ./durable/durable-driver.sh "${DURABLE_ENV}" "${TEST_SELECTOR}"
 
 .PHONY: schedule-durable-tests
 schedule-durable-tests:
-	BUILD_TAG="${BUILD_TAG}" ./ci-scripts/schedule_durable_tests.sh ${DURABLE_ENV}
+	BUILD_TAG="${BUILD_TAG}" TEST_BRANCH="${DURABLE_TEST_BRANCH}" ./ci-scripts/schedule_durable_tests.sh "${DURABLE_ENV}" "${TEST_SELECTOR}"
 
 # TODO Remove this target:
 # Remove flavor concept from driver.

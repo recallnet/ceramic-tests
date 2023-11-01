@@ -16,7 +16,7 @@ pub enum Command {
     Test(TestOpts),
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct TestOpts {
     /// Path to network yaml file
     #[arg(short, long)]
@@ -48,6 +48,10 @@ pub struct TestOpts {
     /// Number of seconds to wait for the test job to finish.
     #[arg(long, default_value_t = 300)]
     job_timeout: u32,
+
+    /// Path regex passed to Jest to select which tests to run.
+    #[arg(long, default_value = ".")]
+    test_selector: String,
 }
 
 #[derive(Debug, Clone)]

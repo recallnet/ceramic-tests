@@ -19,6 +19,11 @@ on:
         description: Build tag for image used for running tests
         required: true
         default: latest
+      test_selector:
+        type: string
+        description: Path regex passed to Jest to select which tests to run
+        required: true
+        default: .
       # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
       # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
       # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
@@ -53,6 +58,7 @@ jobs:
         if: ${{ github.event.inputs.environment == matrix.network }}
         env:
           BUILD_TAG: ${{ github.event.inputs.build_tag }}
+          TEST_SELECTOR: ${{ github.event.inputs.test_selector }}
         run: |
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest
