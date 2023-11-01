@@ -7,8 +7,13 @@ ttl=$(date +%s -d "14 days")
 tag=${BUILD_TAG-latest}
 network=${1-dev}
 
-curl -s https://raw.githubusercontent.com/3box/pipeline-tools/develop/ci/scripts/schedule_job.sh | bash -s -- \
-  "$network"                                        \
+docker run --rm -i \
+  -e "AWS_REGION=$AWS_REGION" \
+  -e "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" \
+  -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
+  -v ~/.aws:/root/.aws \
+  -v "$PWD":/aws \
+  amazon/aws-cli dynamodb put-item --table-name "ceramic-$network-ops" --item \
   "{                                                \
     \"id\":     {\"S\": \"$id\"},                   \
     \"job\":    {\"S\": \"$job_id\"},               \
