@@ -8,7 +8,7 @@ on:
         type: choice
         description: Durable infrastructure to run tests against
         required: true
-        default: "dev"
+        default: dev
         options:
           - dev
           - qa
@@ -18,7 +18,7 @@ on:
         type: string
         description: Build tag for image used for running tests
         required: true
-        default: "latest"
+        default: latest
       # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
       # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
       # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
@@ -28,7 +28,12 @@ on:
         type: string
         description: Test job identifier
         required: true
-        default: "manual"
+        default: manual
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   run-tests:

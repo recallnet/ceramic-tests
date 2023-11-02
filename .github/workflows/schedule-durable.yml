@@ -2,14 +2,14 @@ name: Schedule Durable tests
 
 on:
   schedule:
-    - cron: "0 0/8 * * *" # Every 8 hours
+    - cron: 0 0/8 * * * # Every 8 hours
   workflow_dispatch:
     inputs:
       environment:
         type: choice
-        description: "Environment name"
+        description: Durable infrastructure to run tests against
         required: true
-        default: "all"
+        default: all
         options:
           - dev
           - qa
