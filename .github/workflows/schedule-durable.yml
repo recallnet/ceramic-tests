@@ -91,12 +91,12 @@ jobs:
           # "workflow_dispatch" API call.
           DURABLE_TEST_BRANCH: ${{ steps.get_branch.outputs.branch }}
         run: |
-          # For schedule events, "test_selector" will be null. Run all tests for QA but only "fast" ones for other envs.
+          # For scheduled events, "test_selector" will be null. Run all tests for QA but only "fast" ones for other envs.
           test_selector=${{ github.event.inputs.test_selector || '.' }}
-          # TODO: Uncomment once we have "fast" tests
-          # if [[ -z ${{ github.event.inputs.test_selector }} ]]; then
-          #   if [[ ${{ matrix.network != 'qa' }} ]]; then
-          #     test_selector="fast"
-          #   fi
-          # fi 
+
+          if [[ -z ${{ github.event.inputs.test_selector }} ]]; then
+            if [[ ${{ matrix.network != 'qa' }} ]]; then
+              test_selector="fast"
+            fi
+          fi
           make TEST_SELECTOR="$test_selector" schedule-durable-tests
