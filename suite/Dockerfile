@@ -17,10 +17,8 @@ COPY env/ ./env
 
 RUN pnpm run build
 
-ENV STAGE "dev"
-
 # Set the default .env path for Jest to load
-ENV DOTENV_CONFIG_PATH "./env/.env.$STAGE"
+ENV DOTENV_CONFIG_PATH "./env/.env.dev"
 
 # Select all tests by default
 ENV TEST_SELECTOR "."

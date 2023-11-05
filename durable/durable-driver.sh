@@ -31,6 +31,6 @@ docker run \
     -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
     -e AWS_REGION="${AWS_REGION}" \
     -e DB_ENDPOINT="${DB_ENDPOINT}" \
-    -e STAGE="${DURABLE_ENV}" \
+    -e DOTENV_CONFIG_PATH="./env/.env.${DURABLE_ENV}" \
     -e TEST_SELECTOR="${TEST_SELECTOR}" \
     "${IMAGE_NAME}":"$tag"
