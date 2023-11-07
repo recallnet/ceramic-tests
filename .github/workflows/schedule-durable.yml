@@ -94,8 +94,8 @@ jobs:
           # For scheduled events, "test_selector" will be null. Run all tests for QA but only "fast" ones for other
           # envs.
           test_selector=${{ github.event.inputs.test_selector || '.' }}
-          if [[ ${{ github.event.inputs.test_selector == null }} ]]; then
-            if [[ ${{ matrix.network != 'qa' }} ]]; then
+          if [[ ${{ github.event.inputs.test_selector == null }} == 'true' ]]; then
+            if [[ ${{ matrix.network != 'qa' }} == 'true' ]]; then
               test_selector="fast"
             fi
           fi
