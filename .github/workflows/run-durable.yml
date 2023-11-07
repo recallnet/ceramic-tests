@@ -54,6 +54,15 @@ jobs:
         name: ${{ github.event.inputs.job_id }}
         uses: actions/checkout@v3
       -
+        name: Login to Public ECR
+        uses: docker/login-action@v2
+        with:
+          registry: public.ecr.aws
+          username: ${{ env.AWS_ACCESS_KEY_ID }}
+          password: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        env:
+          AWS_REGION: us-east-1
+      -
         name: Test ${{ matrix.network }}
         if: ${{ github.event.inputs.environment == matrix.network }}
         env:
