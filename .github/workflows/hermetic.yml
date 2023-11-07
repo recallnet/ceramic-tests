@@ -129,7 +129,7 @@ jobs:
 
           # For PR and merge group events, run only "fast" tests.
           # Note it is not possible to override "test_selector" for these types of events.
-          if [[ ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }} ]]; then
+          if [[ ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }} == 'true' ]]; then
               test_selector="fast"
           fi
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
