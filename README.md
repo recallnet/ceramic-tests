@@ -16,7 +16,7 @@ The test drivers run the test image providing the correct configuration for thei
 Hermetic infrastructure refers to infrastructure this is isolated from the rest of the world. In other words it controls all of its dependencies.
 Testing against hermetic infrastructure allows for easier debugging as all dependencies are controlled and can be isolated for potential bugs.
 
-Durable infrastructure refers to infrastructure running connected to the rest of the world. For example other anonymous Ceramic nodes may connect to this infrastructure and it relies on a public Etherium blockchain.
+Durable infrastructure refers to infrastructure running connected to the rest of the world. For example other anonymous Ceramic nodes may connect to this infrastructure and it relies on a public Ethereum blockchain.
 Testing against durable infrastructure allows for better coverage of real world edge cases.
 
 ## Flavors
@@ -74,7 +74,7 @@ There are some helpful scripts in this repo to make testing locally possible:
     source ./port-forward.sh
 
     # Run cargo test locally using the newly exported env vars.
-    # Optionaly you can use `make test`
+    # Optionally you can use `make test`
     cd test-suite && pnpm run start
 
 >NOTE: The port-forward script will leave `kubectl` process running in the background to forward the ports.
