@@ -21,4 +21,4 @@ ENV DOTENV_CONFIG_PATH "./env/.env.dev"
 # Select all tests by default
 ENV TEST_SELECTOR "."
 
-ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--runInBand", "--reporters", "default", "--setupFiles", "dotenv/config", "--testPathPattern", "$TEST_SELECTOR"]
+ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--testPathPattern", "$TEST_SELECTOR"]
