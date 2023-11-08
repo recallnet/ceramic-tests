@@ -64,7 +64,7 @@ Eventually we expect the `js-ceramic` repo/process to be renamed to `js-composed
 
 Tests are run in CI via the build docker image. However locally its useful to be able to run the tests without doing an image build.
 There are some helpful scripts in this repo to make testing locally possible:
-
+```bash
     # Create the network
     kubectl apply -f networks/basic-rust.yaml
 
@@ -73,15 +73,19 @@ There are some helpful scripts in this repo to make testing locally possible:
     # We `source` the script so it can export the env vars.
     source ./port-forward.sh
 
-    # Run cargo test locally using the newly exported env vars.
-    # Optionally you can use `make test`
-    cd test-suite && pnpm run start
-
+    # This will run "fast" tests locally using the newly exported env vars.
+    cd suite
+    pnpm run test --testPathPattern fast
+```
 >NOTE: The port-forward script will leave `kubectl` process running in the background to forward the ports.
 The script kills those processes and creates new ones. However if you need you can kill them directly.
 The script should be run anytime a pod in the network restarts.
 
-
+You can also run these tests against durable infrastructure (e.g. QA):
+```bash
+    cd suite
+    DURABLE_ENV=qa DOTENV_CONFIG_PATH=./env/.env."$DURABLE_ENV" pnpm run test --testPathPattern fast
+```
 ### Visualizing Topology
 
 When debugging a test failure it can be helpful to visualize the current network topology.
