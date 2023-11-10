@@ -736,7 +736,7 @@ fn localstack_stateful_set(namespace: &str) -> StatefulSet {
                         }),
                         volume_mounts: Some(vec![VolumeMount{
                             name: LOCALSTACK_DATA_NAME.to_owned(),
-                            mount_path: "/tmp/localstack".to_owned(),
+                            mount_path: "/var/lib/localstack".to_owned(),
                         ..Default::default()
                         }]),
                         ..Default::default()
