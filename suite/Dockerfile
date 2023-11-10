@@ -15,8 +15,6 @@ RUN pnpm install
 COPY src/ ./src
 COPY env/ ./env
 
-RUN pnpm run build
-
 # Set the default .env path for Jest to load
 ENV DOTENV_CONFIG_PATH "./env/.env.dev"
 
