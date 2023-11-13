@@ -25,7 +25,7 @@ ceramic-kubo-rpc-server = { git = "https://github.com/3box/rust-ceramic", branch
 dotenvy = "0.15.7"
 hyper = { version = "0.14.27", features = ["client"] }
 rand = "0.8.5"
-schemars = "0.8.13"
+schemars = "0.8.16"
 serde = { version = "1.0.188", features = ["serde_derive"] }
 swagger = "6.3.0"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread", "fs"] }
