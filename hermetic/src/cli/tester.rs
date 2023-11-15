@@ -516,7 +516,7 @@ fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> J
         (Some(image), Some("IfNotPresent".to_owned()))
     } else {
         (
-            Some("public.ecr.aws/r5b3e0r5/3box/ceramic-smoke-tests".to_owned()),
+            Some("public.ecr.aws/r5b3e0r5/3box/ceramic-tests-suite".to_owned()),
             Some("Always".to_owned()),
         )
     };
