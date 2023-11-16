@@ -1,4 +1,6 @@
-type GenericModel @createModel(accountRelation: LIST, description: "Very basic profile") {
+type GenericModel @createModel(accountRelation: LIST, description: "Very basic profile") 
+@createIndex(fields: [{ path: "numericalField" }])
+@createIndex(fields: [{ path: "textField" }]) {
     numericalField: Int @int(min: 1, max: 100)
     textField: String @string(minLength: 5, maxLength: 50)
     booleanField: Boolean
