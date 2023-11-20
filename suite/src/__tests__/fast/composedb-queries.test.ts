@@ -1,9 +1,8 @@
 import {afterAll, beforeAll, describe, expect, test} from '@jest/globals'
 import * as helpers from '../../utils/dynamoDbHelpers.js'
+import * as testHelpers from '../../utils/composeDBHelpers.js'
 import { ComposeClient }from '@composedb/client'
-import { definition } from   './__generated__/definition.js'
 
-// Environment variables
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11,19 +10,18 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 ///////////////////////////////////////////////////////////////////////////////
 
 describe('create/update/queries on ComposeDB Models', () => {
-    //TODO maybe put all of these in a single object
     let id: string
+    let compose: ComposeClient;
     const originalText = `Sample Text was created at ${Date.now().toString()}`
     const updatedText = originalText + " and updated"
     const numValue = Math.floor((Math.random() * 100) + 1) // Random number between 1 and 100
     const updatedNumValue = numValue + 1 
     const boolValue = true;
-    beforeAll(async () => {
-   
-    })//TODO deploy model here if it doesn't exists
-    afterAll(async () => await helpers.cleanup())//TODO
 
-    const compose = new ComposeClient({ ceramic: ComposeDbUrls[0], definition })
+    beforeAll(async () => {
+        compose = await testHelpers.setUpEnvironment(ComposeDbUrls[0])
+    })
+    afterAll(async () => await helpers.cleanup())//TODO define what should happen after
 
     test('test create', async () => {
         const response = await compose.executeQuery(`mutation {
@@ -92,7 +90,7 @@ describe('create/update/queries on ComposeDB Models', () => {
     test('test query', async () => {
        const response = await compose.executeQuery(`
        query numericalFieldFiltered {
-        genericModelIndex(first: 1, filters: { where: {numericalField: {equalTo: ${updatedNumValue}} } }) {
+        genericModelIndex(first: 1, filters: { where: {textField: {equalTo: ${updatedText}} } }) {
             edges {
                 node {
                     id
