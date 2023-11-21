@@ -71,7 +71,7 @@ describe('create/update/queries on ComposeDB Models', () => {
            }
          }
        }`)
-       console.log(originalText, response);
+
        expect(response.errors).toBeUndefined()
        expect(response.data).not.toBeUndefined()
        expect(response.data?.genericModelIndex).not.toBeUndefined()

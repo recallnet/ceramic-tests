@@ -1,0 +1,2 @@
+// This is an auto-generated file, do not edit manually
+export const definition = {"models":{"GenericModel":{"id":"kjzl6hvfrbw6cbe0jh2yw7zsybw4eklnnzaamamnu0utqeh0xq1lg3bfkz7trzd","accountRelation":{"type":"list"}}},"objects":{"GenericModel":{"textField":{"type":"string","required":false,"indexed":true},"booleanField":{"type":"boolean","required":false},"numericalField":{"type":"integer","required":false,"indexed":true}}},"enums":{},"accountData":{"genericModelList":{"type":"connection","name":"GenericModel"}}}

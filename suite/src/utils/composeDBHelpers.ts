@@ -12,9 +12,9 @@ import { createComposite, writeEncodedComposite, writeEncodedCompositeRuntime } 
  */
 //TODO avoid creating a new model if it already exists
 export async function setUpEnvironment(apiUrl: string) {
-    const modelFile = "my-test-schema.graphql"
-    const compositeFile = "my-composite.json"
-    const definitionFile = "../__generated__/definition.js"
+    const modelFile = "./src/composites/my-test-schema.graphql"
+    const compositeFile = "./src/composites/my-composite.json"
+    const definitionFile = "src/__generated__/definition.js"
     const seed = new Uint8Array([//Random numbers
         192,  16, 89, 183,  66, 111,  35,  98,
         211, 155, 35, 149, 177, 242, 119,  55,
@@ -29,9 +29,9 @@ export async function setUpEnvironment(apiUrl: string) {
     await did.authenticate()
     ceramic.did = did
 
-    const composite = await createComposite(ceramic, './src/composites/' + modelFile)
+    const composite = await createComposite(ceramic, modelFile)
 
-    await writeEncodedComposite(composite, './' + compositeFile)
+    await writeEncodedComposite(composite, compositeFile)
 
     await writeEncodedCompositeRuntime(
         ceramic,
@@ -39,7 +39,7 @@ export async function setUpEnvironment(apiUrl: string) {
         definitionFile
     )
 
-    const definitionModule = await import(definitionFile)
+    const definitionModule = await import('../../' + definitionFile)
 
     const definition = definitionModule.definition
     const compose = new ComposeClient({ ceramic: apiUrl, definition })
