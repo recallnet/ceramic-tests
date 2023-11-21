@@ -1,10 +1,10 @@
 import {afterAll, beforeAll, describe, expect, test} from '@jest/globals'
 import * as helpers from '../../utils/dynamoDbHelpers.js'
 import * as testHelpers from '../../utils/composeDBHelpers.js'
-import { ComposeClient }from '@composedb/client'
+import { ComposeClient } from '@composedb/client'
 
-const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-
+//const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const ComposeDbUrls = ['http://localhost:7007']
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update/Queries ComposeDB Models Tests
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +57,31 @@ describe('create/update/queries on ComposeDB Models', () => {
         expect(record.booleanField).toBe(boolValue)
     })
 
+    test('test query', async () => {
+        const response = await compose.executeQuery(`
+        query numericalFieldFiltered {
+         genericModelIndex(first: 1, filters: { where: {textField: {equalTo: "${originalText}"} } }) {
+             edges {
+                 node {
+                     id
+                     numericalField
+                     textField
+                     booleanField
+                 }
+           }
+         }
+       }`)
+       console.log(originalText, response);
+       expect(response.errors).toBeUndefined()
+       expect(response.data).not.toBeUndefined()
+       expect(response.data?.genericModelIndex).not.toBeUndefined()
+       const record = (response.data?.genericModelIndex as any).edges.pop().node
+ 
+       expect(record.numericalField).toBe(numValue)
+        expect(record.textField).toBe(originalText)
+        expect(record.booleanField).toBe(boolValue)
+     })
+
     test('test update', async () => {
        const response = await compose.executeQuery(`mutation UpdateGenericModel {
         updateGenericModel(
@@ -81,30 +106,6 @@ describe('create/update/queries on ComposeDB Models', () => {
       expect(response.data?.updateGenericModel).not.toBeUndefined()
 
       const record = (response.data?.updateGenericModel as any).document
-
-      expect(record.numericalField).toBe(updatedNumValue)
-      expect(record.textField).toBe(updatedText)
-      expect(record.booleanField).toBe(!boolValue)
-    })
-
-    test('test query', async () => {
-       const response = await compose.executeQuery(`
-       query numericalFieldFiltered {
-        genericModelIndex(first: 1, filters: { where: {textField: {equalTo: ${updatedText}} } }) {
-            edges {
-                node {
-                    id
-                    numericalField
-                    textField
-                    booleanField
-                }
-          }
-        }
-      }`)
-      expect(response.errors).toBeUndefined()
-      expect(response.data).not.toBeUndefined()
-      expect(response.data?.genericModelIndex).not.toBeUndefined()
-      const record = (response.data?.genericModelIndex as any).edges.pop().node
 
       expect(record.numericalField).toBe(updatedNumValue)
       expect(record.textField).toBe(updatedText)
