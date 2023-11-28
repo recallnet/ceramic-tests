@@ -63,6 +63,18 @@ jobs:
         env:
           AWS_REGION: us-east-1
       -
+        # TODO: Use a separate cluster for durable nodes, and eventually separate clusters for each network.
+        name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      -
+        name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_ZONE }}
+      -
         name: Test ${{ matrix.network }}
         if: ${{ github.event.inputs.environment == matrix.network }}
         env:
@@ -72,6 +84,8 @@ jobs:
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest
           fi
+          # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
+          source ./port-forward.sh "keramik-${{ matrix.network }}"
           make DURABLE_ENV=${{ matrix.network }} durable-tests
 
   collect-results:

@@ -4,6 +4,7 @@ import { jest, describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+    .concat(String(process.env.EXTRA_COMPOSEDB_URLS).split(','))
 
 describe('Ceramic<->CAS basic integration', () => {
   jest.setTimeout(1000 * 60 * 60) // 1 hour

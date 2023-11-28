@@ -8,8 +8,13 @@ set -m
 pids=$(jobs -p)
 if [ -n "$pids" ]
 then
-    kill $pids
-    wait $pids
+    kill "$pids"
+    wait "$pids"
+fi
+
+if [ -n "$1" ]
+then
+  namespace_flag="-n $1"
 fi
 
 composedb=7007
@@ -20,10 +25,10 @@ step=1
 COMPOSEDB_URLS=''
 CERAMIC_URLS=''
 
-for pod in $(kubectl get pods -l app=ceramic -o json | jq -r '.items[].metadata.name')
+for pod in $(kubectl $namespace_flag get pods -l app=ceramic -o json | jq -r '.items[].metadata.name')
 do
-    composedb_local=$((composedb + $offset))
-    ceramic_local=$((ceramic + $offset))
+    composedb_local=$((composedb + offset))
+    ceramic_local=$((ceramic + offset))
 
     if [ $offset != 1 ]
     then
@@ -35,9 +40,9 @@ do
     COMPOSEDB_URLS="${COMPOSEDB_URLS}http://localhost:$composedb_local"
     CERAMIC_URLS="${CERAMIC_URLS}http://localhost:$ceramic_local"
 
-    kubectl port-forward $pod $composedb_local:$composedb $ceramic_local:$ceramic >/dev/null  &
+    kubectl port-forward $namespace_flag "$pod" $composedb_local:$composedb $ceramic_local:$ceramic >/dev/null  &
 
-    offset=$((offset + $step))
+    offset=$((offset + step))
 done
 
 export COMPOSEDB_URLS=$COMPOSEDB_URLS

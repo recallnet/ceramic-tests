@@ -9,6 +9,7 @@ import * as helpers from '../../utils/dynamoDbHelpers.js'
 
 // Environment variables
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+    .concat(String(process.env.EXTRA_COMPOSEDB_URLS).split(','))
 
 /**
  * TODO: Skipping this test for now because it is not required and needs some

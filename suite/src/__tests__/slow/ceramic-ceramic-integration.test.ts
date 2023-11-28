@@ -5,6 +5,7 @@ import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramic
 
 const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from one node to another
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+    .concat(String(process.env.EXTRA_COMPOSEDB_URLS).split(','))
 
 const createWithOneLoadWithTheOther = async (
   ceramic1: CeramicApi,
