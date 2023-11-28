@@ -56,7 +56,9 @@ async function checkIfExists(ceramic: CeramicClient, compositeFile: string) {
     const existingComposite = await import('../../' + compositeFile)
     const id = Object.keys(existingComposite.default.models)[0]
     const isCreated = await loadStream(ceramic, id)
-    return isCreated? true: false
+    const result = isCreated? true: false
+    if (result) console.log(`Found existing model in network. ModelID: ${id}`)
+    return result
 }
 
 async function loadStream(ceramic: CeramicClient, id: string) {
