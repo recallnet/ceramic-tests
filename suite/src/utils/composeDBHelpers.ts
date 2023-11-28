@@ -10,7 +10,6 @@ import { createComposite, writeEncodedComposite, writeEncodedCompositeRuntime } 
  * Creates a new model if it doesn't exists and returns a compose client instance.
  * @param apiUrl
  */
-//TODO avoid creating a new model if it already exists
 export async function setUpEnvironment(apiUrl: string) {
     const modelFile = "./src/composites/my-test-schema.graphql"
     const compositeFile = "./src/composites/my-composite.json"
@@ -29,15 +28,19 @@ export async function setUpEnvironment(apiUrl: string) {
     await did.authenticate()
     ceramic.did = did
 
-    const composite = await createComposite(ceramic, modelFile)
+    const exists = checkIfExists(ceramic, compositeFile)
 
-    await writeEncodedComposite(composite, compositeFile)
-
-    await writeEncodedCompositeRuntime(
-        ceramic,
-        compositeFile,
-        definitionFile
-    )
+    if (!exists) {
+        const composite = await createComposite(ceramic, modelFile)
+    
+        await writeEncodedComposite(composite, compositeFile)
+    
+        await writeEncodedCompositeRuntime(
+            ceramic,
+            compositeFile,
+            definitionFile
+        )
+    }
 
     const definitionModule = await import('../../' + definitionFile)
 
@@ -46,4 +49,20 @@ export async function setUpEnvironment(apiUrl: string) {
     compose.setDID(did) 
     
     return compose
+}
+
+async function checkIfExists(ceramic: CeramicClient, compositeFile: string) {
+    //TODO name file depending on environmental variable of network to get the id deployed on said network
+    const existingComposite = await import('../../' + compositeFile)
+    const id = Object.keys(existingComposite.default.models)[0]
+    const isCreated = await loadStream(ceramic, id)
+    return isCreated? true: false
+}
+
+async function loadStream(ceramic: CeramicClient, id: string) {
+    try {
+        return await ceramic.loadStream(id)
+    } catch {
+        return undefined
+    }
 }
