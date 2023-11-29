@@ -703,7 +703,7 @@ fn localstack_stateful_set(namespace: &str) -> StatefulSet {
                 spec: Some(PodSpec {
                     containers: vec![Container {
                         name: LOCALSTACK_SERVICE_NAME.to_owned(),
-                        image: Some("localstack/localstack@sha256:539f4145f9b3610d11b292457e657b7fd6ad0f7c93e206620056424faacf68b5".to_owned()),
+                        image: Some("gresau/localstack-persist:3".to_owned()),
                         resources: Some(ResourceRequirements {
                             limits: Some(BTreeMap::from_iter([
                                 ("cpu".to_owned(), Quantity("500m".to_owned())),
@@ -736,7 +736,7 @@ fn localstack_stateful_set(namespace: &str) -> StatefulSet {
                         }),
                         volume_mounts: Some(vec![VolumeMount{
                             name: LOCALSTACK_DATA_NAME.to_owned(),
-                            mount_path: "/var/lib/localstack".to_owned(),
+                            mount_path: "/persisted-data".to_owned(),
                         ..Default::default()
                         }]),
                         ..Default::default()
