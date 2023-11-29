@@ -48,6 +48,16 @@ jobs:
       fail-fast: false
       matrix:
         network: [dev, qa, tnet, prod]
+        include:
+        # includes a new variable for each network (this is effectively a switch statement)
+          - network: dev
+            admin_did_seed_secret: DEV_COMPOSEDB_ADMIN_DID_SEEDS
+          - network: qa
+            admin_did_seed_secret: QA_COMPOSEDB_ADMIN_DID_SEEDS
+          - network: tnet
+            admin_did_seed_secret: TNET_COMPOSEDB_ADMIN_DID_SEEDS
+          - network: prod
+            admin_did_seed_secret: PROD_COMPOSEDB_ADMIN_DID_SEEDS
     steps:
       -
         # We're piggybacking on this step to inject the CD manager job ID into this workflow
@@ -80,6 +90,7 @@ jobs:
         env:
           BUILD_TAG: ${{ github.event.inputs.build_tag }}
           TEST_SELECTOR: ${{ github.event.inputs.test_selector }}
+          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets[matrix.admin_did_seed_secret] }}
         run: |
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest

@@ -36,4 +36,5 @@ docker run --network="host" \
     -v $(pwd)/suite/env/.env."${DURABLE_ENV}":/config/.env \
     -e DOTENV_CONFIG_PATH="/config/.env" \
     -e TEST_SELECTOR="${TEST_SELECTOR}" \
+    -e COMPOSEDB_ADMIN_DID_SEEDS="${COMPOSEDB_ADMIN_DID_SEEDS}" \
     "${IMAGE_NAME}":"$tag"

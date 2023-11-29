@@ -30,6 +30,7 @@ function generateUrlCombinations(urls: string[]): string[][] {
 
 function testUpdate(composeDbUrls: string[]) {
   console.log(`test update with urls: ${composeDbUrls}`)
+  console.log(`GOT ADMIN DID SEEDS: ${process.env.COMPOSEDB_ADMIN_DID_SEEDS}`)
   const firstNodeUrl = composeDbUrls[0]
   const content = { step: 0 }
   let firstCeramic: CeramicClient.CeramicClient
