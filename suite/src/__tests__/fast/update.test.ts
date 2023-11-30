@@ -11,7 +11,6 @@ const delay = utilities.delay
 
 // Environment variables
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-    .concat(String(process.env.EXTRA_COMPOSEDB_URLS).split(','))
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update Tests

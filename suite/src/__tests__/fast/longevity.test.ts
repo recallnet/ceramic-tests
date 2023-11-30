@@ -7,7 +7,6 @@ import { newCeramic } from '../../utils/ceramicHelpers.js'
 import * as helpers from '../../utils/dynamoDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-    .concat(String(process.env.EXTRA_COMPOSEDB_URLS).split(','))
 
 /**
  * Longevity test tests that streams that were created (and pinned) in the past continue to be

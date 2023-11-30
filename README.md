@@ -53,12 +53,10 @@ k8s/operator/kustomization.yaml for instructions on how to do that.
 
 The test suite is configured via environment variables.
 
-| Env Var              | Description                                                        |
-|----------------------|--------------------------------------------------------------------|
-| COMPOSEDB_URLS       | Comma separated list of URLs to ComposeDB API endpoints            |
-| EXTRA_COMPOSEDB_URLS | Comma separated list of URLs to additional ComposeDB API endpoints |
-| CERAMIC_URLS         | Comma separated list of URLs to Ceramic API endpoints              |
-| EXTRA_CERAMIC_URLS   | Comma separated list of URLs to additional Ceramic API endpoints   |
+| Env Var        | Description                                             |
+| -------        | -----------                                             |
+| COMPOSEDB_URLS | Comma separated list of URLs to ComposeDB API endpoints |
+| CERAMIC_URLS   | Comma separated list of URLs to Ceramic API endpoints   |
 
 Note, these names use the new API boundaries being currently constructed.
 So confusingly the `js-ceramic` process exposes the `ComposeDB API` while the `rust-ceramic` process exposes the
@@ -67,9 +65,6 @@ So confusingly the `js-ceramic` process exposes the `ComposeDB API` while the `r
 Eventually we expect the `js-ceramic` repo/process to be renamed to `js-composedb` and the `js-composedb` repo being
 renamed to `js-compsedb-client` or other similar names.
 
-The `EXTRA_*_URLS` variables are needed because the `*_URLS` are usually injected via `.env` files that are baked into
-the test Docker image, and thus cannot be updated at runtime. The former allow for additional endpoints to be added at
-runtime and used in addition to the formal list of endpoints.
 
 ## Running tests locally
 
