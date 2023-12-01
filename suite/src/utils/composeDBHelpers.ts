@@ -51,23 +51,20 @@ export async function setUpEnvironment(apiUrl: string) {
     return compose
 }
 
-async function checkIfExists(ceramic: CeramicClient, compositeFile: string) {
+async function checkIfExists(ceramic: CeramicClient, compositeFile: string): Promise<boolean> {
     const existingComposite = await import('../../' + compositeFile)
     const id = Object.keys(existingComposite.default.models)[0]
-    const isCreated = await loadStream(ceramic, id)
-    const result = isCreated? true: false
-    if (result) console.log(`Found existing model in network. ModelID: ${id}`)
-    return result
+    const models = await ceramic.admin.getIndexedModelData()
+
+    return models.some(obj => obj.streamID.toString() === id)
 }
 
-async function loadStream(ceramic: CeramicClient, id: string) {
-    try {
-        return await ceramic.loadStream(id)
-    } catch {
-        return undefined
-    }
-}
-//TODO add doc
+/**
+ * Queries a record using specified text value as search criteria.
+ *
+ * @param compose ComposeClient
+ * @param textValue The text value used to filter
+ */
 export async function queryRecordByText(compose: ComposeClient, textValue:string) {
     return await compose.executeQuery(`
       query numericalFieldFiltered {
@@ -84,6 +81,14 @@ export async function queryRecordByText(compose: ComposeClient, textValue:string
       }`)
 }
 
+/**
+ * Creates a record with the specified values.
+ *
+ * @param compose ComposeClient
+ * @param numValue The numerical value for the new record.
+ * @param textValue The text value for the new record.
+ * @param boolValue The boolean value for the new record.
+ */
 export async function createRecord(compose: ComposeClient, numValue: number, textValue:string, boolValue: boolean) {
     return await compose.executeQuery(`mutation {
         createTestData(input: {
@@ -104,6 +109,15 @@ export async function createRecord(compose: ComposeClient, numValue: number, tex
       }`)
 }
 
+/**
+ * Updates a record with the specified ID using the provided numerical, text, and boolean values.
+ *
+ * @param compose ComposeClient
+ * @param id The ID of the record to update
+ * @param updatedNumValue The updated numerical value for the record
+ * @param updatedText The updated text value for the record
+ * @param boolValue The updated boolean value for the record
+ */
 export async function updateRecord(compose: ComposeClient, id:string, updatedNumValue: number, updatedText:string, boolValue: boolean) {
     return await compose.executeQuery(`mutation UpdateTestData {
         updateTestData(
