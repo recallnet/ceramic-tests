@@ -16,55 +16,50 @@ describe('create/update/queries on ComposeDB Models', () => {
     const updatedText = originalText + " and updated"
     const numValue = Math.floor((Math.random() * 100) + 1) // Random number between 1 and 100
     const updatedNumValue = numValue + 1 
-    const boolValue = true;
+    const boolValue = true
 
     beforeAll(async () => {
       compose = await testHelpers.setUpEnvironment(ComposeDbUrls[0])
     })
 
-    test('test create record', async () => {
-      const response = await createRecord(compose, numValue, originalText, boolValue)
+    test('test create/update/queries on ComposeDB', async () => {
+      const createResponse = await createRecord(compose, numValue, originalText, boolValue)
       console.log(`Executing a create mutation for the TestData with textField: "${originalText}"`)
-      expect(response.errors).toBeUndefined()
-      expect(response.data).not.toBeUndefined()
-      expect(response.data?.createTestData).not.toBeUndefined()
-      const record = (response.data?.createTestData as any).document
-      expect(record).not.toBeUndefined()
+      expect(createResponse.errors).toBeUndefined()
+      expect(createResponse.data).not.toBeUndefined()
+      expect(createResponse.data?.createTestData).not.toBeUndefined()
+      const createdRecord = (createResponse.data?.createTestData as any).document
+      expect(createdRecord).not.toBeUndefined()
       // save the recently created record id
-      id = record.id
+      id = createdRecord.id
       expect(id).not.toBeNull();
       expect(id).not.toBeUndefined();
       expect(id.length).toBe(63)
-      expect(record.numericalField).toBe(numValue)
-      expect(record.textField).toBe(originalText)
-      expect(record.booleanField).toBe(boolValue)
+      expect(createdRecord.numericalField).toBe(numValue)
+      expect(createdRecord.textField).toBe(originalText)
+      expect(createdRecord.booleanField).toBe(boolValue)
 
-    })
-
-    test('test query existing record', async () => {
-      const response = await queryRecordByText(compose, originalText)
+      const queryResponse = await queryRecordByText(compose, originalText)
       console.log(`Executing a query using filters for the TestData with textField: "${originalText}"`)
-      expect(response.errors).toBeUndefined()
-      expect(response.data).not.toBeUndefined()
-      expect(response.data?.testDataIndex).not.toBeUndefined()
-      const record = (response.data?.testDataIndex as any).edges.pop().node
+      expect(queryResponse.errors).toBeUndefined()
+      expect(queryResponse.data).not.toBeUndefined()
+      expect(queryResponse.data?.testDataIndex).not.toBeUndefined()
+      const queriedRecord = (queryResponse.data?.testDataIndex as any).edges.pop().node
 
-      expect(record.numericalField).toBe(numValue)
-      expect(record.textField).toBe(originalText)
-      expect(record.booleanField).toBe(boolValue)
-    })
-
-    test('test update record', async () => {
-      const response = await updateRecord(compose, id, updatedNumValue, updatedText, !boolValue)
+      expect(queriedRecord.numericalField).toBe(numValue)
+      expect(queriedRecord.textField).toBe(originalText)
+      expect(queriedRecord.booleanField).toBe(boolValue)
+    
+      const updateResponse = await updateRecord(compose, id, updatedNumValue, updatedText, !boolValue)
       console.log(`Executing an update mutation for the TestData with new textField: "${updatedText}"`)
-      expect(response.errors).toBeUndefined()
-      expect(response.data).not.toBeUndefined()
-      expect(response.data?.updateTestData).not.toBeUndefined()
+      expect(updateResponse.errors).toBeUndefined()
+      expect(updateResponse.data).not.toBeUndefined()
+      expect(updateResponse.data?.updateTestData).not.toBeUndefined()
 
-      const record = (response.data?.updateTestData as any).document
+      const updatedRecord = (updateResponse.data?.updateTestData as any).document
 
-      expect(record.numericalField).toBe(updatedNumValue)
-      expect(record.textField).toBe(updatedText)
-      expect(record.booleanField).toBe(!boolValue)
+      expect(updatedRecord.numericalField).toBe(updatedNumValue)
+      expect(updatedRecord.textField).toBe(updatedText)
+      expect(updatedRecord.booleanField).toBe(!boolValue)
     })
 })
