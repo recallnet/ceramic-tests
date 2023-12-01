@@ -48,8 +48,8 @@ jobs:
       fail-fast: false
       matrix:
         network: [dev, qa, tnet, prod]
+        # Includes a new variable for each network (this is effectively a switch statement)
         include:
-        # includes a new variable for each network (this is effectively a switch statement)
           - network: dev
             admin_did_seed_secret: DEV_COMPOSEDB_ADMIN_DID_SEEDS
           - network: qa

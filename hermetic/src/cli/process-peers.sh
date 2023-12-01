@@ -1,6 +1,6 @@
 #!/bin/bash
 
-available_peers() {
+get_available_peers() {
   jq -r '. | length' < /peers/peers.json
 }
 
@@ -8,7 +8,8 @@ available_peers() {
 n=0
 until [ "$n" -ge 30 ];
   do
-    if [ "$(available_peers)" == "0" ]; then
+    available_peers=$(get_available_peers)
+    if [ "$available_peers" == "0" ]; then
       sleep 10
       n=$((n+1))
     else
@@ -21,7 +22,7 @@ until [ "$n" -ge 30 ];
       # repeated based on the number of nodes being started
       COMPOSEDB_ADMIN_DID_SEEDS=""
       for ((i=0; i<available_peers; i++)); do
-          if (($i == $available_peers - 1))
+          if ((i == available_peers - 1))
           then
               COMPOSEDB_ADMIN_DID_SEEDS+="$CERAMIC_ADMIN_DID_SECRET";
           else
