@@ -23,7 +23,7 @@ on:
         type: string
         description: Path regex passed to Jest to select which tests to run
         required: true
-        default: .
+        default: fast
       # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
       # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
       # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
@@ -63,6 +63,18 @@ jobs:
         env:
           AWS_REGION: us-east-1
       -
+        # TODO: Use a separate cluster for durable nodes, and eventually separate clusters for each network.
+        name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      -
+        name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_ZONE }}
+      -
         name: Test ${{ matrix.network }}
         if: ${{ github.event.inputs.environment == matrix.network }}
         env:
@@ -71,6 +83,14 @@ jobs:
         run: |
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest
+          fi
+          # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
+          source ./port-forward.sh "keramik-${{ matrix.network }}"
+          # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
+          if [[ -n "$COMPOSEDB_URLS" ]];
+          then
+            sed -i "s|COMPOSEDB_URLS.*|&,$COMPOSEDB_URLS|" suite/env/.env."${{ matrix.network }}"
+            sed -i "s|CERAMIC_URLS.*|&,$CERAMIC_URLS|" suite/env/.env."${{ matrix.network }}"
           fi
           make DURABLE_ENV=${{ matrix.network }} durable-tests
 

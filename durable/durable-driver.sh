@@ -26,11 +26,14 @@ AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-.}
 AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-.}
 AWS_REGION=${AWS_REGION-us-east-1}
 
-docker run \
+# TODO: We are using the host network to make port forwarding work. This can be removed once we have public URLs for
+# Keramik endpoints.
+docker run --network="host" \
     -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
     -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
     -e AWS_REGION="${AWS_REGION}" \
     -e DB_ENDPOINT="${DB_ENDPOINT}" \
-    -e DOTENV_CONFIG_PATH="./env/.env.${DURABLE_ENV}" \
+    -v $(pwd)/suite/env/.env."${DURABLE_ENV}":/config/.env \
+    -e DOTENV_CONFIG_PATH="/config/.env" \
     -e TEST_SELECTOR="${TEST_SELECTOR}" \
     "${IMAGE_NAME}":"$tag"
