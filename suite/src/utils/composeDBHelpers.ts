@@ -28,7 +28,7 @@ export async function setUpEnvironment(apiUrl: string) {
     await did.authenticate()
     ceramic.did = did
 
-    const exists = checkIfExists(ceramic, compositeFile)
+    const exists = await checkIfExists(ceramic, compositeFile)
 
     if (!exists) {
         const composite = await createComposite(ceramic, modelFile)
@@ -52,7 +52,6 @@ export async function setUpEnvironment(apiUrl: string) {
 }
 
 async function checkIfExists(ceramic: CeramicClient, compositeFile: string) {
-    //TODO name file depending on environmental variable of network to get the id deployed on said network
     const existingComposite = await import('../../' + compositeFile)
     const id = Object.keys(existingComposite.default.models)[0]
     const isCreated = await loadStream(ceramic, id)

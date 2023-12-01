@@ -18,112 +18,97 @@ describe('create/update/queries on ComposeDB Models', () => {
     const boolValue = true;
 
     beforeAll(async () => {
-        compose = await testHelpers.setUpEnvironment(ComposeDbUrls[0])
+      compose = await testHelpers.setUpEnvironment(ComposeDbUrls[0])
     })
 
-    test('test create', async () => {
-      try {
-        const response = await compose.executeQuery(`mutation {
-          createGenericModel(input: {
-                  content: {
-                      numericalField: ${numValue},
-                      textField: "${originalText}",
-                      booleanField: ${boolValue}
+    test('test create record', async () => {
+      const response = await compose.executeQuery(`mutation {
+        createTestData(input: {
+                content: {
+                    numericalField: ${numValue},
+                    textField: "${originalText}",
+                    booleanField: ${boolValue}
+                }
+            }) 
+            {
+                document {
+                    id
+                    numericalField
+                    textField
+                    booleanField
                   }
-              }) 
-              {
-                  document {
-                      id
-                      numericalField
-                      textField
-                      booleanField
-                    }
-              }
-        }`)
-        console.log(`Executing a create mutation for the GenericModel with textField: "${originalText}"`)
-        expect(response.errors).toBeUndefined()
-        expect(response.data).not.toBeUndefined()
-        expect(response.data?.createGenericModel).not.toBeUndefined()
-        const record = (response.data?.createGenericModel as any).document
-        expect(record).not.toBeUndefined()
-        // save the recently created record id
-        id = record.id
-        expect(id).not.toBeNull();
-        expect(id).not.toBeUndefined();
-        expect(id.length).toBe(63)
-        expect(record.numericalField).toBe(numValue)
-        expect(record.textField).toBe(originalText)
-        expect(record.booleanField).toBe(boolValue)
-       } catch (err) {
-        console.error(`Test failed. Unable to execute create mutation with text: "${originalText}"`)
-        throw err
-      }
+            }
+      }`)
+      console.log(`Executing a create mutation for the TestData with textField: "${originalText}"`)
+      expect(response.errors).toBeUndefined()
+      expect(response.data).not.toBeUndefined()
+      expect(response.data?.createTestData).not.toBeUndefined()
+      const record = (response.data?.createTestData as any).document
+      expect(record).not.toBeUndefined()
+      // save the recently created record id
+      id = record.id
+      expect(id).not.toBeNull();
+      expect(id).not.toBeUndefined();
+      expect(id.length).toBe(63)
+      expect(record.numericalField).toBe(numValue)
+      expect(record.textField).toBe(originalText)
+      expect(record.booleanField).toBe(boolValue)
 
     })
 
-    test('test query', async () => {
-      try { 
-        const response = await compose.executeQuery(`
-        query numericalFieldFiltered {
-         genericModelIndex(first: 1, filters: { where: {textField: {equalTo: "${originalText}"} } }) {
-             edges {
-                 node {
-                     id
-                     numericalField
-                     textField
-                     booleanField
-                 }
-           }
+    test('test query existing record', async () => {
+      const response = await compose.executeQuery(`
+      query numericalFieldFiltered {
+       testDataIndex(first: 1, filters: { where: {textField: {equalTo: "${originalText}"} } }) {
+           edges {
+               node {
+                  id
+                  numericalField
+                  textField
+                  booleanField
+               }
          }
-        }`)
-        console.log(`Executing a query using filters for the GenericModel with textField: "${originalText}"`)
-        expect(response.errors).toBeUndefined()
-        expect(response.data).not.toBeUndefined()
-        expect(response.data?.genericModelIndex).not.toBeUndefined()
-        const record = (response.data?.genericModelIndex as any).edges.pop().node
-  
-        expect(record.numericalField).toBe(numValue)
-        expect(record.textField).toBe(originalText)
-        expect(record.booleanField).toBe(boolValue)
-      } catch (err) {
-        console.error(`Test failed. Unable to query filtering by textField: "${originalText}"`)
-        throw err
-      }
-     })
+       }
+      }`)
+      console.log(`Executing a query using filters for the TestData with textField: "${originalText}"`)
+      expect(response.errors).toBeUndefined()
+      expect(response.data).not.toBeUndefined()
+      expect(response.data?.testDataIndex).not.toBeUndefined()
+      const record = (response.data?.testDataIndex as any).edges.pop().node
 
-    test('test update', async () => {
-      try { 
-        const response = await compose.executeQuery(`mutation UpdateGenericModel {
-          updateGenericModel(
-            input: { 
-              id: "${id}",
-              content: {
-                  numericalField: ${updatedNumValue},
-                  textField: "${updatedText}",
-                  booleanField: ${!boolValue}  
-              }
-            }
-          ) {
-            document {
-              numericalField
-              textField
-              booleanField
+      expect(record.numericalField).toBe(numValue)
+      expect(record.textField).toBe(originalText)
+      expect(record.booleanField).toBe(boolValue)
+    })
+
+    test('test update record', async () => {
+      const response = await compose.executeQuery(`mutation UpdateTestData {
+        updateTestData(
+          input: { 
+            id: "${id}",
+            content: {
+                numericalField: ${updatedNumValue},
+                textField: "${updatedText}",
+                booleanField: ${!boolValue}  
             }
           }
-        }`)
-        console.log(`Executing an update mutation for the GenericModel with new textField: "${updatedText}"`)
-        expect(response.errors).toBeUndefined()
-        expect(response.data).not.toBeUndefined()
-        expect(response.data?.updateGenericModel).not.toBeUndefined()
-  
-        const record = (response.data?.updateGenericModel as any).document
-  
-        expect(record.numericalField).toBe(updatedNumValue)
-        expect(record.textField).toBe(updatedText)
-        expect(record.booleanField).toBe(!boolValue)
-      } catch (err) {
-        console.error(`Test failed. Unable to execute update mutation to text: "${updatedText}"`)
-        throw err
-      }
+        ) {
+          document {
+            numericalField
+            textField
+            booleanField
+          }
+        }
+      }`)
+      console.log(`Executing an update mutation for the TestData with new textField: "${updatedText}"`)
+      expect(response.errors).toBeUndefined()
+      expect(response.data).not.toBeUndefined()
+      expect(response.data?.updateTestData).not.toBeUndefined()
+
+      const record = (response.data?.updateTestData as any).document
+
+      expect(record.numericalField).toBe(updatedNumValue)
+      expect(record.textField).toBe(updatedText)
+      expect(record.booleanField).toBe(!boolValue)
     })
 })
