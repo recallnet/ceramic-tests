@@ -67,3 +67,60 @@ async function loadStream(ceramic: CeramicClient, id: string) {
         return undefined
     }
 }
+//TODO add doc
+export async function queryRecordByText(compose: ComposeClient, textValue:string) {
+    return await compose.executeQuery(`
+      query numericalFieldFiltered {
+       testDataIndex(first: 1, filters: { where: {textField: {equalTo: "${textValue}"} } }) {
+           edges {
+               node {
+                  id
+                  numericalField
+                  textField
+                  booleanField
+               }
+         }
+       }
+      }`)
+}
+
+export async function createRecord(compose: ComposeClient, numValue: number, textValue:string, boolValue: boolean) {
+    return await compose.executeQuery(`mutation {
+        createTestData(input: {
+                content: {
+                    numericalField: ${numValue},
+                    textField: "${textValue}",
+                    booleanField: ${boolValue}
+                }
+            }) 
+            {
+                document {
+                    id
+                    numericalField
+                    textField
+                    booleanField
+                  }
+            }
+      }`)
+}
+
+export async function updateRecord(compose: ComposeClient, id:string, updatedNumValue: number, updatedText:string, boolValue: boolean) {
+    return await compose.executeQuery(`mutation UpdateTestData {
+        updateTestData(
+          input: { 
+            id: "${id}",
+            content: {
+                numericalField: ${updatedNumValue},
+                textField: "${updatedText}",
+                booleanField: ${boolValue}  
+            }
+          }
+        ) {
+          document {
+            numericalField
+            textField
+            booleanField
+          }
+        }
+    }`)
+}

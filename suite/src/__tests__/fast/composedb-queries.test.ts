@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, test} from '@jest/globals'
 import * as testHelpers from '../../utils/composeDBHelpers.js'
 import { ComposeClient } from '@composedb/client'
+import { createRecord, queryRecordByText, updateRecord } from '../../utils/composeDBHelpers.js'
 
 //const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const ComposeDbUrls = ['http://localhost:7007']
@@ -22,23 +23,7 @@ describe('create/update/queries on ComposeDB Models', () => {
     })
 
     test('test create record', async () => {
-      const response = await compose.executeQuery(`mutation {
-        createTestData(input: {
-                content: {
-                    numericalField: ${numValue},
-                    textField: "${originalText}",
-                    booleanField: ${boolValue}
-                }
-            }) 
-            {
-                document {
-                    id
-                    numericalField
-                    textField
-                    booleanField
-                  }
-            }
-      }`)
+      const response = await createRecord(compose, numValue, originalText, boolValue)
       console.log(`Executing a create mutation for the TestData with textField: "${originalText}"`)
       expect(response.errors).toBeUndefined()
       expect(response.data).not.toBeUndefined()
@@ -57,19 +42,7 @@ describe('create/update/queries on ComposeDB Models', () => {
     })
 
     test('test query existing record', async () => {
-      const response = await compose.executeQuery(`
-      query numericalFieldFiltered {
-       testDataIndex(first: 1, filters: { where: {textField: {equalTo: "${originalText}"} } }) {
-           edges {
-               node {
-                  id
-                  numericalField
-                  textField
-                  booleanField
-               }
-         }
-       }
-      }`)
+      const response = await queryRecordByText(compose, originalText)
       console.log(`Executing a query using filters for the TestData with textField: "${originalText}"`)
       expect(response.errors).toBeUndefined()
       expect(response.data).not.toBeUndefined()
@@ -82,24 +55,7 @@ describe('create/update/queries on ComposeDB Models', () => {
     })
 
     test('test update record', async () => {
-      const response = await compose.executeQuery(`mutation UpdateTestData {
-        updateTestData(
-          input: { 
-            id: "${id}",
-            content: {
-                numericalField: ${updatedNumValue},
-                textField: "${updatedText}",
-                booleanField: ${!boolValue}  
-            }
-          }
-        ) {
-          document {
-            numericalField
-            textField
-            booleanField
-          }
-        }
-      }`)
+      const response = await updateRecord(compose, id, updatedNumValue, updatedText, !boolValue)
       console.log(`Executing an update mutation for the TestData with new textField: "${updatedText}"`)
       expect(response.errors).toBeUndefined()
       expect(response.data).not.toBeUndefined()
