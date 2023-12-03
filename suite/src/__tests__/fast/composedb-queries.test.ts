@@ -3,8 +3,8 @@ import * as testHelpers from '../../utils/composeDBHelpers.js'
 import { ComposeClient } from '@composedb/client'
 import { createRecord, queryRecordByText, updateRecord } from '../../utils/composeDBHelpers.js'
 
-//const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-const ComposeDbUrls = ['http://localhost:7007']
+const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update/Queries ComposeDB Models Tests
 ///////////////////////////////////////////////////////////////////////////////
