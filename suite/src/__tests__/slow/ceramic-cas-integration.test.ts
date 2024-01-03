@@ -136,32 +136,33 @@ describe('Ceramic<->CAS basic integration', () => {
     expect(doc4.state.log.length).toEqual(7)
   })
 
-  test.only('Can retreive anchor commit for doc that was created by another node that is unavailable', async () => {
-    // create a doc with a node using the wrong pubsub. This update should not get propagated to other nodes.
-    const content = { state: 0 }
-    const doc = await TileDocument.create(ceramicWrongPubsub, content, undefined, { anchor: true })
-    expect(doc.content).toEqual(content)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+  if (ComposeDbUrls.length > 2) {
+    test('Can retrieve anchor commit for doc that was created by another node that is unavailable', async () => {
+      // create a doc with a node using the wrong pubsub. This update should not get propagated to other nodes.
+      const content = { state: 0 }
+      const doc = await TileDocument.create(ceramicWrongPubsub, content, undefined, {
+        anchor: true,
+      })
+      expect(doc.content).toEqual(content)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
 
-    await waitForAnchor(doc).catch((errStr) => {
-      throw new Error(errStr)
+      await waitForAnchor(doc).catch((errStr) => {
+        throw new Error(errStr)
+      })
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // loading the document without querying the network
+      const loaded = await TileDocument.load(ceramic, doc.id, { sync: SyncOptions.NEVER_SYNC })
+      expect(loaded.content).toEqual(content)
+      expect(loaded.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // since creamicWrongPubsub is on the incorrect pubsub, the only way ceramic can get the update is from the pubsub responder
+      await loaded.sync({ sync: SyncOptions.SYNC_ALWAYS })
+      await waitForAnchor(loaded).catch((errStr) => {
+        throw new Error(errStr)
+      })
+      expect(loaded.content).toEqual(content)
+      expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
-    console.log(doc.state)
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    // loading the document without querying the network
-    const loaded = await TileDocument.load(ceramic, doc.id, { sync: SyncOptions.NEVER_SYNC })
-    console.log(loaded.state)
-    expect(loaded.content).toEqual(content)
-    expect(loaded.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
-
-    // since creamicWrongPubsub is on the incorrect pubsub, the only way ceramic can get the update is from the pubsub responder
-    await loaded.sync({ sync: SyncOptions.SYNC_ALWAYS })
-    await waitForAnchor(loaded).catch((errStr) => {
-      throw new Error(errStr)
-    })
-    console.log(loaded.state)
-    expect(loaded.content).toEqual(content)
-    expect(loaded.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-  })
+  }
 })
