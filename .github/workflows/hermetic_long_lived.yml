@@ -9,7 +9,7 @@ on:
         type: string
         description: Path regex passed to Jest to select which tests to run
         required: true
-        default: .
+        default: fast
 
 env:
   CARGO_TERM_COLOR: always

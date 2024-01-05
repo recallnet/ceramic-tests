@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 
 use anyhow::{anyhow, Result};
-use ceramic_tests_property::ceramic::DID_PRIVATE_KEY;
 use futures::{future::BoxFuture, StreamExt, TryStreamExt};
 use k8s_openapi::{
     api::{
@@ -12,8 +11,8 @@ use k8s_openapi::{
             EmptyDirVolumeSource, EnvFromSource, EnvVar, EnvVarSource, ExecAction, Namespace,
             ObjectFieldSelector, PersistentVolumeClaim, PersistentVolumeClaimSpec,
             PersistentVolumeClaimVolumeSource, Pod, PodSpec, PodTemplateSpec, Probe,
-            ResourceRequirements, Secret, Service, ServiceAccount, ServicePort, ServiceSpec,
-            Volume, VolumeMount,
+            ResourceRequirements, Secret, SecretKeySelector, Service, ServiceAccount, ServicePort,
+            ServiceSpec, Volume, VolumeMount,
         },
         rbac::v1::{ClusterRole, ClusterRoleBinding, PolicyRule, RoleRef, Subject},
     },
@@ -36,8 +35,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use tokio::fs;
 
 const TESTER_NAME: &str = "ceramic-tester";
-const KERAMIK_NAMESPACE: &str = "keramik";
-const CERAMIC_ADMIN_DID_SECRET: &str = "ceramic-tests-admin-did";
+const CERAMIC_ADMIN_DID_SECRET_NAME: &str = "ceramic-admin";
+const DID_PRIVATE_KEY_NAME: &str = "private-key";
 const SERVICE_ACCOUNT_NAME: &str = "ceramic-tests-service-account";
 const CLUSTER_ROLE_NAME: &str = "ceramic-tests-cluster-role";
 const LOCALSTACK_SERVICE_NAME: &str = "ceramic-tests-localstack";
@@ -46,6 +45,8 @@ const PROCESS_PEERS_NAME: &str = "process-peers";
 
 // See [`WatchParams::timeout`] documentation.
 const MAX_KUBE_WATCH_TIMEOUT: u32 = 290;
+
+const DID_PRIVATE_KEY: &str = "c864a33033626b448912a19509992552283fd463c143bdc4adc75f807b7a4dce";
 
 use crate::cli::Flavor;
 use crate::cli::TestOpts;
@@ -81,20 +82,32 @@ pub async fn run(opts: TestOpts) -> Result<()> {
 
     let namespace = format!("keramik-{network_name}");
 
-    // Create admin secret if it is missing.
-    if is_secret_missing(client.clone(), KERAMIK_NAMESPACE, CERAMIC_ADMIN_DID_SECRET).await? {
+    // Create namespace if it does not already exist
+    apply_namespace(client.clone(), &namespace).await?;
+
+    // If it is missing, create the admin secret directly in the network namespace instead of in the "keramik" namespace
+    // then having the Keramik operator in turn create one in the network namespace. Creating the secret directly in the
+    // network namespace allows a unique secret to be created for each network instead of applying the same secret
+    // across all networks.
+    if is_secret_missing(
+        client.clone(),
+        namespace.as_str(),
+        CERAMIC_ADMIN_DID_SECRET_NAME,
+    )
+    .await?
+    {
         info!("creating admin secret");
         create_secret(
             client.clone(),
-            KERAMIK_NAMESPACE,
-            CERAMIC_ADMIN_DID_SECRET,
-            BTreeMap::from_iter([("private-key".to_string(), DID_PRIVATE_KEY.to_string())]),
+            namespace.as_str(),
+            CERAMIC_ADMIN_DID_SECRET_NAME,
+            BTreeMap::from_iter([(
+                DID_PRIVATE_KEY_NAME.to_string(),
+                std::env::var("DID_PRIVATE_KEY").unwrap_or_else(|_| DID_PRIVATE_KEY.to_owned()),
+            )]),
         )
         .await?;
     }
-
-    // Create namespace if it does not already exist
-    apply_namespace(client.clone(), &namespace).await?;
 
     // Apply service account within the test network namespace
     // The test job uses this account.
@@ -636,17 +649,31 @@ fn job_init() -> Container {
             "-c".to_owned(),
             "/network/process-peers.sh".to_owned(),
         ]),
-        env: Some(vec![EnvVar {
-            name: "NAMESPACE".to_owned(),
-            value_from: Some(EnvVarSource {
-                field_ref: Some(ObjectFieldSelector {
-                    field_path: "metadata.namespace".to_owned(),
+        env: Some(vec![
+            EnvVar {
+                name: "NAMESPACE".to_owned(),
+                value_from: Some(EnvVarSource {
+                    field_ref: Some(ObjectFieldSelector {
+                        field_path: "metadata.namespace".to_owned(),
+                        ..Default::default()
+                    }),
                     ..Default::default()
                 }),
                 ..Default::default()
-            }),
-            ..Default::default()
-        }]),
+            },
+            EnvVar {
+                name: "CERAMIC_ADMIN_DID_SECRET".to_owned(),
+                value_from: Some(EnvVarSource {
+                    secret_key_ref: Some(SecretKeySelector {
+                        key: DID_PRIVATE_KEY_NAME.to_owned(),
+                        name: Some(CERAMIC_ADMIN_DID_SECRET_NAME.to_owned()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        ]),
         env_from: Some(vec![EnvFromSource {
             config_map_ref: Some(ConfigMapEnvSource {
                 name: Some("keramik-peers".to_owned()),
