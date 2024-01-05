@@ -15,7 +15,7 @@ const DbEndpoint = process.env.DB_ENDPOINT
   ? process.env.DB_ENDPOINT
   : `https://dynamodb.${Region}.amazonaws.com`
 const Stage = process.env.STAGE || 'dev'
-const AnchorTable = `ceramic-smoke-tests-${Stage}-anchor`
+const TestTable = `ceramic-tests-${Stage}`
 
 export const AnchorInterval = Duration.fromObject({
   minutes: Number(process.env.ANCHOR_INTERVAL_MIN) || 720,
@@ -39,9 +39,9 @@ export const StreamTTL = Duration.fromObject({
 const DatabaseTTL = StreamTTL.plus(StreamTTL)
 
 // This function will block until the table is ready
-export const createAnchorTable = async () => {
+export const createTestTable = async () => {
   const describeIn: DescribeTableInput = {
-    TableName: AnchorTable,
+    TableName: TestTable,
   }
   while (1) {
     try {
@@ -75,7 +75,7 @@ export const createAnchorTable = async () => {
           ReadCapacityUnits: 1,
           WriteCapacityUnits: 1,
         },
-        TableName: AnchorTable,
+        TableName: TestTable,
       }
       await DynamoClient.createTable(createTableIn)
     } catch (e) {
@@ -89,7 +89,7 @@ export const storeStreamReq = async (streamId: StreamID) => {
   try {
     const now = DateTime.utc()
     await DynamoClient.putItem({
-      TableName: AnchorTable,
+      TableName: TestTable,
       Item: {
         StreamId: {
           S: streamId.toString(),
@@ -112,7 +112,7 @@ export const storeStreamReq = async (streamId: StreamID) => {
 
 export const fetchUnanchoredStreamReqs = async (pageSize: number | null = null) => {
   const args: ScanCommandInput = {
-    TableName: AnchorTable,
+    TableName: TestTable,
     FilterExpression: 'Anchored = :anchored',
     ExpressionAttributeValues: { ':anchored': { BOOL: false } },
   }
@@ -121,7 +121,7 @@ export const fetchUnanchoredStreamReqs = async (pageSize: number | null = null) 
 
 export const fetchAnchoredStreamReqs = async (pageSize: number | null = null) => {
   const args: ScanCommandInput = {
-    TableName: AnchorTable,
+    TableName: TestTable,
     FilterExpression: 'Anchored = :anchored',
     ExpressionAttributeValues: { ':anchored': { BOOL: true } },
   }
@@ -132,7 +132,7 @@ export const fetchExpiredStreamReqs = async (pageSize: number | null = null) => 
   const now = DateTime.utc()
   const expired = now.minus(StreamTTL).toSeconds().toString()
   const args: ScanCommandInput = {
-    TableName: AnchorTable,
+    TableName: TestTable,
     FilterExpression: 'Creation < :expired',
     ExpressionAttributeValues: { ':expired': { N: expired } },
   }
@@ -142,7 +142,7 @@ export const fetchExpiredStreamReqs = async (pageSize: number | null = null) => 
 export const deleteStreamReq = async (streamId: StreamID) => {
   try {
     return await DynamoClient.deleteItem({
-      TableName: AnchorTable,
+      TableName: TestTable,
       Key: {
         StreamId: {
           S: streamId.toString(),
@@ -157,7 +157,7 @@ export const deleteStreamReq = async (streamId: StreamID) => {
 export const markStreamReqAsAnchored = async (streamId: StreamID) => {
   try {
     return await DynamoClient.updateItem({
-      TableName: AnchorTable,
+      TableName: TestTable,
       Key: {
         StreamId: {
           S: streamId.toString(),
@@ -183,7 +183,7 @@ export const makeStreamReqAppearExpired_FOR_TESTING_ONLY = async (streamId: Stre
     const expired = now.minus(StreamTTL).minus(Duration.fromMillis(1000)).toSeconds().toString()
 
     return await DynamoClient.updateItem({
-      TableName: AnchorTable,
+      TableName: TestTable,
       Key: {
         StreamId: {
           S: streamId.toString(),

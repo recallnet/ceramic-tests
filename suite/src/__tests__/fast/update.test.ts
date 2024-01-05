@@ -17,7 +17,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 ///////////////////////////////////////////////////////////////////////////////
 
 describe('update', () => {
-  beforeAll(async () => await helpers.createAnchorTable())
+  beforeAll(async () => await helpers.createTestTable())
   afterAll(async () => await helpers.cleanup())
 
   // Run tests with each node being the node where a stream is created

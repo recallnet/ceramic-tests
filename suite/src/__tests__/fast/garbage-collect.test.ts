@@ -29,7 +29,7 @@ describe.skip('garbage collect old streams created by tests', () => {
   let ceramicConnections: CeramicClient.CeramicClient[] = []
 
   beforeAll(async () => {
-    await helpers.createAnchorTable()
+    await helpers.createTestTable()
     for (const url of ComposeDbUrls) {
       const ceramic = await newCeramic(url)
       ceramicConnections.push(ceramic)

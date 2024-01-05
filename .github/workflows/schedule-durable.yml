@@ -13,9 +13,9 @@ on:
         options:
           - dev
           - qa
-          - tnet
-          - prod
-          - all
+          # TODO: Enable once tnet/prod clusters are available
+          # - tnet
+          # - prod
       test_selector:
         type: string
         description: Path regex passed to Jest to select which tests to run
@@ -70,7 +70,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        network: [dev, qa, tnet, prod]
+        # TODO: Enable once tnet/prod clusters are available
+        # network: [dev, qa, tnet, prod]
+        network: [dev, qa]
     steps:
       -
         uses: actions/checkout@v3
@@ -80,8 +82,8 @@ jobs:
         id: get_branch
       -
         name: Schedule ${{ matrix.network }}
-        # A scheduled run will not include any inputs, so we treat it as needing to test "all" networks.
-        if: ${{ github.event.inputs.environment == null || github.event.inputs.environment == 'all' || github.event.inputs.environment == matrix.network }}
+        # A scheduled run will not include any inputs, so we treat it as needing to test all networks.
+        if: ${{ github.event.inputs.environment == null || github.event.inputs.environment == matrix.network }}
         env:
           BUILD_TAG: ${{ needs.publish-suite.outputs.build_tag }}
           DURABLE_ENV: ${{ matrix.network }}

@@ -19,7 +19,7 @@ describe('longevity', () => {
   let streamIds: Array<StreamID> = []
 
   beforeAll(async () => {
-    await helpers.createAnchorTable()
+    await helpers.createTestTable()
     const anchoredReqs = await helpers.fetchAnchoredStreamReqs()
     console.log(`Found ${anchoredReqs.length} already anchored streams in the database to load`)
     streamIds = anchoredReqs.map((req) => {
@@ -49,8 +49,8 @@ describe('longevity', () => {
             `Loading commit ${prevCommitId} on ${apiUrl} for stream state:\n${JSON.stringify(
               StreamUtils.serializeState(tile.state),
               null,
-              2
-            )}`
+              2,
+            )}`,
           )
           const tileAtPrevCommitId = await TileDocument.load(ceramic, prevCommitId)
 
@@ -64,8 +64,8 @@ describe('longevity', () => {
             `Test failed. StreamID: ${tile.id.toString()}, state:\n${JSON.stringify(
               StreamUtils.serializeState(tile.state),
               null,
-              2
-            )}`
+              2,
+            )}`,
           )
 
           // If the test failed, we don't want to leave this stream in the database,
