@@ -13,9 +13,8 @@ on:
         options:
           - dev
           - qa
-          # TODO: Enable once tnet/prod clusters are available
-          # - tnet
-          # - prod
+          - tnet
+          - prod
       test_selector:
         type: string
         description: Path regex passed to Jest to select which tests to run
@@ -70,9 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # TODO: Enable once tnet/prod clusters are available
-        # network: [dev, qa, tnet, prod]
-        network: [dev, qa]
+        network: [dev, qa, tnet, prod]
     steps:
       -
         uses: actions/checkout@v3
