@@ -12,9 +12,8 @@ on:
         options:
           - dev
           - qa
-          # TODO: Enable once tnet/prod clusters are available
-          # - tnet
-          # - prod
+          - tnet
+          - prod
       build_tag:
         type: string
         description: Build tag for image used for running tests
@@ -45,31 +44,7 @@ jobs:
   run-tests:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # TODO: Enable once tnet/prod clusters are available
-        # network: [dev, qa, tnet, prod]
-        network: [dev, qa]
-        # Includes a new variable for each network (this is effectively a switch statement)
-        include:
-          - network: dev
-            gke_sa_key: DEV_GKE_SA_KEY
-            gke_cluster: DEV_GKE_CLUSTER
-            admin_did_seed_secret: DEV_COMPOSEDB_ADMIN_DID_SEEDS
-          - network: qa
-            gke_sa_key: QA_GKE_SA_KEY
-            gke_cluster: QA_GKE_CLUSTER
-            admin_did_seed_secret: QA_COMPOSEDB_ADMIN_DID_SEEDS
-          # TODO: Enable once tnet/prod clusters are available
-          # - network: tnet
-          #   gke_sa_key: TNET_GKE_SA_KEY
-          #   gke_cluster: TNET_GKE_CLUSTER
-          #   admin_did_seed_secret: TNET_COMPOSEDB_ADMIN_DID_SEEDS
-          # - network: prod
-          #   gke_sa_key: PROD_GKE_SA_KEY
-          #   gke_cluster: PROD_GKE_CLUSTER
-          #   admin_did_seed_secret: PROD_COMPOSEDB_ADMIN_DID_SEEDS
+    environment: ${{ github.event.inputs.environment }}
     steps:
       -
         # We're piggybacking on this step to inject the CD manager job ID into this workflow
@@ -88,33 +63,32 @@ jobs:
         name: Setup GKE auth
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: ${{ secrets[matrix.gke_sa_key] }}
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
       -
         name: Get GKE credentials
         uses: 'google-github-actions/get-gke-credentials@v1'
         with:
-          cluster_name: ${{ secrets[matrix.gke_cluster] }}
-          location: ${{ secrets.GKE_ZONE }}
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_ZONE }}
       -
-        name: Test ${{ matrix.network }}
-        if: ${{ github.event.inputs.environment == matrix.network }}
+        name: Test ${{ github.event.inputs.environment }}
         env:
           BUILD_TAG: ${{ github.event.inputs.build_tag }}
           TEST_SELECTOR: ${{ github.event.inputs.test_selector }}
-          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets[matrix.admin_did_seed_secret] }}
+          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets.COMPOSEDB_ADMIN_DID_SEEDS }}
         run: |
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest
           fi
           # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
-          source ./port-forward.sh "keramik-${{ matrix.network }}"
+          source ./port-forward.sh "keramik-${{ github.event.inputs.environment }}"
           # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
           if [[ -n "$COMPOSEDB_URLS" ]];
           then
-            sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ matrix.network }}"
-            sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ matrix.network }}"
+            sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+            sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
           fi
-          make DURABLE_ENV=${{ matrix.network }} durable-tests
+          make DURABLE_ENV=${{ github.event.inputs.environment }} durable-tests
 
   collect-results:
     name: Durable Test Results
