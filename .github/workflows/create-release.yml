@@ -1,0 +1,86 @@
+# Create a release from the latest tag
+name: Create Release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'Cargo.toml'
+
+jobs:
+  # Build and packages all the things
+  build-binaries:
+    if: |
+      contains(github.event.head_commit.message, 'chore: Release') == 'true' || \
+      contains(github.event.head_commit.message, 'chore: Bump') == 'true' || \
+      github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        # For these target platforms
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            arch: x86_64
+            ext: deb
+            protoc-arch: linux-x86_64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            arch: x86_64
+            ext: pkg
+            protoc-arch: osx-x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            config-file: fpm/osx.fpm
+            arch: aarch64
+            ext: pkg
+            protoc-arch: osx-aarch_64
+        #- target: x86_64-pc-windows-msvc
+        #  os: windows-latest
+    runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: |
+          rustup update stable
+          rustup default stable
+      - name: Setup target
+        run: rustup target add ${{ matrix.target }}
+      - name: Run package script
+        run: |
+          cargo build --release --locked --target ${{ matrix.target }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: hermetic-driver-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/hermetic-driver
+
+  # release:
+  #   needs: [build-binaries]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+  #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #   steps:
+      # - uses: actions/checkout@v3
+      #   with:
+      #     fetch-depth: 0
+      # - uses: actions/download-artifact@v3
+      #   with:
+      #     path: artifacts
+      # - name: check artifacts
+      #   run: |
+      #     ls artifacts/**/*
+      # - name: Install Rust toolchain
+      #   uses: dtolnay/rust-toolchain@stable
+      # - id: release
+      #   run: |
+      #     export TAG=$(cargo metadata --format-version=1 --no-deps | jq '.packages[0].version' | tr -d '"')
+      #     echo "Releasing "$TAG
+      #     gh release create "v${TAG}" -n "Release of ${TAG}" -t "v${TAG}" --latest artifacts/**/*.tar.gz
