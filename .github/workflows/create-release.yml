@@ -63,27 +63,27 @@ jobs:
           name: hermetic-driver-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/hermetic-driver
 
-  # release:
-  #   needs: [build-binaries]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
-  #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   steps:
-  # - uses: actions/checkout@v3
-  #   with:
-  #     fetch-depth: 0
-  # - uses: actions/download-artifact@v3
-  #   with:
-  #     path: artifacts
-  # - name: check artifacts
-  #   run: |
-  #     ls artifacts/**/*
-  # - name: Install Rust toolchain
-  #   uses: dtolnay/rust-toolchain@stable
-  # - id: release
-  #   run: |
-  #     export TAG=$(cargo metadata --format-version=1 --no-deps | jq '.packages[0].version' | tr -d '"')
-  #     echo "Releasing "$TAG
-  #     gh release create "v${TAG}" -n "Release of ${TAG}" -t "v${TAG}" --latest artifacts/**/*.tar.gz
+  release:
+    needs: [build-binaries]
+    runs-on: ubuntu-latest
+    env:
+      # CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+      # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - name: check artifacts
+        run: |
+          ls artifacts/**/*
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - id: release
+        run: |
+          export TAG=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version' )
+          echo "Releasing "$TAG
+          gh release create "v${TAG}" -n "Release of ${TAG}" -t "v${TAG}" --latest artifacts/**/*.tar.gz
