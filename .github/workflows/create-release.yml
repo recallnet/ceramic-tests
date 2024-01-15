@@ -15,8 +15,8 @@ jobs:
   # Build and packages all the things
   build-binaries:
     if: |
-      contains(github.event.head_commit.message, 'chore: Release') == 'true' || \
-      contains(github.event.head_commit.message, 'chore: Bump') == 'true' || \
+      contains(github.event.head_commit.message, 'chore: Release') == 'true' ||
+      contains(github.event.head_commit.message, 'chore: Bump') == 'true' ||
       github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
