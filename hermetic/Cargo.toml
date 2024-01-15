@@ -23,3 +23,4 @@ keramik-operator = { git = "https://github.com/3box/keramik.git", branch = "main
 # Do not upgrade to 0.9, see https://github.com/dtolnay/serde-yaml/issues/298
 # TL;DR Version 0.9 uses YAML tags for enums which breaks.
 serde_yaml = "0.8"
+openssl = { version = "0.10", features = ["vendored"] }

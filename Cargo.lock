@@ -539,7 +539,7 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "hermetic-driver"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -549,6 +549,7 @@ dependencies = [
  "keramik-operator",
  "kube",
  "log",
+ "openssl",
  "serde",
  "serde_yaml 0.8.26",
  "tokio",
@@ -1081,6 +1082,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "300.2.1+3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fe476c29791a5ca0d1273c697e96085bbabbbea2ef7afd5617e78a4b40332d3"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1088,6 +1098,7 @@ checksum = "db4d56a4c0478783083cfafcc42493dd4a981d41669da64b4572a2a089b51b1d"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
