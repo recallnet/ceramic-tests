@@ -34,6 +34,7 @@ jobs:
             protoc-arch: osx-x86_64
           - target: aarch64-apple-darwin
             os: macos-latest
+            config-file: fpm/osx.fpm
             arch: aarch64
             ext: pkg
             protoc-arch: osx-aarch_64
