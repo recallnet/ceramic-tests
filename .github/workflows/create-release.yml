@@ -47,8 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install libssl-dev
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        run: sudo apt-get install libssl-dev pkg-config
+        run: sudo apt-get install libssl-dev
       - name: Install Rust
         run: |
           rustup update stable
