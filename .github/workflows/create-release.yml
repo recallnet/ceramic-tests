@@ -43,15 +43,15 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
-#      - name: Install libssl-dev
-#        if: matrix.target == 'x86_64-unknown-linux-gnu'
-#        run: sudo apt-get install libssl-dev pkg-config
-#      - name: Install libssl-dev
-#        if: matrix.target == 'aarch64-apple-darwin'
-#        run: |
-#          brew install openssl pkg-config
-#          export OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include
-#          export OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib
+      - name: Install libssl-dev
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: sudo apt-get install libssl-dev pkg-config
+      - name: Install libssl-dev
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: |
+          brew install openssl pkg-config
+          export OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include
+          export OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib
       - name: Install Rust
         run: |
           rustup update stable
