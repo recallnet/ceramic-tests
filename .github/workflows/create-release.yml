@@ -27,17 +27,16 @@ jobs:
             arch: x86_64
             ext: deb
             protoc-arch: linux-x86_64
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
-          #   arch: x86_64
-          #   ext: pkg
-          #   protoc-arch: osx-x86_64
-          # - target: aarch64-apple-darwin
-          #   os: macos-latest
-          #   config-file: fpm/osx.fpm
-          #   arch: aarch64
-          #   ext: pkg
-          #   protoc-arch: osx-aarch_64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            arch: x86_64
+            ext: pkg
+            protoc-arch: osx-x86_64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            arch: aarch64
+            ext: pkg
+            protoc-arch: osx-aarch_64
         #- target: x86_64-pc-windows-msvc
         #  os: windows-latest
     runs-on: ${{ matrix.os }}
@@ -54,14 +53,22 @@ jobs:
           rustup default stable
       - name: Setup target
         run: rustup target add ${{ matrix.target }}
+      - name: Install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2' # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+      - name: Install fpm
+        run: |
+          gem install fpm
       - name: Run package script
         run: |
-          cargo build --release --locked --target ${{ matrix.target }}
+          ./ci-scripts/package.sh -a ${{ matrix.arch }} -e ${{ matrix.ext }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: hermetic-driver-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/hermetic-driver
+          name: hermetic-driver_${{ matrix.target }}
+          path: hermetic-driver_${{ matrix.target }}.tar.gz
 
   release:
     needs: [build-binaries]
