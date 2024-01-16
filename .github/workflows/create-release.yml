@@ -50,6 +50,9 @@ jobs:
         if: matrix.target == 'aarch64-apple-darwin'
         run: |
           brew install openssl pkg-config
+          export OPENSSL_LIB_DIR=/usr/local/opt/openssl/bin/openssl
+          export OPENSSL_DIR=/usr/local/opt/openssl/bin/openssl
+          export OPENSSL_LIB_DIR=/usr/local/opt/openssl/lib
           export OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include
           export OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib
       - name: Install Rust
