@@ -19,6 +19,7 @@ jobs:
       contains(github.event.head_commit.message, 'chore: Bump') == 'true' ||
       github.event_name == 'workflow_dispatch'
     strategy:
+      fail-fast: false
       matrix:
         # For these target platforms
         include:
