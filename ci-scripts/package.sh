@@ -64,8 +64,8 @@ done
 
 TARGET=$ARCH-$OS
 ARTIFACTS_DIR=artifacts
-OUT_FILE=ceramic-one.$EXT
-OUT_PATH=$ARTIFACTS_DIR/ceramic-one.$EXT
+OUT_FILE=hermetic-driver.$EXT
+OUT_PATH=$ARTIFACTS_DIR/hermetic-driver.$EXT
 BIN_DIR=target/$TARGET/release
 
 echo "Determining package version"
@@ -83,7 +83,7 @@ echo "Building artifacts for "$TARGET
 cargo build --release --locked --target $TARGET
 
 echo "Building package for "$TARGET
-fpm --fpm-options-file $CONFIG_FILE -C $BIN_DIR -v $PKG_VERSION -p $OUT_PATH ceramic-one=$INSTALL_DIR/ceramic-one
+fpm --fpm-options-file $CONFIG_FILE -C $BIN_DIR -v $PKG_VERSION -p $OUT_PATH hermetic-driver=$INSTALL_DIR/hermetic-driver
 
 echo "Compressing package for "$TARGET
-tar -cvzf ceramic-one_$TARGET.tar.gz -C $ARTIFACTS_DIR $OUT_FILE
+tar -cvzf hermetic-driver_$TARGET.tar.gz -C $ARTIFACTS_DIR $OUT_FILE
