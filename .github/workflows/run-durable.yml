@@ -81,7 +81,7 @@ jobs:
             BUILD_TAG=latest
           fi
           # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
-          source ./port-forward.sh "keramik-${{ github.event.inputs.environment }}"
+          source ./port-forward.sh "keramik-ceramic-v4-${{ github.event.inputs.environment }}"
           # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
           if [[ -n "$COMPOSEDB_URLS" ]];
           then
