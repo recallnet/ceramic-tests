@@ -8,6 +8,8 @@ spec:
   ceramic:
     - ipfs:
         rust: {}
+  # TODO: Remove this once Keramik can accept an unspecified network type without serializing it as "null"
+  networkType: local
   # Use Kubo with CAS because it still needs pubsub
   cas:
     ipfs:
