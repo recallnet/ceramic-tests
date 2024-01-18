@@ -1,6 +1,6 @@
 import { AnchorStatus, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { afterAll, beforeAll, expect, xdescribe, xit } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 import { DateTime } from 'luxon'
 
 import { newCeramic } from '../../utils/ceramicHelpers.js'
@@ -8,11 +8,11 @@ import * as helpers from '../../utils/dynamoDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
-xdescribe('anchor', () => {
+describe('anchor', () => {
   beforeAll(async () => await helpers.createTestTable())
   afterAll(async () => await helpers.cleanup())
 
-  xit('test anchors', async () => {
+  test('test anchors', async () => {
     const anchorReqs = await helpers.fetchUnanchoredStreamReqs()
     console.log(`Identified ${anchorReqs.length} streams pending anchor status check`)
 
