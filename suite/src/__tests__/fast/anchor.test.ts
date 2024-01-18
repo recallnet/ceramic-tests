@@ -9,7 +9,7 @@ import * as helpers from '../../utils/dynamoDbHelpers.js'
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 describe('anchor', () => {
-  beforeAll(async () => await helpers.createAnchorTable())
+  beforeAll(async () => await helpers.createTestTable())
   afterAll(async () => await helpers.cleanup())
 
   test('test anchors', async () => {
@@ -44,8 +44,8 @@ describe('anchor', () => {
             `Test failed. StreamID: ${tile.id.toString()}, state:\n${JSON.stringify(
               StreamUtils.serializeState(tile.state),
               null,
-              2
-            )}`
+              2,
+            )}`,
           )
 
           // If the anchoring failed, we don't want to leave this stream in the database,

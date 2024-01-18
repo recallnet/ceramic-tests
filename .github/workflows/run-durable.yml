@@ -44,20 +44,7 @@ jobs:
   run-tests:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        network: [dev, qa, tnet, prod]
-        # Includes a new variable for each network (this is effectively a switch statement)
-        include:
-          - network: dev
-            admin_did_seed_secret: DEV_COMPOSEDB_ADMIN_DID_SEEDS
-          - network: qa
-            admin_did_seed_secret: QA_COMPOSEDB_ADMIN_DID_SEEDS
-          - network: tnet
-            admin_did_seed_secret: TNET_COMPOSEDB_ADMIN_DID_SEEDS
-          - network: prod
-            admin_did_seed_secret: PROD_COMPOSEDB_ADMIN_DID_SEEDS
+    environment: ${{ github.event.inputs.environment }}
     steps:
       -
         # We're piggybacking on this step to inject the CD manager job ID into this workflow
@@ -73,7 +60,6 @@ jobs:
         env:
           AWS_REGION: us-east-1
       -
-        # TODO: Use a separate cluster for durable nodes, and eventually separate clusters for each network.
         name: Setup GKE auth
         uses: 'google-github-actions/auth@v1'
         with:
@@ -82,28 +68,27 @@ jobs:
         name: Get GKE credentials
         uses: 'google-github-actions/get-gke-credentials@v1'
         with:
-          cluster_name: ${{ secrets.GKE_CLUSTER }}
-          location: ${{ secrets.GKE_ZONE }}
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_ZONE }}
       -
-        name: Test ${{ matrix.network }}
-        if: ${{ github.event.inputs.environment == matrix.network }}
+        name: Test ${{ github.event.inputs.environment }}
         env:
           BUILD_TAG: ${{ github.event.inputs.build_tag }}
           TEST_SELECTOR: ${{ github.event.inputs.test_selector }}
-          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets[matrix.admin_did_seed_secret] }}
+          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets.COMPOSEDB_ADMIN_DID_SEEDS }}
         run: |
           if [[ -z "$BUILD_TAG" ]]; then
             BUILD_TAG=latest
           fi
           # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
-          source ./port-forward.sh "keramik-${{ matrix.network }}"
+          source ./port-forward.sh "keramik-ceramic-v4-${{ github.event.inputs.environment }}"
           # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
           if [[ -n "$COMPOSEDB_URLS" ]];
           then
-            sed -i "s|COMPOSEDB_URLS.*|&,$COMPOSEDB_URLS|" suite/env/.env."${{ matrix.network }}"
-            sed -i "s|CERAMIC_URLS.*|&,$CERAMIC_URLS|" suite/env/.env."${{ matrix.network }}"
+            sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+            sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
           fi
-          make DURABLE_ENV=${{ matrix.network }} durable-tests
+          make DURABLE_ENV=${{ github.event.inputs.environment }} durable-tests
 
   collect-results:
     name: Durable Test Results

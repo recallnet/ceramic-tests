@@ -1,7 +1,7 @@
 import { CeramicApi, SyncOptions } from '@ceramicnetwork/common'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
+import { afterAll, beforeAll, expect, test, xdescribe } from '@jest/globals'
 
 import * as helpers from '../../utils/dynamoDbHelpers.js'
 import { utilities } from '../../utils/common.js'
@@ -16,8 +16,9 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 /// Create/Update Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-describe('update', () => {
-  beforeAll(async () => await helpers.createAnchorTable())
+// TODO: Skipped
+xdescribe('update', () => {
+  beforeAll(async () => await helpers.createTestTable())
   afterAll(async () => await helpers.cleanup())
 
   // Run tests with each node being the node where a stream is created

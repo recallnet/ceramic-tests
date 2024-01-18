@@ -8,3 +8,7 @@ spec:
   ceramic:
     - ipfs:
         rust: {}
+  # Use Kubo with CAS because it still needs pubsub
+  cas:
+    ipfs:
+      go: {}
