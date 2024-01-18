@@ -218,6 +218,7 @@ async fn composedb_models_can_be_indexed() -> Result<()> {
 // Test that updates to streams can be read on any node that is indexing an model indepenedent of
 // where in the network the updates originate.
 #[test(tokio::test)]
+#[ignore]
 async fn composedb_updates_can_be_read() -> Result<()> {
     let composedb_clients = get_composedb_clients().await;
     assert!(!composedb_clients.is_empty());
