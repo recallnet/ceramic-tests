@@ -2,9 +2,18 @@
 apiVersion: "keramik.3box.io/v1alpha1"
 kind: Network
 metadata:
-  name: basic-rust
+  name: steph-second-run
 spec:
   replicas: 2
+  networkType: "local"
   ceramic:
     - ipfs:
-        rust: {}
+        rust: {
+            env: {
+              CERAMIC_ONE_RECON: "true"
+            }
+        }
+  cas:
+    ipfs:
+      go: {}
+      

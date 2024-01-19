@@ -21,7 +21,7 @@ use k8s_openapi::{
     },
     ClusterResourceScope, NamespaceResourceScope,
 };
-use keramik_operator::network::Network;
+use keramik_operator::{network::Network, simulation::Simulation};
 use kube::{
     api::{
         Api, DeleteParams, ListParams, LogParams, ObjectMeta, Patch, PatchParams, PostParams,
@@ -52,6 +52,8 @@ use crate::cli::Flavor;
 use crate::cli::TestOpts;
 
 pub async fn run(opts: TestOpts) -> Result<()> {
+    debug!("opts {:#?}", opts);
+
     // Infer the runtime environment and try to create a Kubernetes Client
     let client = Client::try_default().await?;
 
@@ -119,9 +121,11 @@ pub async fn run(opts: TestOpts) -> Result<()> {
 
     // Apply the network itself
     apply_resource(client.clone(), network).await?;
+    println!("WOOP");
 
     // Apply the process-peers config map
     apply_resource_namespaced(client.clone(), &namespace, process_peers()).await?;
+    println!("wfejw");
 
     // Create any dependencies of the job
     match opts.flavor {
@@ -136,24 +140,57 @@ pub async fn run(opts: TestOpts) -> Result<()> {
             apply_resource_namespaced(client.clone(), &namespace, localstack_service(&namespace))
                 .await?;
         }
+        Flavor::Performance => {}
     }
+    println!("dependencies built");
 
     // Wait for network to be ready
     wait_for_network(client.clone(), &network_name, opts.network_timeout).await?;
 
-    // Create the job
-    let job_name =
-        create_resource_namespaced(client.clone(), &namespace, job(&namespace, opts.clone()))
+    match opts.flavor {
+        Flavor::Property | Flavor::Smoke => {
+            // Create the job
+            let job_name = create_resource_namespaced(
+                client.clone(),
+                &namespace,
+                job(&namespace, opts.clone()),
+            )
             .await?;
-
-    match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
-        (JobResult::Pass, logs) => {
-            println!("Passed:\n {logs}");
-            Ok(())
+            println!("job name: {job_name}");
+            match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
+                (JobResult::Pass, logs) => {
+                    println!("Passed:\n {logs}");
+                    return Ok(());
+                }
+                (JobResult::Fail, logs) => {
+                    println!("Failed:\n {logs}");
+                    return Err(anyhow!("Tests Failed"));
+                }
+            }
         }
-        (JobResult::Fail, logs) => {
-            println!("Failed:\n {logs}");
-            Err(anyhow!("Tests Failed"))
+        Flavor::Performance => {
+            let mut simulation: Simulation =
+                serde_yaml::from_str(&fs::read_to_string(&opts.simulation).await?)?;
+            debug!("input simulation {:#?}", simulation);
+            simulation.metadata.namespace = Some(namespace.clone());
+            debug!(
+                "simulation.metadata.namespace {:#?}",
+                simulation.metadata.namespace
+            );
+            println!("ready: creating simulation");
+            let job_name =
+                create_resource_namespaced(client.clone(), &namespace, simulation).await?;
+            println!("waiting for simulation");
+            match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
+                (JobResult::Pass, logs) => {
+                    println!("Passed:\n {logs}");
+                    return Ok(());
+                }
+                (JobResult::Fail, logs) => {
+                    println!("Failed:\n {logs}");
+                    return Err(anyhow!("Tests Failed"));
+                }
+            }
         }
     }
 }
@@ -208,7 +245,7 @@ async fn wait_for_job(
                 .timeout(timeout);
             let mut stream = jobs.watch(&lp, "0").await?.boxed();
             while let Some(status) = stream.try_next().await? {
-                trace!("job watch event {:?}", status);
+                debug!("job watch event {:?}", status);
                 match status {
                     WatchEvent::Added(job)
                     | WatchEvent::Modified(job)
@@ -236,6 +273,7 @@ async fn wait_for_job(
     })
     .await
 }
+
 // Loop calling f with a timeout until timeout_seconds is reached where timeout will never be
 // greater than max_timeout.
 //
@@ -266,7 +304,9 @@ enum JobResult {
 }
 fn check_job_result(job: &Job) -> Option<JobResult> {
     if let Some(status) = &job.status {
+        debug!("job status: {:?}", status);
         if let Some(conditions) = &status.conditions {
+            debug!("job conditions: {:?}", conditions);
             for condition in conditions {
                 if condition.type_ == "Failed" && condition.status == "True" {
                     return Some(JobResult::Fail);
@@ -456,6 +496,7 @@ fn job(namespace: &str, opts: TestOpts) -> Job {
     match &opts.flavor {
         Flavor::Property => property_job(namespace, opts.test_image),
         Flavor::Smoke => smoke_job(namespace, opts.test_image, opts.test_selector),
+        Flavor::Performance => performance_job(namespace, opts.test_image),
     }
 }
 
@@ -598,6 +639,71 @@ fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> J
                                 ..Default::default()
                             },
                         ]),
+                        ..Default::default()
+                    }],
+                    volumes: Some(job_volumes()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
+
+fn performance_job(namespace: &str, image: Option<String>) -> Job {
+    let (image, image_pull_policy) = if let Some(image) = image {
+        (Some(image), Some("IfNotPresent".to_owned()))
+    } else {
+        (
+            Some("public.ecr.aws/r5b3e0r5/3box/ceramic-tests-property".to_owned()),
+            Some("Always".to_owned()),
+        )
+    };
+
+    Job {
+        metadata: ObjectMeta {
+            generate_name: Some("ceramic-tests-prop-".to_owned()),
+            namespace: Some(namespace.to_owned()),
+            ..Default::default()
+        },
+        spec: Some(JobSpec {
+            // Clean up finished jobs after 10m
+            ttl_seconds_after_finished: Some(600),
+            backoff_limit: Some(0),
+            template: PodTemplateSpec {
+                spec: Some(PodSpec {
+                    restart_policy: Some("Never".to_owned()),
+                    service_account_name: Some(SERVICE_ACCOUNT_NAME.to_owned()),
+                    init_containers: Some(vec![job_init()]),
+                    containers: vec![Container {
+                        name: "tests".to_owned(),
+                        image,
+                        image_pull_policy,
+                        resources: Some(ResourceRequirements {
+                            limits: Some(BTreeMap::from_iter([
+                                ("cpu".to_owned(), Quantity("250m".to_owned())),
+                                ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
+                                ("memory".to_owned(), Quantity("1Gi".to_owned())),
+                            ])),
+                            requests: Some(BTreeMap::from_iter([
+                                ("cpu".to_owned(), Quantity("250m".to_owned())),
+                                ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
+                                ("memory".to_owned(), Quantity("1Gi".to_owned())),
+                            ])),
+                            ..Default::default()
+                        }),
+                        volume_mounts: Some(vec![VolumeMount {
+                            mount_path: "/config".to_owned(),
+                            name: "config-volume".to_owned(),
+                            ..Default::default()
+                        }]),
+                        env: Some(vec![EnvVar {
+                            name: "ENV_PATH".to_owned(),
+                            value: Some("/config/.env".to_owned()),
+                            ..Default::default()
+                        }]),
                         ..Default::default()
                     }],
                     volumes: Some(job_volumes()),

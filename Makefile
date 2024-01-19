@@ -104,6 +104,16 @@ hermetic-tests:
 		--test-image "${TEST_SUITE_IMAGE}" \
 		--test-selector "${TEST_SELECTOR}"
 
+.PHONY: performance-tests
+performance-tests:
+	${HERMETIC_CMD} test \
+		--network "${TEST_NETWORK}" \
+		--flavor performance \
+		--suffix "${HERMETIC_SUFFIX}" \
+		--network-ttl ${HERMETIC_TTL} \
+		--test-image "${TEST_SUITE_IMAGE}" \
+		--test-selector "${TEST_SELECTOR}"
+
 .PHONY: durable-tests
 durable-tests:
 	BUILD_TAG="${BUILD_TAG}" IMAGE_NAME="${TEST_SUITE_IMAGE_NAME}" ./durable/durable-driver.sh "${DURABLE_ENV}" "${TEST_SELECTOR}"
