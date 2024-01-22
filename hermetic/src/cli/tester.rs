@@ -21,7 +21,7 @@ use k8s_openapi::{
     },
     ClusterResourceScope, NamespaceResourceScope,
 };
-use keramik_operator::network::Network;
+use keramik_operator::{network::Network, simulation::Simulation};
 use kube::{
     api::{
         Api, DeleteParams, ListParams, LogParams, ObjectMeta, Patch, PatchParams, PostParams,
@@ -125,7 +125,7 @@ pub async fn run(opts: TestOpts) -> Result<()> {
 
     // Create any dependencies of the job
     match opts.flavor {
-        Flavor::Property => {}
+        Flavor::Property | Flavor::Performance => {}
         Flavor::Smoke => {
             apply_resource_namespaced(
                 client.clone(),
@@ -141,19 +141,50 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     // Wait for network to be ready
     wait_for_network(client.clone(), &network_name, opts.network_timeout).await?;
 
-    // Create the job
-    let job_name =
-        create_resource_namespaced(client.clone(), &namespace, job(&namespace, opts.clone()))
+    match opts.flavor {
+        Flavor::Property | Flavor::Smoke => {
+            // Create the job
+            let job_name = create_resource_namespaced(
+                client.clone(),
+                &namespace,
+                job(&namespace, opts.clone()),
+            )
             .await?;
 
-    match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
-        (JobResult::Pass, logs) => {
-            println!("Passed:\n {logs}");
-            Ok(())
+            match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
+                (JobResult::Pass, logs) => {
+                    println!("Passed:\n {logs}");
+                    Ok(())
+                }
+                (JobResult::Fail, logs) => {
+                    println!("Failed:\n {logs}");
+                    Err(anyhow!("Tests Failed"))
+                }
+            }
         }
-        (JobResult::Fail, logs) => {
-            println!("Failed:\n {logs}");
-            Err(anyhow!("Tests Failed"))
+        Flavor::Performance => {
+            let mut simulation: Simulation =
+                serde_yaml::from_str(&fs::read_to_string(&opts.simulation).await?)?;
+            debug!("input simulation {:#?}", simulation);
+            simulation.metadata.namespace = Some(namespace.clone());
+            debug!(
+                "simulation.metadata.namespace {:#?}",
+                simulation.metadata.namespace
+            );
+            println!("ready: creating simulation");
+            let job_name =
+                create_resource_namespaced(client.clone(), &namespace, simulation).await?;
+            println!("waiting for simulation");
+            match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
+                (JobResult::Pass, logs) => {
+                    println!("Passed:\n {logs}");
+                    return Ok(());
+                }
+                (JobResult::Fail, logs) => {
+                    println!("Failed:\n {logs}");
+                    return Err(anyhow!("Tests Failed"));
+                }
+            }
         }
     }
 }

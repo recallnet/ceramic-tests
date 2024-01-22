@@ -22,6 +22,10 @@ pub struct TestOpts {
     #[arg(short, long)]
     network: PathBuf,
 
+    /// Path to simulation yaml file
+    #[arg(long)]
+    simulation: PathBuf,
+
     /// Name and label of the specific test image to use.
     /// Defaults to latest published image.
     /// Setting this value implies an image pull policy of IfNotPresent
@@ -60,6 +64,8 @@ pub enum Flavor {
     Property,
     /// Smoke tests
     Smoke,
+    /// Performance tests
+    Performance,
 }
 
 impl Flavor {
@@ -67,13 +73,14 @@ impl Flavor {
         match self {
             Flavor::Property => "prop",
             Flavor::Smoke => "smoke",
+            Flavor::Performance => "perf",
         }
     }
 }
 
 impl ValueEnum for Flavor {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Flavor::Property, Flavor::Smoke]
+        &[Flavor::Property, Flavor::Smoke, Flavor::Performance]
     }
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
