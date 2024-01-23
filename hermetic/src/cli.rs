@@ -1,6 +1,10 @@
 use std::{fmt::Display, path::PathBuf};
 
+use anyhow::anyhow;
 use clap::{builder::PossibleValue, Args, Parser, Subcommand, ValueEnum};
+
+use self::tester::{Flavor, TestConfig};
+
 pub mod tester;
 
 #[derive(Parser, Debug)]
@@ -24,7 +28,7 @@ pub struct TestOpts {
 
     /// Path to simulation yaml file
     #[arg(long)]
-    simulation: PathBuf,
+    simulation: Option<PathBuf>,
 
     /// Name and label of the specific test image to use.
     /// Defaults to latest published image.
@@ -34,7 +38,7 @@ pub struct TestOpts {
 
     /// Type of tests to run.
     #[arg(short, long)]
-    flavor: Flavor,
+    flavor: FlavorOpts,
 
     /// Optional suffix to apply to network name.
     /// Used to create unique networks.
@@ -59,7 +63,7 @@ pub struct TestOpts {
 }
 
 #[derive(Debug, Clone)]
-pub enum Flavor {
+pub enum FlavorOpts {
     /// Property based tests
     Property,
     /// Smoke tests
@@ -68,19 +72,23 @@ pub enum Flavor {
     Performance,
 }
 
-impl Flavor {
+impl FlavorOpts {
     fn name(&self) -> &'static str {
         match self {
-            Flavor::Property => "prop",
-            Flavor::Smoke => "smoke",
-            Flavor::Performance => "perf",
+            FlavorOpts::Property => "prop",
+            FlavorOpts::Smoke => "smoke",
+            FlavorOpts::Performance => "perf",
         }
     }
 }
 
-impl ValueEnum for Flavor {
+impl ValueEnum for FlavorOpts {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Flavor::Property, Flavor::Smoke, Flavor::Performance]
+        &[
+            FlavorOpts::Property,
+            FlavorOpts::Smoke,
+            FlavorOpts::Performance,
+        ]
     }
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
@@ -88,8 +96,45 @@ impl ValueEnum for Flavor {
     }
 }
 
-impl Display for Flavor {
+impl Display for FlavorOpts {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name())
+    }
+}
+
+impl TryFrom<TestOpts> for TestConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(opts: TestOpts) -> Result<Self, Self::Error> {
+        let TestOpts {
+            network,
+            simulation,
+            test_image,
+            flavor,
+            suffix,
+            network_ttl,
+            network_timeout,
+            job_timeout,
+            test_selector,
+        } = opts;
+
+        let flavor = match flavor {
+            FlavorOpts::Property => Flavor::Property,
+            FlavorOpts::Smoke => Flavor::Smoke,
+            FlavorOpts::Performance => Flavor::Performance(
+                simulation.ok_or(anyhow!("Simulation file required for performance tests"))?,
+            ),
+        };
+
+        Ok(TestConfig {
+            network,
+            test_image,
+            flavor,
+            suffix,
+            network_ttl,
+            network_timeout,
+            job_timeout,
+            test_selector,
+        })
     }
 }
