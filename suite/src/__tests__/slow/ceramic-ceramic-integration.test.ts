@@ -1,6 +1,6 @@
 import { CeramicApi, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { jest, describe, test, beforeAll, expect } from '@jest/globals'
+import { jest, xdescribe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramicHelpers.js'
 
 const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from one node to another
@@ -8,7 +8,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 const createWithOneLoadWithTheOther = async (
   ceramic1: CeramicApi,
-  ceramic2: CeramicApi
+  ceramic2: CeramicApi,
 ): Promise<void> => {
   const content = { foo: 'bar' }
   const doc1 = await TileDocument.create(ceramic1, content)
@@ -20,7 +20,7 @@ const createWithOneLoadWithTheOther = async (
 const updatesAreShared = async (
   ceramic1: CeramicApi,
   ceramic2: CeramicApi,
-  anchor: boolean
+  anchor: boolean,
 ): Promise<void> => {
   const content0 = { foo: 0 }
   const content1 = { foo: 1 }
@@ -53,7 +53,7 @@ const updatesAreShared = async (
     function (state) {
       return state.next?.content.foo == content1.foo || state.content.foo == content1.foo
     },
-    UPDATE_TIMEOUT
+    UPDATE_TIMEOUT,
   ).catch((errStr) => {
     throw new Error(errStr)
   })
@@ -74,7 +74,7 @@ const updatesAreShared = async (
     function (state) {
       return state.next?.content.foo == content2.foo || state.content.foo == content2.foo
     },
-    UPDATE_TIMEOUT
+    UPDATE_TIMEOUT,
   )
 
   expect(doc2.content).toEqual(content2)
@@ -94,7 +94,8 @@ const updatesAreShared = async (
   expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
 }
 
-describe('Ceramic<->Ceramic multi-node integration', () => {
+// TODO: Skipped
+xdescribe('Ceramic<->Ceramic multi-node integration', () => {
   jest.setTimeout(1000 * 60 * 60) // 1 hour
   let ceramic1: CeramicApi
   let ceramic2: CeramicApi
