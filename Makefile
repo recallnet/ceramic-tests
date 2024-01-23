@@ -9,7 +9,7 @@ BUILD_PROFILE ?= release
 # Unique identifier for builds and tags.
 BUILD_TAG ?= dev-run
 # Path to network to test against.
-TEST_NETWORK ?= ./networks/basic-go-rust.yaml
+TEST_NETWORK ?= ./networks/basic-rust.yaml
 # Path to performance simulation.
 TEST_SIMULATION ?= ./simulations/basic-simulation.yaml
 # Name for the test suite image, without any tag
