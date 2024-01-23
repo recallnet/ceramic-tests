@@ -597,6 +597,11 @@ fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> J
                                 value: Some(test_selector),
                                 ..Default::default()
                             },
+                            EnvVar {
+                                name: "NETWORK".to_owned(),
+                                value: Some("local".to_owned()),
+                                ..Default::default()
+                            },
                         ]),
                         ..Default::default()
                     }],
