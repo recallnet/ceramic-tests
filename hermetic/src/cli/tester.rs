@@ -322,7 +322,7 @@ async fn wait_for_simulation(
         Box::pin(async move {
             let pods: Api<Pod> = Api::namespaced(client.clone(), namespace);
             let wp = WatchParams::default()
-                .labels(&format!("job-name=simulate-manager"))
+                .labels("job-name=simulate-manager")
                 .timeout(timeout);
             let mut stream = pods.watch(&wp, "0").await?.boxed();
             while let Some(status) = stream.try_next().await? {
@@ -736,7 +736,7 @@ async fn performance_simulation(namespace: &str, simulation_path: &PathBuf) -> R
         simulation.metadata.namespace
     );
 
-    return Ok(simulation);
+    Ok(simulation)
 }
 
 // Create volumes for init container
