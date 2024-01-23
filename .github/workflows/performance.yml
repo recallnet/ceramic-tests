@@ -1,0 +1,109 @@
+name: Run Performance tests
+
+on:
+  merge_group:
+    branches: ['main']
+  schedule:
+    - cron: '0 0 * * *' # Run every midnight UTC
+  workflow_dispatch: # manually triggered
+
+env:
+  CARGO_TERM_COLOR: always
+  SCCACHE_GHA_ENABLED: 'true'
+  RUSTC_WRAPPER: 'sccache'
+
+jobs:
+  generate-matrix:
+    name: Generate Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      networks: ${{ steps.generate-matrix.outputs.networks }}
+      build_tag: ${{ steps.generate-matrix.outputs.build_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Generate network matrix
+        id: generate-matrix
+        run: |
+          NETWORKS=$(ls networks | jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
+          echo "Networks:"
+          echo ${NETWORKS}
+          echo "networks=${NETWORKS}" >> $GITHUB_OUTPUT
+          # Choose unique name for this build
+          BUILD_TAG="$(echo ${{ github.sha }} | head -c 8)-${{ github.run_id }}"
+          echo "Build tag:"
+          echo ${BUILD_TAG}
+          echo "build_tag=${BUILD_TAG}" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
+  build-driver:
+    name: Build 'hermetic-driver' binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # The prefix cache key, this can be changed to start a new cache manually.
+          # default: "v0-rust"
+          prefix-key: v0
+          # Cache only the cargo registry
+          cache-targets: false
+      - uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Build Tester
+        run: make BUILD_PROFILE=release driver
+      - uses: actions/upload-artifact@master
+        with:
+          name: hermetic-driver
+          path: ./target/release/hermetic-driver
+          retention-days: 1
+
+  run-performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs:
+      - generate-matrix
+      - build-driver
+    strategy:
+      fail-fast: false
+      matrix:
+        networks: ${{ fromJSON(needs.generate-matrix.outputs.networks) }}
+        # TODO: add simulations matrix
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      - name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_ZONE }}
+      - uses: actions/download-artifact@master
+        with:
+          name: hermetic-driver
+          path: ./bin
+      - name: Test ${{ matrix.networks }}
+        run: |
+          export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
+          export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
+
+          export TEST_SIMULATION=./networks/basic-simulation.yaml
+          chmod +x ./bin/hermetic-driver
+          make HERMETIC_CMD=./bin/hermetic-driver performance-tests
+
+  collect-results:
+    name: Performance Test Results
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs: [run-performance-tests]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+                contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+          }}
