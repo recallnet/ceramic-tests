@@ -1,6 +1,6 @@
 import { CeramicApi, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { jest, xdescribe, test, beforeAll, expect } from '@jest/globals'
+import { jest, describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramicHelpers.js'
 
 const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from one node to another
@@ -94,8 +94,7 @@ const updatesAreShared = async (
   expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
 }
 
-// TODO: Skipped
-xdescribe('Ceramic<->Ceramic multi-node integration', () => {
+describe.skip('Ceramic<->Ceramic multi-node integration', () => {
   jest.setTimeout(1000 * 60 * 60) // 1 hour
   let ceramic1: CeramicApi
   let ceramic2: CeramicApi
