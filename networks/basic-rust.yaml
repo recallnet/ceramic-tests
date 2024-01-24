@@ -5,7 +5,6 @@ metadata:
   name: basic-rust
 spec:
   replicas: 2
-  networkType: "local"
   ceramic:
     - ipfs:
         rust: { env: { CERAMIC_ONE_RECON: "true" } }
