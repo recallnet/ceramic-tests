@@ -10,7 +10,6 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.75"
-ceramic-tests-property.workspace = true
 serde = { version = "1.0.188", features = ["serde_derive"] }
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread", "fs"] }
 clap = { version = "4.4.3", features = ["derive"] }

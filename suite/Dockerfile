@@ -4,7 +4,7 @@ RUN npm install -g pnpm
 
 WORKDIR /app
 
-RUN apk add --no-cache curl jq
+RUN apk add --no-cache curl jq bash
 
 COPY package.json pnpm-*.yaml jest.config.json tsconfig.json entrypoint.sh update.sh ./
 

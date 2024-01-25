@@ -10,6 +10,7 @@ const streamID1 = StreamID.fromString(
   'kjzl6cwe1jw149zfreoiia0ayfbwxnc3qizfyouw1c6mp9e3ah3smmhqfrppm0z',
 )
 
+
 /**
  * Tests the behaviors of the 'helpers' functions for doing reads and writes to
  * DynamoDB.  Not meant to be run in production, just used for local testing

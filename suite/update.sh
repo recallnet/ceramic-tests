@@ -1,8 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
 cd $(dirname $0)
+
+# Update to specific label
+target=latest
+
 
 deps=$(jq -r '.dependencies | keys | .[]' package.json)
 filtered_deps=''
@@ -11,7 +15,7 @@ do
     # Look for specific deps we manage
     case $dep in
         "dids" | "key-did-provider-ed25519" | "key-did-resolver")
-            filtered_deps="$filtered_deps $dep@latest"
+            filtered_deps="$filtered_deps $dep@$target"
             continue
             ;;
         *)
@@ -21,7 +25,7 @@ do
     scope=$(dirname $dep)
     case $scope in
         "@ceramicnetwork"|"@composedb")
-            filtered_deps="$filtered_deps $dep@latest"
+            filtered_deps="$filtered_deps $dep@$target"
             ;;
         *)
             # Ignore other deps
