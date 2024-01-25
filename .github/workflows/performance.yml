@@ -90,7 +90,7 @@ jobs:
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
 
-          export TEST_SIMULATION=./networks/basic-simulation.yaml
+          export TEST_SIMULATION=./simulations/basic-simulation.yaml
           chmod +x ./bin/hermetic-driver
           make HERMETIC_CMD=./bin/hermetic-driver performance-tests
 
