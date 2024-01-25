@@ -10,6 +10,8 @@ BUILD_PROFILE ?= release
 BUILD_TAG ?= dev-run
 # Path to network to test against.
 TEST_NETWORK ?= ./networks/basic-go-rust.yaml
+# Path to performance simulation.
+TEST_SIMULATION ?= ./networks/basic-simulation.yaml
 # Name for the test suite image, without any tag
 TEST_SUITE_IMAGE_NAME ?= public.ecr.aws/r5b3e0r5/3box/ceramic-tests-suite
 # Full path of the test suite image with a tag
@@ -103,6 +105,15 @@ hermetic-tests:
 		--network-ttl ${HERMETIC_TTL} \
 		--test-image "${TEST_SUITE_IMAGE}" \
 		--test-selector "${TEST_SELECTOR}"
+
+.PHONY: performance-tests
+performance-tests:
+	${HERMETIC_CMD} test \
+		--network "${TEST_NETWORK}" \
+		--flavor perf \
+		--suffix "${HERMETIC_SUFFIX}" \
+		--network-ttl ${HERMETIC_TTL} \
+		--simulation ${TEST_SIMULATION}
 
 .PHONY: durable-tests
 durable-tests:

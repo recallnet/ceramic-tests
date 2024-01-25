@@ -8,6 +8,6 @@ async fn main() -> Result<()> {
 
     let args = cli::Cli::parse();
     match args.command {
-        cli::Command::Test(opts) => cli::tester::run(opts).await,
+        cli::Command::Test(opts) => cli::tester::run(opts.try_into()?).await,
     }
 }

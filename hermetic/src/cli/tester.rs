@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use futures::{future::BoxFuture, StreamExt, TryStreamExt};
@@ -21,7 +21,7 @@ use k8s_openapi::{
     },
     ClusterResourceScope, NamespaceResourceScope,
 };
-use keramik_operator::network::Network;
+use keramik_operator::{network::Network, simulation::Simulation};
 use kube::{
     api::{
         Api, DeleteParams, ListParams, LogParams, ObjectMeta, Patch, PatchParams, PostParams,
@@ -48,10 +48,52 @@ const MAX_KUBE_WATCH_TIMEOUT: u32 = 290;
 
 const DID_PRIVATE_KEY: &str = "c864a33033626b448912a19509992552283fd463c143bdc4adc75f807b7a4dce";
 
-use crate::cli::Flavor;
-use crate::cli::TestOpts;
+#[derive(Debug, Clone)]
+pub struct TestConfig {
+    pub network: PathBuf,
 
-pub async fn run(opts: TestOpts) -> Result<()> {
+    pub test_image: Option<String>,
+
+    pub flavor: Flavor,
+
+    pub suffix: Option<String>,
+
+    pub network_ttl: u64,
+
+    pub network_timeout: u32,
+
+    pub job_timeout: u32,
+
+    pub test_selector: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum Flavor {
+    /// Property based tests
+    Property,
+    /// Smoke tests
+    Smoke,
+    /// Performance tests
+    Performance(PathBuf),
+}
+
+impl Flavor {
+    fn name(&self) -> &'static str {
+        match self {
+            Flavor::Property => "prop",
+            Flavor::Smoke => "smoke",
+            Flavor::Performance(_) => "perf",
+        }
+    }
+}
+
+impl Display for Flavor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+pub async fn run(opts: TestConfig) -> Result<()> {
     // Infer the runtime environment and try to create a Kubernetes Client
     let client = Client::try_default().await?;
 
@@ -125,7 +167,7 @@ pub async fn run(opts: TestOpts) -> Result<()> {
 
     // Create any dependencies of the job
     match opts.flavor {
-        Flavor::Property => {}
+        Flavor::Property | Flavor::Performance(_) => {}
         Flavor::Smoke => {
             apply_resource_namespaced(
                 client.clone(),
@@ -141,12 +183,44 @@ pub async fn run(opts: TestOpts) -> Result<()> {
     // Wait for network to be ready
     wait_for_network(client.clone(), &network_name, opts.network_timeout).await?;
 
-    // Create the job
-    let job_name =
-        create_resource_namespaced(client.clone(), &namespace, job(&namespace, opts.clone()))
-            .await?;
+    // Create the job/simulation
+    let job_name = match &opts.flavor {
+        Flavor::Property => {
+            create_resource_namespaced(
+                client.clone(),
+                &namespace,
+                property_job(&namespace, opts.test_image),
+            )
+            .await?
+        }
+        Flavor::Smoke => {
+            create_resource_namespaced(
+                client.clone(),
+                &namespace,
+                smoke_job(&namespace, opts.test_image, opts.test_selector),
+            )
+            .await?
+        }
+        Flavor::Performance(simulation) => {
+            create_resource_namespaced(
+                client.clone(),
+                &namespace,
+                performance_simulation(&namespace, simulation).await?,
+            )
+            .await?
+        }
+    };
 
-    match wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await? {
+    let results = match opts.flavor {
+        Flavor::Property | Flavor::Smoke => {
+            wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await?
+        }
+        Flavor::Performance(_) => {
+            wait_for_simulation(client.clone(), &namespace, opts.job_timeout).await?
+        }
+    };
+
+    match results {
         (JobResult::Pass, logs) => {
             println!("Passed:\n {logs}");
             Ok(())
@@ -236,6 +310,54 @@ async fn wait_for_job(
     })
     .await
 }
+
+// waits for the simulate manager pod to fail or succeed
+async fn wait_for_simulation(
+    client: Client,
+    namespace: &str,
+    timeout_seconds: u32,
+) -> Result<(JobResult, String)> {
+    loop_with_max_timeout(timeout_seconds, MAX_KUBE_WATCH_TIMEOUT, move |timeout| {
+        let client = client.clone();
+        Box::pin(async move {
+            let pods: Api<Pod> = Api::namespaced(client.clone(), namespace);
+            let wp = WatchParams::default()
+                .labels("job-name=simulate-manager")
+                .timeout(timeout);
+            let mut stream = pods.watch(&wp, "0").await?.boxed();
+            while let Some(status) = stream.try_next().await? {
+                debug!("pod watch event {:#?}", status);
+                match status {
+                    WatchEvent::Added(pod) | WatchEvent::Modified(pod) => {
+                        trace!("found pod: {}", pod.name_unchecked());
+                        debug!("pod status: {:#?}", pod.status);
+
+                        if let Some(status) = &pod.status {
+                            if let Some(phase) = &status.phase {
+                                if phase == "Succeeded" {
+                                    let logs = pods
+                                        .logs(&pod.name_unchecked(), &LogParams::default())
+                                        .await?;
+                                    return Ok(Some((JobResult::Pass, logs)));
+                                } else if phase == "Failed" {
+                                    let logs = pods
+                                        .logs(&pod.name_unchecked(), &LogParams::default())
+                                        .await?;
+                                    return Ok(Some((JobResult::Fail, logs)));
+                                }
+                            }
+                        }
+                    }
+                    WatchEvent::Deleted(_) | WatchEvent::Bookmark(_) => {}
+                    WatchEvent::Error(err) => return Err(err.into()),
+                }
+            }
+            Ok(None)
+        })
+    })
+    .await
+}
+
 // Loop calling f with a timeout until timeout_seconds is reached where timeout will never be
 // greater than max_timeout.
 //
@@ -452,13 +574,6 @@ fn process_peers() -> ConfigMap {
     }
 }
 
-fn job(namespace: &str, opts: TestOpts) -> Job {
-    match &opts.flavor {
-        Flavor::Property => property_job(namespace, opts.test_image),
-        Flavor::Smoke => smoke_job(namespace, opts.test_image, opts.test_selector),
-    }
-}
-
 fn property_job(namespace: &str, image: Option<String>) -> Job {
     let (image, image_pull_policy) = if let Some(image) = image {
         (Some(image), Some("IfNotPresent".to_owned()))
@@ -614,6 +729,19 @@ fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> J
         }),
         ..Default::default()
     }
+}
+
+async fn performance_simulation(namespace: &str, simulation_path: &PathBuf) -> Result<Simulation> {
+    let mut simulation: Simulation =
+        serde_yaml::from_str(&fs::read_to_string(&simulation_path).await?)?;
+    debug!("input simulation {:#?}", simulation);
+    simulation.metadata.namespace = Some(namespace.to_string());
+    debug!(
+        "simulation.metadata.namespace {:#?}",
+        simulation.metadata.namespace
+    );
+
+    Ok(simulation)
 }
 
 // Create volumes for init container
