@@ -46,15 +46,7 @@ PNPM = pnpm
 all: check-fmt check-clippy test
 
 .PHONY: build
-build: release driver suite
-
-.PHONY: release
-release:
-	./ci-scripts/build-test-binaries.sh release
-
-.PHONY: dev
-dev:
-	./ci-scripts/build-test-binaries.sh dev
+build: driver suite
 
 .PHONY: test
 test:
@@ -91,16 +83,11 @@ build-suite:
 publish-suite:
 	BUILD_PROFILE=${BUILD_PROFILE} IMAGE_NAME=${TEST_SUITE_IMAGE_NAME} ./ci-scripts/publish_suite.sh ${BUILD_TAG}
 
-# TODO Remove this target when the flavors are refactored away
-.PHONY: publish-tests-property
-publish-tests-property:
-	BUILD_PROFILE=${BUILD_PROFILE} ./ci-scripts/publish_property.sh ${BUILD_TAG}
-
 .PHONY: hermetic-tests
 hermetic-tests:
 	${HERMETIC_CMD} test \
 		--network "${TEST_NETWORK}" \
-		--flavor smoke \
+		--flavor correctness \
 		--suffix "${HERMETIC_SUFFIX}" \
 		--network-ttl ${HERMETIC_TTL} \
 		--test-image "${TEST_SUITE_IMAGE}" \
@@ -122,16 +109,3 @@ durable-tests:
 .PHONY: schedule-durable-tests
 schedule-durable-tests:
 	BUILD_TAG="${BUILD_TAG}" TEST_BRANCH="${DURABLE_TEST_BRANCH}" ./ci-scripts/schedule_durable_tests.sh "${DURABLE_ENV}" "${TEST_SELECTOR}"
-
-# TODO Remove this target:
-# Remove flavor concept from driver.
-# We should have a single test suite with different kinds of tests
-# within the suite.
-.PHONY: prop-test
-prop-test:
-	# Run tests using BUILD_TAG image
-	${HERMETIC_CMD} test \
-		--network "${TEST_NETWORK}" \
-		--flavor prop \
-		--suffix "${BUILD_TAG}" \
-		--test-image public.ecr.aws/r5b3e0r5/3box/ceramic-tests-property:${BUILD_TAG}

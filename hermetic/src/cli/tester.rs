@@ -69,10 +69,8 @@ pub struct TestConfig {
 
 #[derive(Debug, Clone)]
 pub enum Flavor {
-    /// Property based tests
-    Property,
-    /// Smoke tests
-    Smoke,
+    /// Correctness tests
+    Correctness,
     /// Performance tests
     Performance(PathBuf),
 }
@@ -80,8 +78,7 @@ pub enum Flavor {
 impl Flavor {
     fn name(&self) -> &'static str {
         match self {
-            Flavor::Property => "prop",
-            Flavor::Smoke => "smoke",
+            Flavor::Correctness => "correctness",
             Flavor::Performance(_) => "perf",
         }
     }
@@ -167,8 +164,8 @@ pub async fn run(opts: TestConfig) -> Result<()> {
 
     // Create any dependencies of the job
     match opts.flavor {
-        Flavor::Property | Flavor::Performance(_) => {}
-        Flavor::Smoke => {
+        Flavor::Performance(_) => {}
+        Flavor::Correctness => {
             apply_resource_namespaced(
                 client.clone(),
                 &namespace,
@@ -185,19 +182,11 @@ pub async fn run(opts: TestConfig) -> Result<()> {
 
     // Create the job/simulation
     let job_name = match &opts.flavor {
-        Flavor::Property => {
+        Flavor::Correctness => {
             create_resource_namespaced(
                 client.clone(),
                 &namespace,
-                property_job(&namespace, opts.test_image),
-            )
-            .await?
-        }
-        Flavor::Smoke => {
-            create_resource_namespaced(
-                client.clone(),
-                &namespace,
-                smoke_job(&namespace, opts.test_image, opts.test_selector),
+                correctness_test(&namespace, opts.test_image, opts.test_selector),
             )
             .await?
         }
@@ -212,7 +201,7 @@ pub async fn run(opts: TestConfig) -> Result<()> {
     };
 
     let results = match opts.flavor {
-        Flavor::Property | Flavor::Smoke => {
+        Flavor::Correctness => {
             wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await?
         }
         Flavor::Performance(_) => {
@@ -574,72 +563,7 @@ fn process_peers() -> ConfigMap {
     }
 }
 
-fn property_job(namespace: &str, image: Option<String>) -> Job {
-    let (image, image_pull_policy) = if let Some(image) = image {
-        (Some(image), Some("IfNotPresent".to_owned()))
-    } else {
-        (
-            Some("public.ecr.aws/r5b3e0r5/3box/ceramic-tests-property".to_owned()),
-            Some("Always".to_owned()),
-        )
-    };
-
-    Job {
-        metadata: ObjectMeta {
-            generate_name: Some("ceramic-tests-prop-".to_owned()),
-            namespace: Some(namespace.to_owned()),
-            ..Default::default()
-        },
-        spec: Some(JobSpec {
-            // Clean up finished jobs after 10m
-            ttl_seconds_after_finished: Some(600),
-            backoff_limit: Some(0),
-            template: PodTemplateSpec {
-                spec: Some(PodSpec {
-                    restart_policy: Some("Never".to_owned()),
-                    service_account_name: Some(SERVICE_ACCOUNT_NAME.to_owned()),
-                    init_containers: Some(vec![job_init()]),
-                    containers: vec![Container {
-                        name: "tests".to_owned(),
-                        image,
-                        image_pull_policy,
-                        resources: Some(ResourceRequirements {
-                            limits: Some(BTreeMap::from_iter([
-                                ("cpu".to_owned(), Quantity("250m".to_owned())),
-                                ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
-                                ("memory".to_owned(), Quantity("1Gi".to_owned())),
-                            ])),
-                            requests: Some(BTreeMap::from_iter([
-                                ("cpu".to_owned(), Quantity("250m".to_owned())),
-                                ("ephemeral-storage".to_owned(), Quantity("1Gi".to_owned())),
-                                ("memory".to_owned(), Quantity("1Gi".to_owned())),
-                            ])),
-                            ..Default::default()
-                        }),
-                        volume_mounts: Some(vec![VolumeMount {
-                            mount_path: "/config".to_owned(),
-                            name: "config-volume".to_owned(),
-                            ..Default::default()
-                        }]),
-                        env: Some(vec![EnvVar {
-                            name: "ENV_PATH".to_owned(),
-                            value: Some("/config/.env".to_owned()),
-                            ..Default::default()
-                        }]),
-                        ..Default::default()
-                    }],
-                    volumes: Some(job_volumes()),
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
-}
-
-fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> Job {
+fn correctness_test(namespace: &str, image: Option<String>, test_selector: String) -> Job {
     let (image, image_pull_policy) = if let Some(image) = image {
         (Some(image), Some("IfNotPresent".to_owned()))
     } else {
@@ -651,7 +575,7 @@ fn smoke_job(namespace: &str, image: Option<String>, test_selector: String) -> J
 
     Job {
         metadata: ObjectMeta {
-            generate_name: Some("ceramic-tests-smoke-".to_owned()),
+            generate_name: Some("ceramic-tests-".to_owned()),
             namespace: Some(namespace.to_owned()),
             ..Default::default()
         },

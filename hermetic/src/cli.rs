@@ -64,10 +64,8 @@ pub struct TestOpts {
 
 #[derive(Debug, Clone)]
 pub enum FlavorOpts {
-    /// Property based tests
-    Property,
-    /// Smoke tests
-    Smoke,
+    /// Correctness tests
+    Correctness,
     /// Performance tests
     Performance,
 }
@@ -75,8 +73,7 @@ pub enum FlavorOpts {
 impl FlavorOpts {
     fn name(&self) -> &'static str {
         match self {
-            FlavorOpts::Property => "prop",
-            FlavorOpts::Smoke => "smoke",
+            FlavorOpts::Correctness => "correctness",
             FlavorOpts::Performance => "perf",
         }
     }
@@ -84,11 +81,7 @@ impl FlavorOpts {
 
 impl ValueEnum for FlavorOpts {
     fn value_variants<'a>() -> &'a [Self] {
-        &[
-            FlavorOpts::Property,
-            FlavorOpts::Smoke,
-            FlavorOpts::Performance,
-        ]
+        &[FlavorOpts::Correctness, FlavorOpts::Performance]
     }
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
@@ -119,8 +112,7 @@ impl TryFrom<TestOpts> for TestConfig {
         } = opts;
 
         let flavor = match flavor {
-            FlavorOpts::Property => Flavor::Property,
-            FlavorOpts::Smoke => Flavor::Smoke,
+            FlavorOpts::Correctness => Flavor::Correctness,
             FlavorOpts::Performance => Flavor::Performance(
                 simulation.ok_or(anyhow!("Simulation file required for performance tests"))?,
             ),

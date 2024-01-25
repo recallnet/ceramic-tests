@@ -5,7 +5,7 @@ This repo contains an end-to-end test suite for the [Ceramic Network](https://gi
 
 ## Design
 
-This crate provides three entities:
+This repo provides three entities:
 
 * A test suite of end-to-end tests.
 * A hermetic test driver, which runs the test suite against isolated infrastructure.
@@ -26,22 +26,20 @@ Testing against durable infrastructure allows for better coverage of real world 
 
 ## Flavors
 
-> Flavors are deprecated and will be removed in favor of a single test suite and multiple drivers design.
-
 There are several test flavors:
 
-* Property based tests
-* Smoke tests
+* Correctness tests
+* Performance tests
 
-More will be added over time.
+More will be added as needed.
 
-The property based tests, test a specific property of a network (i.e. writes can be read).
+The correctness tests, test a specific property of a network (i.e. writes can be read).
 These tests do not assume any network topology.
-Property tests live in this repo as Rust integration tests, see the `/property/tests` directory.
+Property tests live in this repo in the `/suite` directory.
 
-The smoke tests, test specific behaviors of a network end to end.
+The performance tests, test at scale.
 These tests do not assume any network topology.
-Smoke tests live outside of this repo.
+Performance tests live outside of this repo.
 
 ## Prerequisites
 
@@ -143,9 +141,9 @@ To tear down all the pods created by running the tests, you can delete the netwo
 
     > kubectl get networks # Look up the network name
     NAME                          AGE
-    smoke-basic-go-rust-dev-run   33m
+    basic-rust-dev-run   33m
 
-    > kubectl delete network smoke-basic-go-rust-dev-run # delete the network and all pods within it.
+    > kubectl delete network basic-rust-dev-run # delete the network and all pods within it.
 
 ## Contributing
 
