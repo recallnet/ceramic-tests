@@ -11,7 +11,7 @@ BUILD_TAG ?= dev-run
 # Path to network to test against.
 TEST_NETWORK ?= ./networks/basic-go-rust.yaml
 # Path to performance simulation.
-TEST_SIMULATION ?= ./networks/basic-simulation.yaml
+TEST_SIMULATION ?= ./simulations/basic-simulation.yaml
 # Name for the test suite image, without any tag
 TEST_SUITE_IMAGE_NAME ?= public.ecr.aws/r5b3e0r5/3box/ceramic-tests-suite
 # Full path of the test suite image with a tag
