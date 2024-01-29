@@ -14,6 +14,8 @@ TEST_NETWORK ?= ./networks/basic-rust.yaml
 TEST_SIMULATION ?= ./simulations/basic-simulation.yaml
 # Name for the test suite image, without any tag
 TEST_SUITE_IMAGE_NAME ?= public.ecr.aws/r5b3e0r5/3box/ceramic-tests-suite
+# Name for the hermetic-driver image, without any tag
+HERMETIC_DRIVER_IMAGE_NAME ?= public.ecr.aws/r5b3e0r5/3box/hermetic-driver
 # Full path of the test suite image with a tag
 TEST_SUITE_IMAGE ?= ${TEST_SUITE_IMAGE_NAME}:${BUILD_TAG}
 
@@ -82,6 +84,15 @@ build-suite:
 .PHONY: publish-suite
 publish-suite:
 	BUILD_PROFILE=${BUILD_PROFILE} IMAGE_NAME=${TEST_SUITE_IMAGE_NAME} ./ci-scripts/publish_suite.sh ${BUILD_TAG}
+
+.PHONY: publish-hermetic-driver
+publish-hermetic-driver:
+	IMAGE_NAME=${TEST_SUITE_IMAGE_NAME} ./ci-scripts/publish_hermetic_driver.sh ${BUILD_TAG}
+
+# TODO Remove this target when the flavors are refactored away
+.PHONY: publish-tests-property
+publish-tests-property:
+	BUILD_PROFILE=${BUILD_PROFILE} ./ci-scripts/publish_property.sh ${BUILD_TAG}
 
 .PHONY: hermetic-tests
 hermetic-tests:
