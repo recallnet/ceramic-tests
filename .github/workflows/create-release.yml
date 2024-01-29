@@ -1,5 +1,5 @@
 # Create a release from the latest tag
-name: Create Release
+name: Create Hermetic Driver Release
 
 permissions:
   contents: write
