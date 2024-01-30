@@ -5,6 +5,10 @@ import * as random from '@stablelib/random'
 import { base64 } from 'multiformats/bases/base64'
 import { base16 } from 'multiformats/bases/base16'
 import { randomCID, StreamID, EventID } from '@ceramicnetwork/streamid'
+import { CARFactory } from "cartonne";
+import * as dagJson from "@ipld/dag-json";
+import { sha256 } from "multihashes-sync/sha2";
+
 
 const delay = utilities.delay
 
@@ -14,7 +18,13 @@ const Network = String(process.env.NETWORK)
 
 function randomEvents(modelID: StreamID, count: number, network = Network, networkOffset = 0) {
   let modelEvents = [];
+  const carFactory = new CARFactory();
+  carFactory.codecs.add(dagJson);
+  carFactory.hashers.add(sha256);
+
   for (let i = 0; i < count; i++) {
+    const car = carFactory.build().asV1();
+    car.put({ data: base64.encode(random.randomBytes(512)) }, { isRoot: true });
     modelEvents.push({
       "eventId": base16.encode(EventID.createRandom(
         network,
@@ -24,7 +34,7 @@ function randomEvents(modelID: StreamID, count: number, network = Network, netwo
           separatorValue: modelID.toString(),
         }
       ).bytes),
-      "eventData": base64.encode(random.randomBytes(1024)),
+      "eventData": car.toString('base64'),
     })
   }
   return modelEvents

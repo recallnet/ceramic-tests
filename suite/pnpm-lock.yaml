@@ -35,6 +35,9 @@ dependencies:
   '@composedb/devtools':
     specifier: 0.6.1
     version: 0.6.1(graphql@16.8.1)(typescript@4.9.5)
+  '@ipld/dag-json':
+    specifier: ^10.1.7
+    version: 10.1.7
   '@jest/globals':
     specifier: ^29.7.0
     version: 29.7.0
@@ -47,6 +50,9 @@ dependencies:
   axios:
     specifier: ^0.24.0
     version: 0.24.0
+  cartonne:
+    specifier: ^3.0.1
+    version: 3.0.1
   cross-fetch:
     specifier: ^4.0.0
     version: 4.0.0
@@ -71,6 +77,9 @@ dependencies:
   multiformats:
     specifier: ^13.0.1
     version: 13.0.1
+  multihashes-sync:
+    specifier: ^2.0.0
+    version: 2.0.0
   node-jq:
     specifier: ^2.3.5
     version: 2.3.5
@@ -1886,6 +1895,14 @@ packages:
 
   /@ipld/dag-cbor@9.0.8:
     resolution: {integrity: sha512-ETWJ7p7lmGw5X+BuI/7rf4/k56xyOvAOVNUVuQmnGYBdJjObLPgS+vyFxRk4odATlkyZqCq2MLNY52bhE6SlRA==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+    dependencies:
+      cborg: 4.0.8
+      multiformats: 13.0.1
+    dev: false
+
+  /@ipld/dag-json@10.1.7:
+    resolution: {integrity: sha512-ipraTPMA40sZAtUYwFvjHeQjReDJXWI8V3lrOeyedKxMb9rOOCS0B7eodRoWM3RIS2qMqtnu1oZr8kP+QJEN0Q==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 4.0.8
