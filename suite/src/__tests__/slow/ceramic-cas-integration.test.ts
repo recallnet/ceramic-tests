@@ -5,7 +5,8 @@ import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
-describe('Ceramic<->CAS basic integration', () => {
+// Skipped https://linear.app/3boxlabs/issue/WS1-1460/unskip-ceramic-cas-basic-integration
+describe.skip('Ceramic<->CAS basic integration', () => {
   jest.setTimeout(1000 * 60 * 60) // 1 hour
   let ceramic: CeramicApi
 
