@@ -40,8 +40,8 @@ function randomEvents(modelID: StreamID, count: number, network = Network, netwo
   return modelEvents
 }
 
-async function subscribe(url: string, model: StreamID) {
-  let response = await fetch(url + `/ceramic/subscribe/model/${model.toString()}?limit=1`)
+async function registerInterest(url: string, model: StreamID) {
+  let response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
   await response.text()
 }
 
@@ -98,13 +98,13 @@ describe('events', () => {
 
     // Write all data to one node before subscribing on the other nodes.
     // This way the other nodes to a linear download of the data from the first node.
-    await subscribe(firstNodeUrl, modelID)
+    await registerInterest(firstNodeUrl, modelID)
     await writeEvents(firstNodeUrl, modelEvents)
 
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
-      await subscribe(url, modelID)
+      await registerInterest(url, modelID)
     }
 
     await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10)
@@ -126,7 +126,7 @@ describe('events', () => {
     // Subscribe on all nodes then write the data
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      await subscribe(url, modelID)
+      await registerInterest(url, modelID)
     }
     await writeEvents(firstNodeUrl, modelEvents)
 
@@ -146,7 +146,7 @@ describe('events', () => {
     const modelID = new StreamID('model', randomCID())
     let modelEvents = randomEvents(modelID, 20);
     // Write half the data before other nodes subscribe
-    await subscribe(firstNodeUrl, modelID)
+    await registerInterest(firstNodeUrl, modelID)
     let half = Math.ceil(modelEvents.length / 2);
     let firstHalf = modelEvents.slice(0, half)
     let secondHalf = modelEvents.slice(half, modelEvents.length)
@@ -155,7 +155,7 @@ describe('events', () => {
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
-      await subscribe(url, modelID)
+      await registerInterest(url, modelID)
     }
     // Write the second half of the data
     await writeEvents(firstNodeUrl, secondHalf)
@@ -182,7 +182,7 @@ describe('events', () => {
     // Subscribe on all nodes then write the data
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      await subscribe(url, modelID)
+      await registerInterest(url, modelID)
     }
 
     // Write to both node simultaneously
@@ -221,7 +221,7 @@ describe('events', () => {
       let model = models[m]
       for (let idx in CeramicUrls) {
         let url = CeramicUrls[idx]
-        await subscribe(url, model.id)
+        await registerInterest(url, model.id)
       }
     }
 
