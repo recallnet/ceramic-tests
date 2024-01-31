@@ -1,4 +1,4 @@
-import { CeramicApi, StreamUtils } from '@ceramicnetwork/common'
+import { StreamReaderWriter, StreamUtils } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { jest, describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramicHelpers.js'
@@ -7,8 +7,8 @@ const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from on
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 const createWithOneLoadWithTheOther = async (
-  ceramic1: CeramicApi,
-  ceramic2: CeramicApi,
+  ceramic1: StreamReaderWriter,
+  ceramic2: StreamReaderWriter,
 ): Promise<void> => {
   const content = { foo: 'bar' }
   const doc1 = await TileDocument.create(ceramic1, content)
@@ -18,8 +18,8 @@ const createWithOneLoadWithTheOther = async (
 }
 
 const updatesAreShared = async (
-  ceramic1: CeramicApi,
-  ceramic2: CeramicApi,
+  ceramic1: StreamReaderWriter,
+  ceramic2: StreamReaderWriter,
   anchor: boolean,
 ): Promise<void> => {
   const content0 = { foo: 0 }
@@ -96,8 +96,8 @@ const updatesAreShared = async (
 
 describe.skip('Ceramic<->Ceramic multi-node integration', () => {
   jest.setTimeout(1000 * 60 * 60) // 1 hour
-  let ceramic1: CeramicApi
-  let ceramic2: CeramicApi
+  let ceramic1: StreamReaderWriter
+  let ceramic2: StreamReaderWriter
 
   beforeAll(async () => {
     ceramic1 = await newCeramic(ComposeDbUrls[0])
