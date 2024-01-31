@@ -12,3 +12,5 @@ spec:
   cas:
     ipfs:
       go: {}
+  monitoring:
+    namespaced: true
