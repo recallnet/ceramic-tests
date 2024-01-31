@@ -27,6 +27,7 @@ jobs:
             arch: x86_64
             ext: deb
             protoc-arch: linux-x86_64
+            build-command: sudo apt-get install libssl-dev pkg-config
           # - target: x86_64-apple-darwin
           #   os: macos-latest
           #   arch: x86_64
@@ -38,6 +39,7 @@ jobs:
             arch: aarch64
             ext: pkg
             protoc-arch: osx-aarch_64
+            build-command: brew install openssl
         #- target: x86_64-pc-windows-msvc
         #  os: windows-latest
     runs-on: ${{ matrix.os }}
@@ -46,11 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install libssl-dev
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        run: sudo apt-get install libssl-dev pkg-config
-      - name: Brew install openssl
-        if: matrix.target == 'aarch64-apple-darwin'
-        run: brew install openssl
+        run: ${{ matrix.target.build-command }} || true
       - name: Install Rust
         run: |
           rustup update stable
