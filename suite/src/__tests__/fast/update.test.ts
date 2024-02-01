@@ -1,4 +1,4 @@
-import { StreamReaderWriter, SyncOptions } from '@ceramicnetwork/common'
+import { CeramicApi, SyncOptions } from '@ceramicnetwork/common'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { afterAll, beforeAll, expect, test, describe } from '@jest/globals'
@@ -38,7 +38,7 @@ function testUpdate(composeDbUrls: string[]) {
   // Create and update on first node
   test(`create stream on ${firstNodeUrl}`, async () => {
     firstCeramic = await newCeramic(firstNodeUrl)
-    firstTile = await TileDocument.create(firstCeramic as StreamReaderWriter, content, metadata, {
+    firstTile = await TileDocument.create(firstCeramic as CeramicApi, content, metadata, {
       anchor: false,
     })
     console.log(

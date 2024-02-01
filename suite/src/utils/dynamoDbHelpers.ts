@@ -54,7 +54,7 @@ export const createTestTable = async () => {
       await delay(5)
       continue
     } catch (e) {
-      console.log('Test table does not exist', e)
+      console.error('Test table does not exist')
     }
     try {
       console.log('Creating test table...')
@@ -79,7 +79,7 @@ export const createTestTable = async () => {
       }
       await DynamoClient.createTable(createTableIn)
     } catch (e) {
-      console.log('Could not create table', e)
+      console.error('Could not create test table')
     }
     await delay(5)
   }
