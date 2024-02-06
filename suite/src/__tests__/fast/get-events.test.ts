@@ -44,7 +44,7 @@ describe('rust-ceramic e2e test', () => {
     // fetching the event from its event-id from rust-ceramic
     const getResponse = await getEventData(ceramicUrl, eventId)
     const responseText = await getResponse.text()
-    expect(getResponse.status).toEqual(400)
+    expect(getResponse.status).toEqual(404)
     expect(responseText).toContain('Event not found')
     expect(responseText).toContain(eventId)
     expect(getResponse.statusText).toContain('Bad Request')
