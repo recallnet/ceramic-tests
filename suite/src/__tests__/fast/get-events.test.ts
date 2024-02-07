@@ -34,8 +34,8 @@ describe('rust-ceramic e2e test', () => {
     const getResponse = await getEventData(ceramicUrl, eventId)
     expect(getResponse.status).toEqual(200)
     expect(await getResponse.json()).toEqual({
-      eventId: eventId,
-      eventData: event.eventData,
+      id: eventId,
+      data: event.eventData,
     })
   })
 
