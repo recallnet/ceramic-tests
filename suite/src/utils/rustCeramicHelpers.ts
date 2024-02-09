@@ -20,7 +20,7 @@ export function generateRandomEvent(eventId: string): any {
   const car = carFactory.build().asV1()
   car.put({ data: base64.encode(random.randomBytes(512)) }, { isRoot: true })
   return {
-    eventId: eventId,
-    eventData: car.toString('base64'),
+    id: eventId,
+    data: car.toString('base64'),
   }
 }

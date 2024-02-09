@@ -9,6 +9,10 @@ import { CARFactory } from "cartonne";
 import * as dagJson from "@ipld/dag-json";
 import { sha256 } from "multihashes-sync/sha2";
 
+interface Event {
+  id: string
+  data: string
+}
 
 const delay = utilities.delay
 
@@ -26,7 +30,7 @@ function randomEvents(modelID: StreamID, count: number, network = Network, netwo
     const car = carFactory.build().asV1();
     car.put({ data: base64.encode(random.randomBytes(512)) }, { isRoot: true });
     modelEvents.push({
-      "eventId": base16.encode(EventID.createRandom(
+      "id": base16.encode(EventID.createRandom(
         network,
         networkOffset,
         {
@@ -34,7 +38,7 @@ function randomEvents(modelID: StreamID, count: number, network = Network, netwo
           separatorValue: modelID.toString(),
         }
       ).bytes),
-      "eventData": car.toString('base64'),
+      "data": car.toString('base64'),
     })
   }
   return modelEvents
@@ -61,10 +65,10 @@ async function readEvents(url: string, model: StreamID) {
   return await response.json()
 }
 
-function sortModelEvents(events: any[]) {
+function sortModelEvents(events: Event[]) {
   return JSON.parse(JSON.stringify(events)).sort((a: any, b: any) => {
-    if (a.eventId > b.eventId) return 1;
-    if (a.eventId < b.eventId) return -1;
+    if (a.id > b.id) return 1;
+    if (a.id < b.id) return -1;
     return 0;
   })
 }
