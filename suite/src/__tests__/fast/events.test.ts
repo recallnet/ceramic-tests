@@ -1,49 +1,12 @@
 import { describe, expect, test } from '@jest/globals'
 import { utilities } from '../../utils/common.js'
 import fetch from 'cross-fetch'
-import * as random from '@stablelib/random'
-import { base64 } from 'multiformats/bases/base64'
-import { base16 } from 'multiformats/bases/base16'
-import { randomCID, StreamID, EventID } from '@ceramicnetwork/streamid'
-import { CARFactory } from "cartonne";
-import * as dagJson from "@ipld/dag-json";
-import { sha256 } from "multihashes-sync/sha2";
-
-interface Event {
-  id: string
-  data: string
-}
+import { randomCID, StreamID } from '@ceramicnetwork/streamid'
+import { randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
 
 const delay = utilities.delay
-
 // Environment variables
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
-const Network = String(process.env.NETWORK)
-
-function randomEvents(modelID: StreamID, count: number, network = Network, networkOffset = 0) {
-  let modelEvents = [];
-  const carFactory = new CARFactory();
-  carFactory.codecs.add(dagJson);
-  carFactory.hashers.add(sha256);
-
-  for (let i = 0; i < count; i++) {
-    const car = carFactory.build().asV1();
-    car.put({ data: base64.encode(random.randomBytes(512)) }, { isRoot: true });
-    modelEvents.push({
-      "id": base16.encode(EventID.createRandom(
-        network,
-        networkOffset,
-        {
-          separatorKey: 'model',
-          separatorValue: modelID.toString(),
-        }
-      ).bytes),
-      "data": car.toString('base64'),
-    })
-  }
-  return modelEvents
-}
-
 async function registerInterest(url: string, model: StreamID) {
   let response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
   await response.text()
@@ -65,7 +28,7 @@ async function readEvents(url: string, model: StreamID) {
   return await response.json()
 }
 
-function sortModelEvents(events: Event[]) {
+function sortModelEvents(events: ReconEvent[]) {
   return JSON.parse(JSON.stringify(events)).sort((a: any, b: any) => {
     if (a.id > b.id) return 1;
     if (a.id < b.id) return -1;
