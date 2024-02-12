@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
 import fetch from 'cross-fetch'
-import { generateRandomEventId, generateRandomEvent } from '../../utils/rustCeramicHelpers'
+import { generateRandomEventId, generateRandomEvent, getEventData } from '../../utils/rustCeramicHelpers'
 
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
@@ -15,12 +15,6 @@ async function postEvent(url: string, event: any) {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
   }
-}
-
-async function getEventData(url: string, eventId: string) {
-  let response = await fetch(url + `/ceramic/events/${eventId}`)
-  console.log(response)
-  return response
 }
 
 describe('rust-ceramic e2e test', () => {

@@ -1,8 +1,8 @@
 import { describe, expect, test } from '@jest/globals'
 import { utilities } from '../../utils/common.js'
 import fetch from 'cross-fetch'
-import { randomCID, StreamID } from '@ceramicnetwork/streamid'
-import { randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
+import { EventID, randomCID, StreamID } from '@ceramicnetwork/streamid'
+import { getEventData, randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
 
 const delay = utilities.delay
 // Environment variables
@@ -22,18 +22,37 @@ async function writeEvents(url: string, events: any[]) {
     await response.text()
   }
 }
+
 async function readEvents(url: string, model: StreamID) {
-  let fullUrl = url + `/ceramic/subscribe/model/${model.toString()}`
+  let fullUrl = url + `/ceramic/feed/events`
   let response = await fetch(fullUrl)
-  return await response.json()
+  // this only gives us keys. we filter to the model we want, and then get values (yea, it's clunky)
+  const eventFeed = await response.json();
+  // currently, the event feed returns an empty value, so we have to go fetch the data for each key
+  const modelEvents = eventFeed.events.filter((e: ReconEvent) => {
+    const id = EventID.fromString(e.id)
+    const eventModel = StreamID.fromBytes(id.separator)
+    return eventModel == model
+  });
+  const events = []
+  for (const e of modelEvents) {
+    const response = await getEventData(url, e.id)
+    let event = await response.json()
+    events.push(event)
+  }
+  return sortModelEvents(events) // sort so that tests are stable
 }
 
-function sortModelEvents(events: ReconEvent[]) {
-  return JSON.parse(JSON.stringify(events)).sort((a: any, b: any) => {
-    if (a.id > b.id) return 1;
-    if (a.id < b.id) return -1;
-    return 0;
-  })
+function sortModelEvents(events: ReconEvent[]): ReconEvent[] {
+  if (events && events.length > 0) {
+    return JSON.parse(JSON.stringify(events)).sort((a: any, b: any) => {
+      if (a.id > b.id) return 1;
+      if (a.id < b.id) return -1;
+      return 0;
+    })
+  } else {
+    return []
+  }
 }
 
 // Wait up till retries seconds for all urls to have count events

@@ -1,4 +1,5 @@
 import { randomCID, EventID, StreamID } from '@ceramicnetwork/streamid'
+import fetch from 'cross-fetch'
 import { base16 } from 'multiformats/bases/base16'
 import { base64 } from 'multiformats/bases/base64'
 import { CARFactory } from 'cartonne'
@@ -54,4 +55,12 @@ export function randomEvents(modelID: StreamID, count: number, network = Network
     modelEvents.push(event)
   }
   return modelEvents
+}
+
+export async function getEventData(url: string, eventId: string, log = false) {
+  let response = await fetch(url + `/ceramic/events/${eventId}`)
+  if (log) {
+    console.log(response)
+  }
+  return response
 }
