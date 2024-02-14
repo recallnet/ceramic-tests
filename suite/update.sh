@@ -4,8 +4,9 @@ set -e
 
 cd $(dirname $0)
 
-# Update to specific label
-target=latest
+# Update to specific label (we only publish nightly for ceramic packages)
+target=nightly
+target_dids=latest
 
 
 deps=$(jq -r '.dependencies | keys | .[]' package.json)
@@ -14,8 +15,8 @@ for dep in $deps
 do
     # Look for specific deps we manage
     case $dep in
-        "dids" | "key-did-provider-ed25519" | "key-did-resolver")
-            filtered_deps="$filtered_deps $dep@$target"
+        "dids" | "key-did-provider-ed25519" | "key-did-resolver" | "@composedb")
+            filtered_deps="$filtered_deps $dep@$target_dids"
             continue
             ;;
         *)
@@ -24,7 +25,7 @@ do
     esac
     scope=$(dirname $dep)
     case $scope in
-        "@ceramicnetwork"|"@composedb")
+        "@ceramicnetwork")
             filtered_deps="$filtered_deps $dep@$target"
             ;;
         *)
