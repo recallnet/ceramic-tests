@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --reporters default --setupFiles dotenv/config"
+    "test": "tsc && NODE_OPTIONS=--experimental-vm-modules jest --runInBand --reporters default --setupFiles dotenv/config"
   },
   "devDependencies": {
     "@skypack/package-check": "^0.2.2",

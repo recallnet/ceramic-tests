@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals'
 import fetch from 'cross-fetch'
 import { generateRandomEventId, generateRandomEvent, getEventData } from '../../utils/rustCeramicHelpers'
+import { StreamID, randomCID } from '@ceramicnetwork/streamid'
 
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
@@ -20,7 +21,8 @@ async function postEvent(url: string, event: any) {
 describe('rust-ceramic e2e test', () => {
   const ceramicUrl = CeramicUrls[0]
   test('post and get event data, success', async () => {
-    const eventId = generateRandomEventId()
+    const modelId = new StreamID('model', randomCID())
+    const eventId = generateRandomEventId(modelId)
     const event = generateRandomEvent(eventId)
     // publishing the event to rust-ceramic
     await postEvent(ceramicUrl, event)
@@ -34,7 +36,8 @@ describe('rust-ceramic e2e test', () => {
   })
 
   test('get event data for non-existing event', async () => {
-    const eventId = generateRandomEventId()
+    const modelId = new StreamID('model', randomCID())
+    const eventId = generateRandomEventId(modelId)
     // fetching the event from its event-id from rust-ceramic
     const getResponse = await getEventData(ceramicUrl, eventId)
     const responseText = await getResponse.text()

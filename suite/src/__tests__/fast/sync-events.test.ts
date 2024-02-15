@@ -1,44 +1,47 @@
-import { describe, expect, test } from '@jest/globals'
+import { beforeAll, describe, expect, test } from '@jest/globals'
 import { utilities } from '../../utils/common.js'
 import fetch from 'cross-fetch'
-import { EventID, randomCID, StreamID } from '@ceramicnetwork/streamid'
-import { getEventData, randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
+import { randomCID, StreamID } from '@ceramicnetwork/streamid'
+import { randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
 
 const delay = utilities.delay
 // Environment variables
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 async function registerInterest(url: string, model: StreamID) {
   let response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
+  expect(response.status).toEqual(204)
   await response.text()
 }
 
 async function writeEvents(url: string, events: any[]) {
-  for (let i in events) {
-    let event = events[i]
+  for (const event of events) {
     let response = await fetch(url + '/ceramic/events', {
       method: 'POST',
       body: JSON.stringify(event),
     })
+    expect(response.status).toEqual(204)
     await response.text()
   }
 }
 
 async function readEvents(url: string, model: StreamID) {
-  let fullUrl = url + `/ceramic/feed/events`
-  let response = await fetch(fullUrl)
-  // this only gives us keys. we filter to the model we want, and then get values (yea, it's clunky)
-  const eventFeed = await response.json();
-  // currently, the event feed returns an empty value, so we have to go fetch the data for each key
-  const modelEvents = eventFeed.events.filter((e: ReconEvent) => {
-    const id = EventID.fromString(e.id)
-    const eventModel = StreamID.fromBytes(id.separator)
-    return eventModel == model
-  });
   const events = []
-  for (const e of modelEvents) {
-    const response = await getEventData(url, e.id)
-    let event = await response.json()
-    events.push(event)
+  let complete = false;
+  let offset = 0;
+  var startTime = Date.now();
+  while (!complete) {
+    const fullUrl = url + `/ceramic/events/model/${model.toString()}?offset=${offset}`
+    const response = await fetch(fullUrl)
+    expect(response.status).toEqual(200)
+    const data = await response.json();
+    events.push(...data.events)
+    offset = data.resumeOffset
+    complete = data.isComplete
+    if (!complete && (Date.now() - startTime) > 60000) {
+      // if it took more than a minute, quit
+      console.warn(`readEvents: timeout after 60 seconds`)
+      complete = true
+    }
   }
   return sortModelEvents(events) // sort so that tests are stable
 }
@@ -55,14 +58,14 @@ function sortModelEvents(events: ReconEvent[]): ReconEvent[] {
   }
 }
 
-// Wait up till retries seconds for all urls to have count events
+// Wait up till retries seconds for all urls to have at least count events
 async function waitForEventCount(urls: string[], model: StreamID, count: number, retries: number) {
   for (let r = 0; r < retries; r++) {
     let all_good = true;
     for (let u in urls) {
       let url = urls[u];
       let events = await readEvents(url, model)
-      if (events.length != count) {
+      if (events.length < count) {
         all_good = false;
         break;
       }
@@ -72,11 +75,18 @@ async function waitForEventCount(urls: string[], model: StreamID, count: number,
     }
     await delay(1)
   }
+  throw new Error(`waitForEventCount: timeout after ${retries} retries`)
 }
 
-describe('events', () => {
+describe('sync events', () => {
   const firstNodeUrl = CeramicUrls[0]
   const secondNodeUrl = CeramicUrls[1]
+
+  beforeAll(() => {
+    if (!firstNodeUrl || !secondNodeUrl) {
+      throw new Error('CERAMIC_URLS environment variable must be set')
+    }
+  })
 
   test(`linear sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
@@ -92,15 +102,13 @@ describe('events', () => {
       let url = CeramicUrls[idx]
       await registerInterest(url, modelID)
     }
-
+    const sortedModelEvents = sortModelEvents(modelEvents)
     await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10)
 
     // Use a sorted expected value for stable tests
-    const sortedModelEvents = sortModelEvents(modelEvents)
     // Validate each node got the events, including the first node
-    for (let idx in CeramicUrls) {
-      let url = CeramicUrls[idx]
-      let events = await readEvents(url, modelID)
+    for (const url of CeramicUrls) {
+      const events = await readEvents(url, modelID)
 
       expect(events).toEqual(sortedModelEvents)
     }
