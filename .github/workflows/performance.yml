@@ -61,7 +61,7 @@ jobs:
   run-performance-tests:
     name: Performance Tests
     runs-on: ubuntu-latest
-    environment: test
+    environment: github-tests-2024
     needs:
       - generate-matrix
       - build-driver
