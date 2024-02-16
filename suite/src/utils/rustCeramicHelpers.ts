@@ -1,5 +1,4 @@
 import { EventID, StreamID } from '@ceramicnetwork/streamid'
-import fetch from 'cross-fetch'
 import { base16 } from 'multiformats/bases/base16'
 import { base64 } from 'multiformats/bases/base64'
 import { CARFactory } from 'cartonne'
