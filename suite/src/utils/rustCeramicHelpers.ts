@@ -50,11 +50,3 @@ export function randomEvents(modelID: StreamID, count: number, network = Network
   }
   return modelEvents
 }
-
-export async function getEventData(url: string, eventId: string, log = false) {
-  let response = await fetch(url + `/ceramic/events/${eventId}`)
-  if (log) {
-    console.log(response)
-  }
-  return response
-}
