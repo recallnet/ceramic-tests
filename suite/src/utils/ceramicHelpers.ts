@@ -18,9 +18,9 @@ export const metadata = { controllers: [] }
 export const newCeramic = async (apiUrl: string, didOverride?: DID) => {
   const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
   const effectiveDID = didOverride || did
-  if (!did.authenticated) {
+  if (!effectiveDID.authenticated) {
     await effectiveDID.authenticate()
-    ;(metadata.controllers as string[]) = [did.id]
+    ;(metadata.controllers as string[]) = [effectiveDID.id]
   }
   await ceramic.setDID(effectiveDID)
   return ceramic

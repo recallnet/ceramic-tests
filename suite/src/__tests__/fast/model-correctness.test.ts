@@ -1,14 +1,12 @@
 import { describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic } from '../../utils/ceramicHelpers.js'
-import { createDid } from '../../utils/didHelper.js'
+import { createDid, splitDidsToList } from '../../utils/didHelper.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import {} from '@composedb/cli'
 import {Model} from '@ceramicnetwork/stream-model'
 import {ModelInstanceDocument} from '@ceramicnetwork/stream-model-instance'
 import { newModel, basicModelDocumentContent } from '../../models/modelConstants'
-// import { StreamWriter } from '@ceramicnetwork/common'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-// import { randomString } from '@stablelib/random'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 // TODO : Update to correct modelId
@@ -18,16 +16,11 @@ let seed = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS)
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
   let streamId = StreamID.fromString(modelId);
-  console.log(ComposeDbUrls)
   beforeAll(async () => {
-    // Initialize two Ceramic nodesxwe
-    // Get urls local/dev/qa depending on the env
-    console.log(seed)
-    let did = await createDid(seed);
-    ceramicNode1 = await newCeramic('http://localhost:7007', did)
-    //   let ceramicNode2 = await newCeramic('http://localhost:7007', did)
-    console.log("Here!")
-    console.log(ceramicNode1)
+    let did = await createDid(splitDidsToList(seed)[1]);
+    console.log(ComposeDbUrls[0])
+    ceramicNode1 = await newCeramic(ComposeDbUrls[0], did)
+    // let ceramicNode2 = await newCeramic(ComposeDbUrls[1], did)
     const indexedModels = await ceramicNode1.admin.getIndexedModels();
     console.log(indexedModels);
 
@@ -43,11 +36,10 @@ describe('Model Integration Test', () => {
   })
 
   test('Create a ModelInstanceDocument on one node and read it from another', async () => {
-    // Create a modelInstanceDocument on Node1
     const modelInstanceDocumentMetdata = {model: streamId}
-    console.log(modelInstanceDocumentMetdata)
+    // console.log(modelInstanceDocumentMetdata)
     const document = await ModelInstanceDocument.create(ceramicNode1, basicModelDocumentContent, modelInstanceDocumentMetdata);
-    console.log(document)
+    // console.log(document)
     await new Promise(resolve => setTimeout(resolve, 5000));
 
 
