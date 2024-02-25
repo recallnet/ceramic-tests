@@ -16,9 +16,6 @@ spec:
           resourceLimits:
             cpu: "4"
             memory: "1Gi"
-    - env:
-        CERAMIC_RECON_MODE: "true"
-
   # Use Kubo with CAS because it still needs pubsub
   cas:
     ipfs:
