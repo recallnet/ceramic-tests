@@ -2,14 +2,16 @@
 apiVersion: "keramik.3box.io/v1alpha1"
 kind: Network
 metadata:
-  name: basic-rust
+  name: no-sig-validation
 spec:
   replicas: 2
   ceramic:
+    - image: public.ecr.aws/r5b3e0r5/3box/js-ceramic:no-sig-validation
     - ipfs:
         rust:
           env:
             CERAMIC_ONE_RECON: "true"
+            RUST_LOG: "error"
           resourceLimits:
             cpu: "4"
             memory: "1Gi"
@@ -19,3 +21,7 @@ spec:
       go: {}
   monitoring:
     namespaced: true
+  datadog:
+    enabled: true
+    version: "unique_value"
+    profilingEnabled: true
