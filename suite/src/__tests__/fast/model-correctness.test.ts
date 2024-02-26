@@ -20,19 +20,21 @@ describe('Model Integration Test', () => {
   let ceramicNode2: CeramicClient
   let modelId: StreamID
   beforeAll(async () => {
-    console.log('Reading admin seeds:', adminSeeds)
-    const did = await createDid(adminSeeds[0])
-    ceramicNode1 = await newCeramic(ComposeDbUrls[0], did)
-    ceramicNode2 = await newCeramic(ComposeDbUrls[1], did)
-    console.log('Created ceramic client for node 1', ceramicNode1)
-    console.log('Created ceramic client for node 2', ceramicNode2)
+    const did1 = await createDid(adminSeeds[0])
+    let did2
+    if (adminSeeds[1]) {
+      did2 = await createDid(adminSeeds[1])
+    } else {
+      did2 = did1
+    }
+    ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
+    ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
     let model = await Model.create(ceramicNode1, newModel)
-    console.log('Creating model on node1 ', model)
     TestUtils.waitForConditionOrTimeout(async () =>
-        ceramicNode1
-          .loadStream(model.id)
-          .then((_) => true)
-          .catch((_) => false),
+      ceramicNode1
+        .loadStream(model.id)
+        .then((_) => true)
+        .catch((_) => false),
     )
     await ceramicNode1.admin.startIndexingModels([model.id])
     console.log('Indexing model on node1')
