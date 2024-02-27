@@ -11,7 +11,6 @@ import { utilities } from '../../utils/common.js'
 
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-// TODO : Update to the modelId created manually on all envs, if id cannot be the same then create an array for different envs
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 const nodeSyncWaitTimeSec = 2
 
@@ -21,17 +20,18 @@ describe('Model Integration Test', () => {
   let modelId: StreamID
   beforeAll(async () => {
     const did1 = await createDid(adminSeeds[0])
-    let did2
-    if (adminSeeds[1]) {
-      did2 = await createDid(adminSeeds[1])
-    } else {
-      did2 = did1
-    }
+    const did2 = adminSeeds[1] ? await createDid(adminSeeds[1]) : did1
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
-    let model = await Model.create(ceramicNode1, newModel)
+    const model = await Model.create(ceramicNode1, newModel)
     TestUtils.waitForConditionOrTimeout(async () =>
       ceramicNode1
+        .loadStream(model.id)
+        .then((_) => true)
+        .catch((_) => false),
+    )
+    TestUtils.waitForConditionOrTimeout(async () =>
+      ceramicNode2
         .loadStream(model.id)
         .then((_) => true)
         .catch((_) => false),
