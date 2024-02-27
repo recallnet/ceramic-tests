@@ -14,6 +14,9 @@ dependencies:
   '@aws-sdk/client-lambda':
     specifier: ^3.427.0
     version: 3.427.0
+  '@ceramicnetwork/codecs':
+    specifier: ^4.1.0
+    version: 4.1.0(typescript@4.9.5)
   '@ceramicnetwork/common':
     specifier: 5.1.0-nightly.20240214002530.0
     version: 5.1.0-nightly.20240214002530.0(typescript@4.9.5)
@@ -53,6 +56,12 @@ dependencies:
   cartonne:
     specifier: ^3.0.1
     version: 3.0.1
+  codeco:
+    specifier: ^1.2.1
+    version: 1.2.1
+  cross-eventsource:
+    specifier: ^1.0.0
+    version: 1.0.0
   cross-fetch:
     specifier: ^4.0.0
     version: 4.0.0
@@ -1560,7 +1569,7 @@ packages:
     resolution: {integrity: sha512-eqBtI5dZrptXTCyadnhvU0di/KvumoByT7F8KB/8BLU7M1lltfEmvf/c5AnsyrWO9338ygCs2u5mKz1p1Zdj5A==}
     engines: {node: '>=14.14'}
     dependencies:
-      codeco: 1.2.0
+      codeco: 1.2.1
     dev: false
 
   /@eslint-community/eslint-utils@4.4.0(eslint@8.56.0):
@@ -2830,6 +2839,10 @@ packages:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
+  /@types/eventsource@1.1.15:
+    resolution: {integrity: sha512-XQmGcbnxUNa06HR3VBVkc9+A2Vpi9ZyLJcdS5dwaQQ/4ZMWFO+5c90FnMUpbtMZwB/FChoYHwuVg8TvkECacTA==}
+    dev: false
+
   /@types/graceful-fs@4.1.7:
     resolution: {integrity: sha512-MhzcwU8aUygZroVwL2jeYk6JisJrPl/oov/gsgGCue9mkgl9wjGbzReYQClxiUgFDnib9FuHqTndccKeZKxTRw==}
     dependencies:
@@ -3780,10 +3793,6 @@ packages:
     resolution: {integrity: sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==}
     engines: {iojs: '>= 1.0.0', node: '>= 0.12.0'}
 
-  /codeco@1.2.0:
-    resolution: {integrity: sha512-SHTBW7QsiDtHGqEyhX10gZesmWlWV00gXteFyU2xLqyZmy658/+HlPyXG5EvY05+csQNWjBIfGg2mZrklR1RtQ==}
-    dev: false
-
   /codeco@1.2.1:
     resolution: {integrity: sha512-jJHt2yEpV2p/pY1qQ0JZUScjWCqvZgE8SBYqzAEXo+DrpFB2BFs9RJp67GP2syg0+cMJ8DK14KOJZhFhhvH1nQ==}
     dev: false
@@ -3865,6 +3874,13 @@ packages:
       - babel-plugin-macros
       - supports-color
       - ts-node
+
+  /cross-eventsource@1.0.0:
+    resolution: {integrity: sha512-aV5BDwzv+Cge3RHHDXfKo18RvQoRaimqKGc5KtEz3nLq9xsoPJwIJXspA9Q7jPk5WKr6zBF6gBEU3iE4U+yjWg==}
+    dependencies:
+      '@types/eventsource': 1.1.15
+      eventsource: 2.0.2
+    dev: false
 
   /cross-fetch@3.1.8:
     resolution: {integrity: sha512-cvA+JwZoU0Xq+h6WkMvAUqPEYy92Obet6UdKLfW60qn99ftItKjB5T+BkyWOFWe2pUyfQ+IJHmpOTznqk1M6Kg==}
@@ -4638,6 +4654,11 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
     dev: true
+
+  /eventsource@2.0.2:
+    resolution: {integrity: sha512-IzUmBGPR3+oUG9dUeXynyNmf91/3zUSJg1lCktzKw47OXuhco54U3r9B7O4XX+Rb1Itm9OZ2b0RkTs10bICOxA==}
+    engines: {node: '>=12.0.0'}
+    dev: false
 
   /execa@0.7.0:
     resolution: {integrity: sha512-RztN09XglpYI7aBBrJCPW95jEH7YF1UEPOoX9yDhUTPdp7mK+CQvnLTuD10BNXZ3byLTu2uehZ8EcKT/4CGiFw==}
