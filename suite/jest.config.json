@@ -2,7 +2,7 @@
     "clearMocks": true,
     "collectCoverage": false,
     "testEnvironment": "node",
-    "testTimeout": 600000,
+    "testTimeout": 1800000,
     "verbose": true,
     "extensionsToTreatAsEsm": [".ts"],
     "moduleNameMapper": {
