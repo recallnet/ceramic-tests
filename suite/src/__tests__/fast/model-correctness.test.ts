@@ -24,22 +24,14 @@ describe('Model Integration Test', () => {
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
     const model = await Model.create(ceramicNode1, newModel)
-    TestUtils.waitForConditionOrTimeout(async () =>
-      ceramicNode1
-        .loadStream(model.id)
-        .then((_) => true)
-        .catch((_) => false),
-    )
-    TestUtils.waitForConditionOrTimeout(async () =>
+    await TestUtils.waitForConditionOrTimeout(async () =>
       ceramicNode2
         .loadStream(model.id)
         .then((_) => true)
         .catch((_) => false),
     )
     await ceramicNode1.admin.startIndexingModels([model.id])
-    console.log('Indexing model on node1')
     await ceramicNode2.admin.startIndexingModels([model.id])
-    console.log('Indexed model on Node 2', model.id)
     modelId = model.id
   })
 
