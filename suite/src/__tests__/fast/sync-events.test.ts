@@ -73,7 +73,7 @@ async function waitForEventCount(urls: string[], model: StreamID, count: number,
     if (all_good) {
       return
     }
-    await delay(1)
+    await delay(3)
   }
   throw new Error(`waitForEventCount: timeout after ${retries} retries`)
 }
