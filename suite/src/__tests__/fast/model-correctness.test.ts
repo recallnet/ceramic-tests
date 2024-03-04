@@ -20,7 +20,11 @@ describe('Model Integration Test', () => {
   let modelId: StreamID
   beforeAll(async () => {
     const did1 = await createDid(adminSeeds[0])
-    const did2 = adminSeeds[1] ? await createDid(adminSeeds[1]) : did1
+    if (!adminSeeds[1])
+      throw new Error(
+        'adminSeeds expects minimum 2 dids one for each url, adminSeeds[1] is not set',
+      )
+    const did2 = await createDid(adminSeeds[1])
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
     const model = await Model.create(ceramicNode1, newModel)
