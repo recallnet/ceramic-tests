@@ -15,7 +15,6 @@ import { decode } from 'codeco'
 
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
-// TODO : Update to the modelId created manually on all envs, if id cannot be the same then create an array for different envs
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 const nodeSyncWaitTimeSec = 2
 
