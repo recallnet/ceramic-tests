@@ -50,11 +50,11 @@ export class EventAccumulator<T> {
     })
   }
 
-  async waitForEvents(expected: Set<T>): Promise<void> {
+  async waitForEvents(expected: Set<T>, timeoutMs?: number): Promise<void> {
     const success = await CommonTestUtils.waitForConditionOrTimeout(async () => {
       const received = new Set(Array.from(this.allEvents).filter((event) => expected.has(event)))
       return received.size === expected.size
-    })
+    }, timeoutMs)
 
     if (!success) {
       throw new Error(

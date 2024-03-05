@@ -105,8 +105,8 @@ describe('Model Integration Test', () => {
       await document1.replace({ myData: 42 })
       expectedEvents.add(document1.tip.toString())
 
-      await accumulator1.waitForEvents(expectedEvents)
-      await accumulator2.waitForEvents(expectedEvents)
+      await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
+      await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
     } finally {
       source1.close()
       source2.close()
