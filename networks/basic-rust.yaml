@@ -6,7 +6,9 @@ metadata:
 spec:
   replicas: 2
   ceramic:
-    - ipfs:
+    - env:
+        CERAMIC_RECON_MODE: "true"
+      ipfs:
         rust:
           env:
             CERAMIC_ONE_RECON: "true"
@@ -19,3 +21,4 @@ spec:
       go: {}
   monitoring:
     namespaced: true
+

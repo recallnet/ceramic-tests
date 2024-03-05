@@ -15,13 +15,14 @@ const did = new DID({ provider, resolver })
 export const DEFAULT_ANCHOR_TIMEOUT = 60 * 30
 export const metadata = { controllers: [] }
 
-export const newCeramic = async (apiUrl: string) => {
+export const newCeramic = async (apiUrl: string, didOverride?: DID) => {
   const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
-  if (!did.authenticated) {
-    await did.authenticate()
-    ;(metadata.controllers as string[]) = [did.id]
+  const effectiveDID = didOverride || did
+  if (!effectiveDID.authenticated) {
+    await effectiveDID.authenticate()
+    ;(metadata.controllers as string[]) = [effectiveDID.id]
   }
-  await ceramic.setDID(did)
+  await ceramic.setDID(effectiveDID)
   return ceramic
 }
 
