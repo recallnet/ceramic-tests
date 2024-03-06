@@ -30,6 +30,7 @@ docker run --rm -i \
         \"repo\":     {\"S\": \"ceramic-tests\"},           \
         \"ref\":      {\"S\": \"$branch\"},                 \
         \"workflow\": {\"S\": \"run-durable.yml\"},         \
+        \"labels\":   {\"L\": [{\"S\": \"test\"}]},         \
         \"inputs\":   {                                     \
           \"M\": {                                          \
             \"build_tag\": {\"S\": \"$tag\"},               \
