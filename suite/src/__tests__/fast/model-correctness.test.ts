@@ -16,9 +16,9 @@ import { decode } from 'codeco'
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 2
+const setupSyncDelay = 2
 
-describe.skip('Model Integration Test', () => {
+describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
@@ -51,7 +51,7 @@ describe.skip('Model Integration Test', () => {
       modelInstanceDocumentMetdata,
     )
     // We have to wait for some time for sync to happen
-    await delay(nodeSyncWaitTimeSec)
+    await delay(setupSyncDelay)
     const document2 = await ModelInstanceDocument.load(ceramicNode2, document1.id)
     expect(document2.id).toEqual(document1.id)
   })
@@ -66,6 +66,8 @@ describe.skip('Model Integration Test', () => {
     const source2 = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[1]).toString(),
     )
+    // Wait added for the Event Source to be set up. Events can be missed without this
+    await delay(setupSyncDelay)
 
     const parseEventData = (eventData: any) => {
       const decoded = decode(Codec, eventData)
