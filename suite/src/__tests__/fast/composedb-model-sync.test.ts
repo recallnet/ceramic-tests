@@ -100,7 +100,6 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
       getDocumentByStreamIdVariables,
     )
     const queryResponseObj = await JSON.parse(JSON.stringify(queryResponse))
-    console.log(' this is the response object: ', queryResponseObj)
     const queryResponseid = queryResponseObj?.data?.node?.id
     expect(queryResponseid).toBeDefined()
   })
