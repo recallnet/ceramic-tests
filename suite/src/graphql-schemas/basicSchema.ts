@@ -1,8 +1,6 @@
-
-
-export const basicSchema = `
-type BasicScema @createModel(description: "A set of unique numbers")
-  @createIndex(fields: [{ path: "numericalField" }]){
-    numericalField: Int @int(min: 1, max: 100)
-  }
+export const BasicSchema = `
+type BasicSchema @createModel(accountRelation: LIST, description: "A set of unique numbers")
+@createIndex(fields: [{ path: "myData" }]){
+  myData: String! @string(maxLength: 500)
+}
 `

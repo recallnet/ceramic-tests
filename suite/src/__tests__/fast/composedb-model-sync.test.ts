@@ -1,107 +1,107 @@
 import { ComposeClient } from '@composedb/client'
-import { beforeAll, describe, test } from '@jest/globals'
-import { newModel, basicModelDocumentContent } from '../../models/modelConstants'
-import { gql } from 'graphql-request'
+import { beforeAll, describe, test, expect } from '@jest/globals'
 import { Composite } from '@composedb/devtools'
-import { basicSchema } from '../../graphql-schemas/basicSchema'
 import { newCeramic } from '../../utils/ceramicHelpers.js'
+import { createDid } from '../../utils/didHelper.js'
+import { utilities } from '../../utils/common.js'
+import { BasicSchema } from '../../graphql-schemas/basicSchema'
+import { StreamID } from '@ceramicnetwork/streamid'
 
+const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
+const nodeSyncDelay = 2
 
 describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
   let composeClient1: ComposeClient
   let composeClient2: ComposeClient
-  let streamId: string
-//   let createdDocumentId: string
 
   beforeAll(async () => {
-    const ceramicInstance1 = await newCeramic(ComposeDbUrls[0])
-    const ceramicInstance2 = await newCeramic(ComposeDbUrls[1])
-    const composite = await Composite.create({ ceramic: ceramicInstance1, schema: basicSchema })
+    const did1 = await createDid(adminSeeds[0])
+    if (!adminSeeds[1])
+      throw new Error(
+        'adminSeeds expects minimum 2 dids one for each url, adminSeeds[1] is not set',
+      )
+    const did2 = await createDid(adminSeeds[1])
 
-    composeClient1 = new ComposeClient({
+    const ceramicInstance1 = await newCeramic(ComposeDbUrls[0], did1)
+    const ceramicInstance2 = await newCeramic(ComposeDbUrls[1], did2)
+
+    const composite = await Composite.create({ ceramic: ceramicInstance1, schema: BasicSchema })
+    composeClient1 = await new ComposeClient({
       ceramic: ceramicInstance1,
       definition: composite.toRuntime(),
     })
-    composeClient2 = new ComposeClient({
+    composeClient1.setDID(did1)
+
+    // CACAO resources URLs for the models the client interacts with
+    const resources = composeClient1.resources
+    // Fetch themodelId of the model created by the node
+    const parts = String(resources[0]).split('model=')
+    const modelId = parts[parts.length - 1]
+
+    // start indexing for tha nodel on node 2
+    await ceramicInstance2.admin.startIndexingModels([StreamID.fromString(modelId)])
+    composeClient2 = await new ComposeClient({
       ceramic: ceramicInstance2,
       definition: composite.toRuntime(),
     })
-
-    const createStreamMutation = gql`
-      mutation CreateStream($input: CreateStreamInput!) {   
-        createStream(input: $input) {
-          stream {
-            id
-          }
-        }
-      }
-    `
-
-    const variables = {
-      input: {
-        schema: newModel,
-      },
-    }
-
-    const response = await composeClient1.executeQuery(createStreamMutation, variables)
-    // streamId = response.data.createStream.stream.id
-    console.log("Document 1: ", response)
+    composeClient2.setDID(did2)
   })
 
   test('Create and sync a ModelInstanceDocument', async () => {
-    const createDocumentMutation = gql`
-      mutation CreateDocument($input: CreateDocumentInput!) {
-        createDocument(input: $input) {
-          document {
-            id
-          }
+    const createDocumentMutation = `
+        mutation createBasicSchema($input: CreateBasicSchemaInput!) {
+            createBasicSchema(input: $input) {
+            document {
+                id
+                myData
+            }
+            }
         }
-      }
-    `
+        `
 
-    const variables = {
+    const createDocumentVariables = {
       input: {
-        content: basicModelDocumentContent,
-        streamId,
+        content: {
+          myData: 'my data' + Date.now(),
+        },
       },
     }
 
-    const response = await composeClient1.executeQuery(createDocumentMutation, variables)
-    // createdDocumentId = response.id
-    console.log("Created document 1: ", response.data)
-    // expect(createdDocumentId).toBeDefined()
+    const response = await composeClient1.executeQuery(
+      createDocumentMutation,
+      createDocumentVariables,
+    )
+    const responseObject = await JSON.parse(JSON.stringify(response))
+    const documentId = responseObject?.data?.createBasicSchema?.document?.id
+    expect(documentId).toBeDefined()
 
     // Wait for the document to sync across nodes
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await delay(nodeSyncDelay)
 
-    const queryDocumentsQuery = gql`
-      query QueryDocuments($streamId: String!) {
-        documents(streamId: $streamId) {
-          nodes {
+    const getDocumentByStreamIdQuery = `
+    query GetBasicSchemaById($id: ID!) {
+        node(id: $id) {
+          ... on BasicSchema {
             id
-            content
+            myData
           }
         }
       }
-    `
+        `
 
-    const queryVariables = {
-      streamId,
+    const getDocumentByStreamIdVariables = {
+      id: documentId,
     }
 
-    const queryResponse1 = await composeClient1.executeQuery(queryDocumentsQuery, queryVariables)
-    console.log("Query response 1:", queryResponse1)
-    const queryResponse2 = await composeClient2.executeQuery(queryDocumentsQuery, queryVariables)
-    console.log("Query response 2: ", queryResponse2)
-    // const documents1 = queryResponse1.data.documents.nodes
-    // const documents2 = queryResponse2.data.documents.nodes
-
-    // expect(documents1).toBeDefined()
-    // expect(documents2).toBeDefined()
-    // expect(documents1.some((doc) => doc.id === createdDocumentId)).toBe(true)
-    // expect(documents2.some((doc) => doc.id === createdDocumentId)).toBe(true)
-    // expect(documents1.find((doc) => doc.id === createdDocumentId)?.content).toEqual(basicModelDocumentContent)
-    // expect(documents2.find((doc) => doc.id === createdDocumentId)?.content).toEqual(basicModelDocumentContent)
+    const queryResponse = await composeClient2.executeQuery(
+      getDocumentByStreamIdQuery,
+      getDocumentByStreamIdVariables,
+    )
+    const queryResponseObj = await JSON.parse(JSON.stringify(queryResponse))
+    console.log(' this is the response object: ', queryResponseObj)
+    const queryResponseid = queryResponseObj?.data?.node?.id
+    expect(queryResponseid).toBeDefined()
   })
 })
