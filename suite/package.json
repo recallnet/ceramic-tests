@@ -24,7 +24,7 @@
     "@ceramicnetwork/codecs": "^4.1.0",
     "@ceramicnetwork/common": "^5.2.0",
     "@ceramicnetwork/common-test-utils": "^3.3.0",
-    "@ceramicnetwork/http-client": "^5.2.0",
+    "@ceramicnetwork/http-client": "5.3.0",
     "@ceramicnetwork/stream-model": "^4.2.0",
     "@ceramicnetwork/stream-model-instance": "^4.3.0",
     "@ceramicnetwork/stream-tile": "^5.2.0",
