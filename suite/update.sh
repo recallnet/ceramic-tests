@@ -5,7 +5,7 @@ set -e
 cd $(dirname $0)
 
 # Update to specific label (we only publish nightly for ceramic packages)
-target=nightly
+target=latest
 target_dids=latest
 
 
