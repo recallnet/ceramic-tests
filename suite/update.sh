@@ -13,6 +13,9 @@ deps=$(jq -r '.dependencies | keys | .[]' package.json)
 filtered_deps=''
 for dep in $deps
 do
+    current_version=$(jq -r --arg dep "$dep" '.dependencies[$dep]' package.json)
+    target_version=""
+
     # Look for specific deps we manage
     case $dep in
         "dids" | "key-did-provider-ed25519" | "key-did-resolver" | "@composedb")
@@ -26,7 +29,10 @@ do
     scope=$(dirname $dep)
     case $scope in
         "@ceramicnetwork")
-            filtered_deps="$filtered_deps $dep@$target"
+            target_version=$(npm view $dep@$target version)
+            if [[ -n "$target_version" ]] && semver -r ">$current_version" $target_version &> /dev/null; then
+                filtered_deps="$filtered_deps $dep@$target"
+            fi
             ;;
         *)
             # Ignore other deps
