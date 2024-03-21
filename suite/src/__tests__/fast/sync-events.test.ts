@@ -30,7 +30,7 @@ async function readEvents(url: string, model: StreamID) {
   let offset = 0;
   var startTime = Date.now();
   while (!complete) {
-    const fullUrl = url + `/ceramic/events/model/${model.toString()}?offset=${offset}`
+    const fullUrl = url + `/ceramic/experimental/events/model/${model.toString()}?offset=${offset}`
     const response = await fetch(fullUrl)
     expect(response.status).toEqual(200)
     const data = await response.json();
