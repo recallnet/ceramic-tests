@@ -1,5 +1,5 @@
-import { utilities } from '../../utils/common.js'
 import { ComposeClient } from '@composedb/client'
+import { utilities } from './common'
 
 const delay = utilities.delay
 
