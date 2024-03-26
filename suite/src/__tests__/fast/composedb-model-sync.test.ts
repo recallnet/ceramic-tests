@@ -9,7 +9,7 @@ import { waitForDocument } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const timeoutMs = 60000;
+const timeoutMs = 60000
 
 describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
   let composeClient1: ComposeClient
@@ -91,10 +91,14 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
       id: documentId,
     }
 
-    const queryResponse = await waitForDocument(composeClient2, getDocumentByStreamIdQuery, getDocumentByStreamIdVariables, timeoutMs);
-    const queryResponseObj = JSON.parse(JSON.stringify(queryResponse));
-    const queryResponseid = queryResponseObj?.data?.node?.id;
-    expect(queryResponseid).toBeDefined();
-
+    const queryResponse = await waitForDocument(
+      composeClient2,
+      getDocumentByStreamIdQuery,
+      getDocumentByStreamIdVariables,
+      timeoutMs,
+    )
+    const queryResponseObj = JSON.parse(JSON.stringify(queryResponse))
+    const queryResponseid = queryResponseObj?.data?.node?.id
+    expect(queryResponseid).toBeDefined()
   })
 })
