@@ -6,6 +6,7 @@ import { createDid } from '../../utils/didHelper.js'
 import { BasicSchema } from '../../graphql-schemas/basicSchema'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { waitForDocument } from '../../utils/composeDbHelpers.js'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
@@ -38,6 +39,13 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
     // Fetch themodelId of the model created by the node
     const parts = String(resources[0]).split('model=')
     const modelId = parts[parts.length - 1]
+
+    await TestUtils.waitForConditionOrTimeout(async () =>
+      ceramicInstance2
+        .loadStream(modelId)
+        .then((_) => true)
+        .catch((_) => false),
+    )
 
     // start indexing for tha nodel on node 2
     await ceramicInstance2.admin.startIndexingModels([StreamID.fromString(modelId)])
