@@ -44,11 +44,11 @@ describe.skip('Model Integration Test', () => {
   })
 
   test('Create a ModelInstanceDocument on one node and read it from another', async () => {
-    const modelInstanceDocumentMetdata = { model: modelId }
+    const modelInstanceDocumentMetadata = { model: modelId }
     const document1 = await ModelInstanceDocument.create(
       ceramicNode1,
       basicModelDocumentContent,
-      modelInstanceDocumentMetdata,
+      modelInstanceDocumentMetadata,
     )
     // We have to wait for some time for sync to happen
     await delay(nodeSyncWaitTimeSec)
@@ -57,7 +57,7 @@ describe.skip('Model Integration Test', () => {
   })
 
   test('Model instance document changes are delivered via the datafeed SSE Api', async () => {
-    const modelInstanceDocumentMetdata = { model: modelId }
+    const modelInstanceDocumentMetadata = { model: modelId }
     const Codec = JsonAsString.pipe(AggregationDocument)
 
     const source1 = new EventSource(
@@ -80,21 +80,21 @@ describe.skip('Model Integration Test', () => {
       const document1 = await ModelInstanceDocument.create(
         ceramicNode1,
         { myData: 40 },
-        modelInstanceDocumentMetdata,
+        modelInstanceDocumentMetadata,
       )
       expectedEvents.add(document1.tip.toString())
 
       const document2 = await ModelInstanceDocument.create(
         ceramicNode1,
         { myData: 50 },
-        modelInstanceDocumentMetdata,
+        modelInstanceDocumentMetadata,
       )
       expectedEvents.add(document2.tip.toString())
 
       const document3 = await ModelInstanceDocument.create(
         ceramicNode1,
         { myData: 60 },
-        modelInstanceDocumentMetdata,
+        modelInstanceDocumentMetadata,
       )
       expectedEvents.add(document3.tip.toString())
 
