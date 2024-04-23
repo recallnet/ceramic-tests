@@ -4,3 +4,9 @@ type BasicSchema @createModel(accountRelation: LIST, description: "A set of uniq
   myData: String! @string(maxLength: 500)
 }
 `
+
+export const MultiQuerySchema = `
+type MultiQuerySchema @createModel(accountRelation: LIST, description: "A set of unique numbers")
+@createIndex(fields: [{ path: "myData" }]){
+  myData: String! @string(maxLength: 500)
+}`
