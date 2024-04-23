@@ -1,7 +1,6 @@
 import { describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
-import { EventAccumulator } from '../../utils/common.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
@@ -9,9 +8,6 @@ import { newModel, basicModelDocumentContent } from '../../models/modelConstants
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { utilities } from '../../utils/common.js'
-import { EventSource } from 'cross-eventsource'
-import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
-import { decode } from 'codeco'
 
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
