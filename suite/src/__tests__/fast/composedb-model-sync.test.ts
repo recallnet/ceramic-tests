@@ -10,13 +10,16 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const parallelIterations = process.env.CDB_ITRS_PARALLEL ? parseInt(process.env.CDB_ITRS_PARALLEL, 10) : 20;
-const transactionIterations = process.env.CDB_TXN_ITRS ? parseInt(process.env.CDB_TXN_ITRS, 10) : 20;
+const parallelIterations = process.env.CDB_ITRS_PARALLEL
+  ? parseInt(process.env.CDB_ITRS_PARALLEL, 10)
+  : 20
+const transactionIterations = process.env.CDB_TXN_ITRS ? parseInt(process.env.CDB_TXN_ITRS, 10) : 20
 const timeoutMs = 60000
 
 describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
   let composeClient1: ComposeClient
   let composeClient2: ComposeClient
+  let composeClient3: ComposeClient
 
   beforeAll(async () => {
     const did1 = await createDid(adminSeeds[0])
@@ -30,17 +33,21 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
     const ceramicInstance2 = await newCeramic(ComposeDbUrls[1], did2)
 
     const composite = await Composite.create({ ceramic: ceramicInstance1, schema: BasicSchema })
-    const composite2 = await Composite.create({ ceramic: ceramicInstance1, schema: MultiQuerySchema })
+    const composite2 = await Composite.create({
+      ceramic: ceramicInstance1,
+      schema: MultiQuerySchema,
+    })
     composeClient1 = await new ComposeClient({
       ceramic: ceramicInstance1,
       definition: composite.toRuntime(),
     })
     composeClient1.setDID(did1)
 
-    composeClient2 = await new ComposeClient({
+    composeClient3 = await new ComposeClient({
       ceramic: ceramicInstance1,
       definition: composite2.toRuntime(),
     })
+    composeClient3.setDID(did1)
 
     // CACAO resources URLs for the models the client interacts with
     const resources = composeClient1.resources
@@ -119,10 +126,9 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
   })
 
   test('Create 20 model instance documents in a second and query them from the same node using mult query in the same node, query 20 times ina second', async () => {
-    
-  for(let i = 0; i < transactionIterations; i++) {
-    // TODO : Add whatever mutation gitcoin was doing
-    const createDocumentMutation = `
+    for (let i = 0; i < transactionIterations; i++) {
+      // TODO : Add whatever mutation gitcoin was doing
+      const createDocumentMutation = `
     mutation MultiQuerySchema($input: CreateBasicSchemaInput!) {
       MultiQuerySchema(input: $input) {
         document {
@@ -131,38 +137,38 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
         }
       }
     }
-  `;
+  `
 
-  
-    // TODO : Generate 1 kb data and create 20 documents in a second
-    const createDocumentPromises = [];
-    for (let i = 0; i < parallelIterations; i++) {
-      createDocumentPromises.push((async () => {
-        const createDocumentVariables = {
-          input: {
-            content: {
-              myData: 'my data ' + Date.now() + ' ' + i,
-            },
-          },
-        };
+      // TODO : Generate 1 kb data and create 20 documents in a second
+      const createDocumentPromises = []
+      for (let i = 0; i < parallelIterations; i++) {
+        createDocumentPromises.push(
+          (async () => {
+            const createDocumentVariables = {
+              input: {
+                content: {
+                  myData: 'my data ' + Date.now() + ' ' + i,
+                },
+              },
+            }
 
-        const response = await composeClient2.executeQuery(
-          createDocumentMutation,
-          createDocumentVariables,
-        );
-        const responseObject = await JSON.parse(JSON.stringify(response));
-        const documentId = responseObject?.data?.createBasicSchema?.document?.id;
-        expect(documentId).toBeDefined();
-        return documentId;
-      })());
-    }
+            const response = await composeClient3.executeQuery(
+              createDocumentMutation,
+              createDocumentVariables,
+            )
+            const responseObject = await JSON.parse(JSON.stringify(response))
+            const documentId = responseObject?.data?.createBasicSchema?.document?.id
+            expect(documentId).toBeDefined()
+            return documentId
+          })(),
+        )
+      }
 
-    const documentIds = await Promise.all(createDocumentPromises);
-    documentIds.forEach(id => expect(id).toBeDefined());
+      const documentIds = await Promise.all(createDocumentPromises)
+      documentIds.forEach((id) => expect(id).toBeDefined())
 
-
-    // TODO: Create a multi query instead of simple query
-    const getDocumentsByStreamIdQuery = `
+      // TODO: Create a multi query instead of simple query
+      const getDocumentsByStreamIdQuery = `
       query MultiQuerySchemaById($ids: [ID!]!) {
         nodes(ids: $ids) {
           ... on MultiQuerySchema {
@@ -171,30 +177,26 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
           }
         }
       }
-    `; 
+    `
 
-    const getDocumentsByStreamIdVariables = {
-      ids: documentIds,
-    };
+      const getDocumentsByStreamIdVariables = {
+        ids: documentIds,
+      }
 
-    // Generate simultaneous query load of 20
-    const queryPromises = [];
-    for (let i = 0; i < parallelIterations; i++) {
-      queryPromises.push(
-        composeClient2.executeQuery(
-          getDocumentsByStreamIdQuery,
-          getDocumentsByStreamIdVariables,
+      // Generate simultaneous query load of 20
+      const queryPromises = []
+      for (let i = 0; i < parallelIterations; i++) {
+        queryPromises.push(
+          composeClient3.executeQuery(getDocumentsByStreamIdQuery, getDocumentsByStreamIdVariables),
         )
-      );
+      }
+
+      const queryResponses = await Promise.all(queryPromises)
+      queryResponses.forEach((queryResponse) => {
+        const queryResponseObj = JSON.parse(JSON.stringify(queryResponse))
+        const nodes = queryResponseObj?.data?.nodes
+        expect(nodes).toHaveLength(parallelIterations)
+      })
     }
-
-    const queryResponses = await Promise.all(queryPromises);
-    queryResponses.forEach(queryResponse => {
-      const queryResponseObj = JSON.parse(JSON.stringify(queryResponse));
-      const nodes = queryResponseObj?.data?.nodes;
-      expect(nodes).toHaveLength(parallelIterations);
-    });
-
-  }
-})
+  })
 })
