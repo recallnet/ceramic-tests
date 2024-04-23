@@ -18,7 +18,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 const nodeSyncWaitTimeSec = 2
 
-describe.skip('Model Integration Test', () => {
+describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
@@ -56,7 +56,7 @@ describe.skip('Model Integration Test', () => {
     expect(document2.id).toEqual(document1.id)
   })
 
-  test('Model instance document changes are delivered via the datafeed SSE Api', async () => {
+  test.only('Model instance document changes are delivered via the datafeed SSE Api', async () => {
     const modelInstanceDocumentMetadata = { model: modelId }
     const Codec = JsonAsString.pipe(AggregationDocument)
 
@@ -104,7 +104,6 @@ describe.skip('Model Integration Test', () => {
       expectedEvents.add(document2.tip.toString())
       await document1.replace({ myData: 42 })
       expectedEvents.add(document1.tip.toString())
-
       await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
       await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
     } finally {

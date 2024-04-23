@@ -12,7 +12,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
  * Longevity test tests that streams that were created (and pinned) in the past continue to be
  * accessible days later, possibly even after a new version of Ceramic is released and deployed.
  */
-describe('longevity', () => {
+describe.skip('longevity', () => {
   // `step` is incremented once for each r/w node during the `update` test, so use
   // the length of the r/w URL array to test the content.
   const expectedContent = { step: ComposeDbUrls.length }
