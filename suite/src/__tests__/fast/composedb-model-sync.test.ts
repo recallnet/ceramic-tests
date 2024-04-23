@@ -10,6 +10,12 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
+const parallelIterations = process.env.TEST_ITERATIONS
+  ? parseInt(process.env.TEST_ITERATIONS, 10)
+  : 20
+const transactionIterations = process.env.TEST_ITERATIONS
+  ? parseInt(process.env.TEST_ITERATIONS, 10)
+  : 20
 const timeoutMs = 60000
 
 describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
@@ -108,5 +114,80 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
     const queryResponseObj = JSON.parse(JSON.stringify(queryResponse))
     const queryResponseid = queryResponseObj?.data?.node?.id
     expect(queryResponseid).toBeDefined()
+  })
+
+  test('Create 20 model instance documents in a second and query them from the same node using mult query in the same node, query 20 times ina second', async () => {
+    for (let i = 0; i < transactionIterations; i++) {
+      // Add whatever mutation gitcoin was doing
+      const createDocumentMutation = `
+    mutation createBasicSchema($input: CreateBasicSchemaInput!) {
+      createBasicSchema(input: $input) {
+        document {
+          id
+          myData
+        }
+      }
+    }
+  `
+
+      // TODO : Generate 1 kb data and create 20 documents in a second
+      const createDocumentPromises = []
+      for (let i = 0; i < parallelIterations; i++) {
+        createDocumentPromises.push(
+          (async () => {
+            const createDocumentVariables = {
+              input: {
+                content: {
+                  myData: 'my data ' + Date.now() + ' ' + i,
+                },
+              },
+            }
+
+            const response = await composeClient1.executeQuery(
+              createDocumentMutation,
+              createDocumentVariables,
+            )
+            const responseObject = await JSON.parse(JSON.stringify(response))
+            const documentId = responseObject?.data?.createBasicSchema?.document?.id
+            expect(documentId).toBeDefined()
+            return documentId
+          })(),
+        )
+      }
+
+      const documentIds = await Promise.all(createDocumentPromises)
+      documentIds.forEach((id) => expect(id).toBeDefined())
+
+      // TODO: Create a multi query instead of simple query
+      const getDocumentsByStreamIdQuery = `
+      query GetBasicSchemaById($ids: [ID!]!) {
+        nodes(ids: $ids) {
+          ... on BasicSchema {
+            id
+            myData
+          }
+        }
+      }
+    `
+
+      const getDocumentsByStreamIdVariables = {
+        ids: documentIds,
+      }
+
+      // Generate simultaneous query load of 20
+      const queryPromises = []
+      for (let i = 0; i < parallelIterations; i++) {
+        queryPromises.push(
+          composeClient1.executeQuery(getDocumentsByStreamIdQuery, getDocumentsByStreamIdVariables),
+        )
+      }
+
+      const queryResponses = await Promise.all(queryPromises)
+      queryResponses.forEach((queryResponse) => {
+        const queryResponseObj = JSON.parse(JSON.stringify(queryResponse))
+        const nodes = queryResponseObj?.data?.nodes
+        expect(nodes).toHaveLength(parallelIterations)
+      })
+    }
   })
 })
