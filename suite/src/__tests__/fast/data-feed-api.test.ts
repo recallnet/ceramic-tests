@@ -21,6 +21,7 @@ describe('Datafeed SSE Api Test', () => {
   let modelId: StreamID
   let modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs
   let Codec: any
+  beforeAll(async () => {
     const did1 = await createDid(adminSeeds[0])
     if (!adminSeeds[1])
       throw new Error(
