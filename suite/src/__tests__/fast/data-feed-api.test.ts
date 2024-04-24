@@ -10,7 +10,7 @@ import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
-import { Decoder, Type, decode } from 'codeco'
+import { decode } from 'codeco'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
@@ -49,7 +49,7 @@ describe('Datafeed SSE Api Test', () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
-    let event
+    let event: any
     const parseEventData = (eventData: any) => {
       event = decode(Codec, eventData) // a single event is expected for this test scenario
       return event.commitId.commit.toString()
@@ -87,7 +87,7 @@ describe('Datafeed SSE Api Test', () => {
     )
 
     const parseEventData = (eventData: any) => {
-      const decoded = decode(Codec, eventData)
+      const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
     }
 
@@ -141,7 +141,7 @@ describe('Datafeed SSE Api Test', () => {
     )
 
     const parseEventData = (eventData: any) => {
-      const decoded = decode(Codec, eventData)
+      const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
     }
 
@@ -176,7 +176,7 @@ describe('Datafeed SSE Api Test', () => {
     )
 
     const parseEventData = (eventData: any) => {
-      const decoded = decode(Codec, eventData)
+      const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
     }
 
