@@ -1,6 +1,7 @@
 'use strict'
 
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { start } from 'repl'
 
 export const utilities = {
   valid: (exp: any) => {
@@ -43,11 +44,7 @@ export class EventAccumulator<T> {
   constructor(source: EventSource, parseEventData?: (event: MessageEvent) => T) {
     this.#source = source
     this.#parseEventData = parseEventData || ((eventData) => eventData.toString())
-
-    this.#source.addEventListener('message', (event) => {
-      const parsedEvent = this.#parseEventData(event.data)
-      this.allEvents.add(parsedEvent)
-    })
+    start()
   }
 
   async waitForEvents(expected: Set<T>, timeoutMs?: number): Promise<void> {
@@ -67,5 +64,12 @@ export class EventAccumulator<T> {
 
   stop() {
     this.#source.close()
+  }
+
+  start() {
+    this.#source.addEventListener('message', (event) => {
+      const parsedEvent = this.#parseEventData(event.data)
+      this.allEvents.add(parsedEvent)
+    })
   }
 }

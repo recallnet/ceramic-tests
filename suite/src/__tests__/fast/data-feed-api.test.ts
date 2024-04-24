@@ -170,7 +170,7 @@ describe('Datafeed SSE Api Test', () => {
     }
   })
   // this wont be tested until the feature its ready
-  test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  test.only('if a connection goes offline can resume the missed events upon reconnection', async () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
@@ -178,7 +178,7 @@ describe('Datafeed SSE Api Test', () => {
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
-    }
+    } 
 
     const accumulator = new EventAccumulator(source, parseEventData)
     
@@ -191,10 +191,15 @@ describe('Datafeed SSE Api Test', () => {
         modelInstanceDocumentMetadata,
       )
       expectedEvents.add(doc.tip.toString())
-
+      // disconnect  
+      accumulator.stop()
       // data commit offline
       await doc.replace({ myData: 41 })
       expectedEvents.add(doc.tip.toString())
+
+      // connection after events
+      accumulator.start()
+
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
 
       expect(accumulator.allEvents).toBe(expectedEvents)
