@@ -1,7 +1,6 @@
 'use strict'
 
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
-import { start } from 'repl'
 
 export const utilities = {
   valid: (exp: any) => {

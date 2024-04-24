@@ -169,8 +169,8 @@ describe('Datafeed SSE Api Test', () => {
       source.close()
     }
   })
-  // this wont be tested until the feature its ready
-  test.only('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  // this wont be tested until the feature its ready update to include timestamps
+  test('if a connection goes offline can resume the missed events upon reconnection', async () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
