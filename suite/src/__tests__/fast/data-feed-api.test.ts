@@ -1,4 +1,4 @@
-import { describe, test, beforeAll } from '@jest/globals'
+import { describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { EventAccumulator } from '../../utils/common.js'
@@ -40,6 +40,42 @@ describe('Datafeed SSE Api Test', () => {
     modelId = model.id
   })
 
+  test('event format is as expected', async () => {
+    const modelInstanceDocumentMetadata = { model: modelId }
+    const Codec = JsonAsString.pipe(AggregationDocument)
+
+    const source = new EventSource(
+      new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
+    )
+    let event
+    const parseEventData = (eventData: any) => {
+      event = decode(Codec, eventData) // a single event is expected for this test scenario
+      return event.commitId.commit.toString()
+    }
+
+    const accumulator = new EventAccumulator(source, parseEventData)
+    
+    try {
+      const expectedEvents = new Set()
+      // genesis commit
+      const doc = await ModelInstanceDocument.create(
+        ceramicNode1,
+        { myData: 40 },
+        modelInstanceDocumentMetadata,
+      )
+      expectedEvents.add(doc.tip.toString())
+
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
+      const receivedEvent = [...accumulator.allEvents].pop()
+      expect(receivedEvent).toHaveProperty("commitId")
+      expect(receivedEvent).toHaveProperty("content")
+      expect(receivedEvent).toHaveProperty("metadata")
+      expect(receivedEvent).toHaveProperty("eventType")
+    } finally {
+      source.close()
+    }
+  })
+
   test('genesis and data commits are delivered', async () => {
     const modelInstanceDocumentMetadata = { model: modelId }
     const Codec = JsonAsString.pipe(AggregationDocument)
@@ -61,6 +97,7 @@ describe('Datafeed SSE Api Test', () => {
 
     try {
       const expectedEvents = new Set()
+      // genesis commits
       const document1 = await ModelInstanceDocument.create(
         ceramicNode1,
         { myData: 40 },
@@ -81,7 +118,7 @@ describe('Datafeed SSE Api Test', () => {
         modelInstanceDocumentMetadata,
       )
       expectedEvents.add(document3.tip.toString())
-
+      // data commits
       await document1.replace({ myData: 41 })
       expectedEvents.add(document1.tip.toString())
       await document2.replace({ myData: 51 })
@@ -90,6 +127,9 @@ describe('Datafeed SSE Api Test', () => {
       expectedEvents.add(document1.tip.toString())
       await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
       await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
+
+      expect(accumulator1.allEvents).toBe(expectedEvents)
+      expect(accumulator2.allEvents).toBe(expectedEvents)
     } finally {
       source1.close()
       source2.close()
@@ -110,7 +150,7 @@ describe('Datafeed SSE Api Test', () => {
     }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-
+    
     try {
       const expectedEvents = new Set()
       // genesis commit
@@ -126,10 +166,11 @@ describe('Datafeed SSE Api Test', () => {
         throw new Error(errStr)
       })
       expectedEvents.add(doc.tip.toString())
-      await accumulator.waitForEvents(expectedEvents, 2)//TODO fix this number
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
+
+      expect(accumulator.allEvents).toBe(expectedEvents)
     } finally {
-      source1.close()
-      source2.close()
+      source.close()
     }
   })
   // this wont be tested until the feature its ready
