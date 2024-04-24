@@ -43,7 +43,7 @@ export class EventAccumulator<T> {
   constructor(source: EventSource, parseEventData?: (event: MessageEvent) => T) {
     this.#source = source
     this.#parseEventData = parseEventData || ((eventData) => eventData.toString())
-    start()
+    this.start()
   }
 
   async waitForEvents(expected: Set<T>, timeoutMs?: number): Promise<void> {
