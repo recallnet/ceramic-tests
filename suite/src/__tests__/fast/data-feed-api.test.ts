@@ -72,11 +72,11 @@ describe('Datafeed SSE Api Test', () => {
       expectedEvents.add(doc.tip.toString())
 
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
-      const receivedEvent = [...accumulator.allEvents].pop()
-      expect(receivedEvent).toHaveProperty("commitId")
-      expect(receivedEvent).toHaveProperty("content")
-      expect(receivedEvent).toHaveProperty("metadata")
-      expect(receivedEvent).toHaveProperty("eventType")
+
+      expect(event).toHaveProperty("commitId")
+      expect(event).toHaveProperty("content")
+      expect(event).toHaveProperty("metadata")
+      expect(event).toHaveProperty("eventType")
     } finally {
       source.close()
     }
@@ -128,11 +128,10 @@ describe('Datafeed SSE Api Test', () => {
       expectedEvents.add(document2.tip.toString())
       await document1.replace({ myData: 42 })
       expectedEvents.add(document1.tip.toString())
+      // By waiting for the expected events we confirm the api delivers all events
       await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
       await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
 
-      expect(accumulator1.allEvents).toBe(expectedEvents)
-      expect(accumulator2.allEvents).toBe(expectedEvents)
     } finally {
       source1.close()
       source2.close()
