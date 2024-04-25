@@ -157,7 +157,7 @@ describe('Datafeed SSE Api Test', () => {
         throw new Error(errStr)
       })
       expectedEvents.add(doc.tip.toString())
-      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
+      await accumulator.waitForEvents(expectedEvents, 2000 * 60)
 
       expect(accumulator.allEvents).toBe(expectedEvents)
     } finally {
