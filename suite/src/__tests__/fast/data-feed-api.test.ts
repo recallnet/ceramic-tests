@@ -18,11 +18,12 @@ const source = new EventSource(
   new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
 )
 
-async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs) {
+async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
     node,
     { myData: 40 },
     modelInstanceDocumentMetadata,
+    { anchor }
   )
 }
 
@@ -68,7 +69,7 @@ describe('Datafeed SSE Api Test', () => {
     try {
       const expectedEvents = new Set()
       // genesis commit
-      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata)
+      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
 
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
@@ -149,9 +150,9 @@ describe('Datafeed SSE Api Test', () => {
     try {
       const expectedEvents = new Set()
       // genesis commit
-      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata)
+      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, true)
       expectedEvents.add(doc.tip.toString())
-
+      
       // time commit
       await waitForAnchor(doc).catch((errStr) => {
         throw new Error(errStr)
@@ -176,7 +177,7 @@ describe('Datafeed SSE Api Test', () => {
     try {
       const expectedEvents = new Set()
       // genesis commit
-      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata)
+      const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
       // disconnect  
       accumulator.stop()
