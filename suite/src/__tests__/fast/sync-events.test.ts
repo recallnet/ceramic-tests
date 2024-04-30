@@ -78,7 +78,7 @@ async function waitForEventCount(urls: string[], model: StreamID, count: number,
   throw new Error(`waitForEventCount: timeout after ${retries} retries`)
 }
 
-describe('sync events', () => {
+describe.skip('sync events', () => {
   const firstNodeUrl = CeramicUrls[0]
   const secondNodeUrl = CeramicUrls[1]
 

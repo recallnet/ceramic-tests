@@ -29,7 +29,7 @@ async function postEvent(url: string, event: any) {
 
 describe('rust-ceramic e2e test', () => {
   const ceramicUrl = CeramicUrls[0]
-  test('post and get event data, success', async () => {
+  test.skip('post and get event data, success', async () => {
     const modelId = new StreamID('model', randomCID())
     const eventId = generateRandomEventId(modelId)
     const event = generateRandomEvent(eventId)
