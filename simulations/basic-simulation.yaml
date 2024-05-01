@@ -3,8 +3,8 @@ kind: Simulation
 metadata:
   name: recon
 spec:
-  scenario: recon-event-sync # or recon-event-key-sync if you're using rust-ceramic without recon data
+  scenario: recon-event-sync 
   throttleRequests: 300 # include to define a "steady sync" scenario where the worker creates about this many events/second
   successRequestTarget: 200 # override the default value of 300 to determine how many events must be synced per second to other peers in the network
-  users: 2 # increase to generate more events, 1 is probably sufficient for our 300/s goal
+  users: 16 # increase to generate more events. having more uses a bit more RAM, but should be limited to the throttleRequests number
   runTime: 10
