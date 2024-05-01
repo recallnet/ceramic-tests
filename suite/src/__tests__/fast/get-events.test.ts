@@ -45,8 +45,7 @@ describe('rust-ceramic e2e test', () => {
   })
 
   test('get event data for non-existing event', async () => {
-    const modelId = new StreamID('model', randomCID())
-    const eventId = generateRandomEventId(modelId)
+    const eventId = randomCID().toString()
     // fetching the event from its event-id from rust-ceramic
     const getResponse = await getEventData(ceramicUrl, eventId)
     const responseText = await getResponse.text()
