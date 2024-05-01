@@ -14,9 +14,6 @@ import { decode } from 'codeco'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const source = new EventSource(
-  new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
-)
 
 async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
@@ -59,6 +56,9 @@ describe('Datafeed SSE Api Test', () => {
 
   test('event format is as expected', async () => {
     let event: any
+    const source = new EventSource(
+      new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
+    )
     const parseEventData = (eventData: any) => {
       event = decode(Codec, eventData) // a single event is expected for this test scenario
       return event.commitId.commit.toString()
@@ -140,6 +140,9 @@ describe('Datafeed SSE Api Test', () => {
   })
 
   test('time commits are delivered', async () => {
+    const source = new EventSource(
+      new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
+    )
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
@@ -166,6 +169,9 @@ describe('Datafeed SSE Api Test', () => {
   })
   // this wont be tested until the feature its ready
   test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
+    const source = new EventSource(
+      new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
+    )
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
