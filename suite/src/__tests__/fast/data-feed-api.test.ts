@@ -12,7 +12,7 @@ import { EventSource } from 'cross-eventsource'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
 
-const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
 async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
@@ -31,6 +31,11 @@ describe('Datafeed SSE Api Test', () => {
   let modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs
   let Codec: any
   beforeAll(async () => {
+    if(!ComposeDbUrls)
+    throw new Error(
+      'ComposeDbUrls expects a minimum of 2 urls, but none were found',
+    )
+
     const did1 = await createDid(adminSeeds[0])
     if (!adminSeeds[1])
       throw new Error(
