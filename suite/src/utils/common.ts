@@ -65,7 +65,7 @@ export class EventAccumulator<T> {
     this.#source.close()
   }
 
-  start(resumeToken: undefined | string) {
+  start(resumeToken?: string) {
     if(resumeToken) {
       const afterQueryParam = "after=" + encodeURIComponent(resumeToken)
       const newUrl = new URL(this.#source.url)
