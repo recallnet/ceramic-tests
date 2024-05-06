@@ -15,9 +15,9 @@ import { decode } from 'codeco'
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
-async function genesisCommit(CeramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
+async function genesisCommit(CeramicNode: ceramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
-    CeramicNode,
+    ceramicNode,
     { myData: Math.floor(Math.random() * (100)) + 1},
     modelInstanceDocumentMetadata,
     { anchor }
@@ -77,7 +77,7 @@ describe('Datafeed SSE Api Test', () => {
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
 
-      await accumulator.waitForEvents(expectedEvents, 2000 * 60)
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
 
       expect(event).toHaveProperty("commitId")
       expect(event).toHaveProperty("content")
@@ -167,7 +167,7 @@ describe('Datafeed SSE Api Test', () => {
       })
       expectedEvents.add(doc.tip.toString())
       // By waiting for the expected events we confirm the api delivers all events)
-      await accumulator.waitForEvents(expectedEvents, 2000 * 60)
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
       source.close()
     }
