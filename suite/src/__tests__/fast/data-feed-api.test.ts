@@ -59,13 +59,14 @@ describe('Datafeed SSE Api Test', () => {
     Codec = JsonAsString.pipe(AggregationDocument)
   })
 
-  test('event format is as expected', async () => {
+  test.only('event format is as expected', async () => {
     let event: any
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
     const parseEventData = (eventData: any) => {
       event = decode(Codec, eventData) // a single event is expected for this test scenario
+      console.log("Original", eventData, "\ndecoded:", event)
       return event.commitId.commit.toString()
     }
 
@@ -83,6 +84,7 @@ describe('Datafeed SSE Api Test', () => {
       expect(event).toHaveProperty("content")
       expect(event).toHaveProperty("metadata")
       expect(event).toHaveProperty("eventType")
+      expect(event).toHaveProperty("resumeToken")
     } finally {
       source.close()
     }
@@ -172,8 +174,8 @@ describe('Datafeed SSE Api Test', () => {
       source.close()
     }
   })
-  // this wont be tested until the feature its ready
-  test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  
+  test('if a connection goes offline can resume the missed events upon reconnection', async () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
@@ -196,7 +198,7 @@ describe('Datafeed SSE Api Test', () => {
       expectedEvents.add(doc.tip.toString())
 
       // connection after events
-      accumulator.start()
+      accumulator.start()//TODO reconnect with token
 
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
 
