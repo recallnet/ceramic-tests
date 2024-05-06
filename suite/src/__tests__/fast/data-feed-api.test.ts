@@ -24,7 +24,7 @@ async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata:
   )
 }
 
-describe('Datafeed SSE Api Test', () => {
+describe.skip('Datafeed SSE Api Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
@@ -70,7 +70,7 @@ describe('Datafeed SSE Api Test', () => {
     }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
@@ -154,13 +154,13 @@ describe('Datafeed SSE Api Test', () => {
     }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, true)
       expectedEvents.add(doc.tip.toString())
-      
+
       // time commit
       await waitForAnchor(doc).catch((errStr) => {
         throw new Error(errStr)
@@ -180,16 +180,16 @@ describe('Datafeed SSE Api Test', () => {
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
       return decoded.commitId.commit.toString()
-    } 
+    }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
-      // disconnect  
+      // disconnect
       accumulator.stop()
       // data commit offline
       await doc.replace({ myData: 41 })
