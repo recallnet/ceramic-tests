@@ -1,6 +1,7 @@
 'use strict'
 
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { EventSource } from 'cross-eventsource'
 
 export const utilities = {
   valid: (exp: any) => {
