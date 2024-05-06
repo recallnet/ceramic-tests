@@ -59,14 +59,13 @@ describe('Datafeed SSE Api Test', () => {
     Codec = JsonAsString.pipe(AggregationDocument)
   })
 
-  test.only('event format is as expected', async () => {
+  test('event format is as expected', async () => {
     let event: any
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
     const parseEventData = (eventData: any) => {
       event = decode(Codec, eventData) // a single event is expected for this test scenario
-      console.log("Original", eventData, "\ndecoded:", event)
       return event.commitId.commit.toString()
     }
 
@@ -168,7 +167,7 @@ describe('Datafeed SSE Api Test', () => {
         throw new Error(errStr)
       })
       expectedEvents.add(doc.tip.toString())
-      // By waiting for the expected events we confirm the api delivers all events)
+      // By waiting for the expected events we confirm the api delivers all events
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
     } finally {
       source.close()
@@ -176,11 +175,13 @@ describe('Datafeed SSE Api Test', () => {
   })
   
   test('if a connection goes offline can resume the missed events upon reconnection', async () => {
+    const resumeTokens: string[] = []
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
+      resumeTokens.push(decoded.resumeToken)
       return decoded.commitId.commit.toString()
     } 
 
@@ -191,18 +192,20 @@ describe('Datafeed SSE Api Test', () => {
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
-      // disconnect  
+      // wait for latest event and disconnect  
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
       accumulator.stop()
-      // data commit offline
+      // data commits offline
       await doc.replace({ myData: 41 })
       expectedEvents.add(doc.tip.toString())
 
-      // connection after events
-      accumulator.start()//TODO reconnect with token
+      await doc.replace({ myData: 42 })
+      expectedEvents.add(doc.tip.toString())
 
+      // connection after events using latest resumeToken
+      accumulator.start(resumeTokens.pop())
+      // By waiting for the expected events we confirm the api delivers all events
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
-
-      expect(accumulator.allEvents).toBe(expectedEvents)
     } finally {
       source.close()
     }

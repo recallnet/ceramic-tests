@@ -65,7 +65,14 @@ export class EventAccumulator<T> {
     this.#source.close()
   }
 
-  start() {
+  start(resumeToken: undefined | string) {
+    if(resumeToken) {
+      const afterQueryParam = "after=" + encodeURIComponent(resumeToken)
+      const newUrl = new URL(this.#source.url)
+      newUrl.search = afterQueryParam
+      this.#source = new EventSource(newUrl.toString())
+    }
+
     this.#source.addEventListener('message', (event) => {
       const parsedEvent = this.#parseEventData(event.data)
       this.allEvents.add(parsedEvent)
