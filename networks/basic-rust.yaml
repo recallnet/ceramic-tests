@@ -23,4 +23,3 @@ spec:
       go: {}
   monitoring:
     namespaced: true
-  ttlSeconds: 3600
