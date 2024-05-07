@@ -31,7 +31,7 @@ HERMETIC_CMD ?= ${CARGO_RUN} --bin hermetic-driver --
 HERMETIC_SUFFIX ?= ${BUILD_TAG}
 
 # TTL for cleaning up network after tests (defaults to 8 hours)
-HERMETIC_TTL ?= 28800
+HERMETIC_TTL ?= 3600
 
 # Environment to run durable tests against
 DURABLE_ENV ?= dev
