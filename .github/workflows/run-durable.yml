@@ -70,6 +70,12 @@ jobs:
         with:
           cluster_name: ${{ vars.GKE_CLUSTER }}
           location: ${{ vars.GKE_ZONE }}
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-actions
       -
         name: Test ${{ github.event.inputs.environment }}
         env:
@@ -81,13 +87,13 @@ jobs:
             BUILD_TAG=latest
           fi
           # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
-          source ./port-forward.sh "keramik-ceramic-v4-${{ github.event.inputs.environment }}"
+          # source ./port-forward.sh "keramik-ceramic-v4-${{ github.event.inputs.environment }}"
           # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
-          if [[ -n "$COMPOSEDB_URLS" ]];
-          then
-            sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
-            sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
-          fi
+          # if [[ -n "$COMPOSEDB_URLS" ]];
+          # then
+          #   sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+          #   sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+          # fi
           make DURABLE_ENV=${{ github.event.inputs.environment }} durable-tests
 
   collect-results:

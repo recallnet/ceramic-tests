@@ -15,10 +15,10 @@ import { decode } from 'codeco'
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
-async function genesisCommit(node: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
+async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
-    node,
-    { myData: 40 },
+    ceramicNode,
+    { myData: Math.floor(Math.random() * (100)) + 1},
     modelInstanceDocumentMetadata,
     { anchor }
   )
@@ -70,14 +70,14 @@ describe('Datafeed SSE Api Test', () => {
     }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
 
-      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
 
       expect(event).toHaveProperty("commitId")
       expect(event).toHaveProperty("content")
@@ -155,20 +155,20 @@ describe('Datafeed SSE Api Test', () => {
     }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, true)
       expectedEvents.add(doc.tip.toString())
-      
+
       // time commit
       await waitForAnchor(doc).catch((errStr) => {
         throw new Error(errStr)
       })
       expectedEvents.add(doc.tip.toString())
       // By waiting for the expected events we confirm the api delivers all events
-      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
       source.close()
     }
@@ -183,10 +183,10 @@ describe('Datafeed SSE Api Test', () => {
       const decoded: any = decode(Codec, eventData)
       resumeTokens.push(decoded.resumeToken)
       return decoded.commitId.commit.toString()
-    } 
+    }
 
     const accumulator = new EventAccumulator(source, parseEventData)
-    
+
     try {
       const expectedEvents = new Set()
       // genesis commit
