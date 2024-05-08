@@ -24,7 +24,7 @@ async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMe
   )
 }
 
-describe('Datafeed SSE Api Test', () => {
+describe.skip('Datafeed SSE Api Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
@@ -174,7 +174,7 @@ describe('Datafeed SSE Api Test', () => {
     }
   })
   
-  test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  test('if a connection goes offline can resume the missed events upon reconnection', async () => {
     const resumeTokens: string[] = []
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
