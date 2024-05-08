@@ -2,25 +2,31 @@ import { beforeAll, describe, expect, test } from '@jest/globals'
 import { utilities } from '../../utils/common.js'
 import fetch from 'cross-fetch'
 import { randomCID, StreamID } from '@ceramicnetwork/streamid'
-import { randomEvents, ReconEvent } from '../../utils/rustCeramicHelpers.js'
+import { ReconEvent, ReconEventInput, randomEvents } from '../../utils/rustCeramicHelpers.js'
 
 const delay = utilities.delay
 // Environment variables
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 async function registerInterest(url: string, model: StreamID) {
   let response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
+  if (response.status !== 204) {
+    const data = await response.text()
+    console.warn(`registerInterest: ${data}`)
+  }
   expect(response.status).toEqual(204)
-  await response.text()
 }
 
-async function writeEvents(url: string, events: any[]) {
+async function writeEvents(url: string, events: ReconEventInput[]) {
   for (const event of events) {
     let response = await fetch(url + '/ceramic/events', {
       method: 'POST',
       body: JSON.stringify(event),
     })
+    if (response.status !== 204) {
+      const data = await response.text()
+      console.warn(`writeEvents: ${data}`)
+    }
     expect(response.status).toEqual(204)
-    await response.text()
   }
 }
 
@@ -78,7 +84,7 @@ async function waitForEventCount(urls: string[], model: StreamID, count: number,
   throw new Error(`waitForEventCount: timeout after ${retries} retries`)
 }
 
-describe.skip('sync events', () => {
+describe('sync events', () => {
   const firstNodeUrl = CeramicUrls[0]
   const secondNodeUrl = CeramicUrls[1]
 

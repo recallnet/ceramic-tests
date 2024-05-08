@@ -33,6 +33,7 @@
     "@composedb/client": "^0.7.1",
     "@composedb/devtools": "^0.7.1",
     "@ipld/dag-json": "^10.1.7",
+    "@ipld/dag-cbor": "^7.0.0",
     "@jest/globals": "^29.7.0",
     "@jest/reporters": "^29.7.0",
     "@stablelib/random": "^1.0.2",
