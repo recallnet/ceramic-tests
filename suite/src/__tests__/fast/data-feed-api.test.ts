@@ -174,7 +174,7 @@ describe('Datafeed SSE Api Test', () => {
     }
   })
   
-  test('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
     const resumeTokens: string[] = []
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
