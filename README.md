@@ -80,6 +80,7 @@ There are some helpful scripts in this repo to make testing locally possible:
 
     # This will run "fast" tests locally using the newly exported env vars.
     cd suite
+    pnpm install # do NOT `pnpm run build`. if you do, remove the .build directory
     pnpm run test --testPathPattern fast
 ```
 >NOTE: The port-forward script will leave `kubectl` process running in the background to forward the ports.
