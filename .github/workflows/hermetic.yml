@@ -150,12 +150,14 @@ jobs:
     steps:
       # Retrieve the start time and end time outputs from the run-tests job
       - name: Get job start time
-        run: echo "Job start time: ${{ needs.run-tests.outputs.start_time }}"
         id: start_time
-
+        run: | 
+        echo "Job start time: ${{ needs.run-tests.outputs.start_time }}"
+        
       - name: Get job end time
-        run: echo "Job end time: ${{ needs.run-tests.outputs.end_time }}"
         id: end_time
+        run: |
+        echo "Job end time: ${{ needs.run-tests.outputs.end_time }}"
 
       # Calculate the duration of the job
       - name: Calculate duration
