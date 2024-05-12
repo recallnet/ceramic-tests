@@ -118,6 +118,10 @@ jobs:
         with:
           name: hermetic-driver
           path: ./bin
+      - 
+        name: Start timer
+        id: start_time
+        run: echo "::set-output name=start_time::$(date +%s)"
       -
         name: Test ${{ matrix.networks }}
         run: |
@@ -134,7 +138,32 @@ jobs:
               test_selector="fast"
           fi
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
-        continue-on-error: true
+      - 
+        name: End timer
+        id: end_time
+        run: echo "::set-output name=end_time::$(date +%s)"
+
+  print-duration:
+    name: Print Job Duration
+    runs-on: ubuntu-latest
+    needs: run-tests
+    steps:
+      # Retrieve the start time and end time outputs from the run-tests job
+      - name: Get job start time
+        run: echo "Job start time: ${{ needs.run-tests.outputs.start_time }}"
+        id: start_time
+
+      - name: Get job end time
+        run: echo "Job end time: ${{ needs.run-tests.outputs.end_time }}"
+        id: end_time
+
+      # Calculate the duration of the job
+      - name: Calculate duration
+        run: |
+          start_time=$(date -d"${{ steps.start_time.outputs.start_time }}" +%s)
+          end_time=$(date -d"${{ steps.end_time.outputs.end_time }}" +%s)
+          duration=$((end_time - start_time))
+          echo "Job duration: $duration seconds"
 
   collect-results:
     name: Hermetic Test Results
