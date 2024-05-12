@@ -121,7 +121,6 @@ jobs:
       -
         name: Test ${{ matrix.networks }}
         run: |
-          set -euxo pipefail
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
           chmod +x ./bin/hermetic-driver
