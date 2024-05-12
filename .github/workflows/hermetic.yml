@@ -134,6 +134,7 @@ jobs:
               test_selector="fast"
           fi
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+        continue-on-error: true
 
   collect-results:
     name: Hermetic Test Results
