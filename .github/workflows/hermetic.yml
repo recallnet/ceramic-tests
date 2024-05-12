@@ -134,19 +134,17 @@ jobs:
     steps:
       - name: Get job start time
         id: start_time
-        run: |
-          echo "Job start time: ${{ needs.run-tests.outputs.start_time }}"
+        run: echo "::set-output name=start_time::$(date +%s)"
       - name: Get job end time
         id: end_time
-        run: |
-          echo "Job end time: ${{ needs.run-tests.outputs.end_time }}"
+        run: echo "::set-output name=end_time::$(date +%s)"
       - name: Calculate duration
         run: |
-          start_time=$(date -d"${{ steps.start_time.outputs.start_time }}" +%s)
-          end_time=$(date -d"${{ steps.end_time.outputs.end_time }}" +%s)
+          start_time=${{ steps.start_time.outputs.start_time }}
+          end_time=${{ steps.end_time.outputs.end_time }}
           duration=$((end_time - start_time))
           echo "Job duration: $duration seconds"
-
+        
   collect-results:
     name: Hermetic Test Results
     if: ${{ always() }}
