@@ -5,6 +5,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 const delay = utilities.delay
+const delayMs = utilities.delayMs
 
 /**
  * Waits for a specific document to be available by repeatedly querying the ComposeDB until the document is found or a timeout occurs.
@@ -61,7 +62,7 @@ export async function loadDocumentOrTimeout(
       return doc
     } catch (error) {
       console.log(`Error loading document : ${documentId} retrying`, error)
-      await delay(10)
+      await delayMs(10)
       now = Date.now()
     }
   }
@@ -90,11 +91,9 @@ export async function waitForIndexingOrTimeout(
     if (indexedModels1.includes(modelId) && indexedModels2.includes(modelId)) {
       return true
     }
-    await delay(100)
+    await delayMs(100)
     now = Date.now()
-    console.log(
-      `Waiting for indexing model: ${modelId}, indexed on node1: ${indexedModels1.toString()}, indexed on node2: ${indexedModels2.toString()}`,
-    )
+    console.log(`Waiting for indexing model: ${modelId} on both ceramic nodes`)
   }
   throw Error(`Timeout waiting for indexing model: ${modelId}`)
 }
