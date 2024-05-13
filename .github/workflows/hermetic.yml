@@ -110,65 +110,17 @@ jobs:
         with:
           name: hermetic-driver
           path: ./bin
-      - name: Start timer
-        id: start_time
-        run: echo "::set-output name=start_time::$(date +%s)"
       - name: Test ${{ matrix.networks }}
         id: run_test
         run: |
-          echo "::set-output name=build_start_time::$(date +%s)"
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
-          echo "::set-output name=build_end_time::$(date +%s)"
-          echo "::set-output name=network_start_time::$(date +%s)"
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
-          echo "::set-output name=network_end_time::$(date +%s)"
-          echo "::set-output name=chmod_start_time::$(date +%s)"
           chmod +x ./bin/hermetic-driver
-          echo "::set-output name=chmod_end_time::$(date +%s)"
-          echo "::set-output name=selector_start_time::$(date +%s)"
           test_selector=${{ github.event.inputs.test_selector || '.' }}
-          echo "::set-output name=selector_end_time::$(date +%s)"
-          echo "::set-output name=if_start_time::$(date +%s)"
           if [[ ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }} == 'true' ]]; then
               test_selector="fast"
           fi
-          echo "::set-output name=if_end_time::$(date +%s)"
-          echo "::set-output name=make_start_time::$(date +%s)"
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
-          echo "::set-output name=make_end_time::$(date +%s)"
-      - name: End timer
-        id: end_time
-        run: echo "::set-output name=end_time::$(date +%s)"
-      - name: Calculate duration
-        run: |
-          build_start_time=${{ steps.run_test.outputs.build_start_time }}
-          build_end_time=${{ steps.run_test.outputs.build_end_time }}
-          build_duration=$((build_start_time - build_end_time))
-          echo "build Job duration: $build_duration seconds"
-          network_start_time=${{ steps.run_test.outputs.network_start_time }}
-          network_end_time=${{ steps.run_test.outputs.network_end_time }}
-          network_duration=$((network_start_time - network_end_time))
-          echo "network Job duration: $network_duration seconds"
-          chmod_start_time=${{ steps.run_test.outputs.chmod_start_time }}
-          chmod_end_time=${{ steps.run_test.outputs.chmod_end_time }}
-          chmod_duration=$((chmod_start_time - chmod_end_time))
-          echo "chmod Job duration: $chmod_duration seconds"
-          selector_start_time=${{ steps.run_test.outputs.selector_start_time }}
-          selector_end_time=${{ steps.run_test.outputs.selector_end_time }}
-          selector_duration=$((selector_start_time - selector_end_time))
-          echo "selector Job duration: $selector_duration seconds"
-          if_start_time=${{ steps.run_test.outputs.if_start_time }}
-          if_end_time=${{ steps.run_test.outputs.if_end_time }}
-          if_duration=$((if_start_time - if_end_time))
-          echo "if Job duration: $if_duration seconds"
-          make_start_time=${{ steps.run_test.outputs.make_start_time }}
-          make_end_time=${{ steps.run_test.outputs.make_end_time }}
-          make_duration=$((make_end_time - make_start_time))
-          echo "make Job duration: $make_duration seconds"
-          full_start_time=${{ steps.start_time.outputs.start_time }}
-          full_end_time=${{ steps.end_time.outputs.end_time }}
-          full_duration=$((full_start_time - full_end_time))
-          echo "Full Job duration: $full_duration seconds"
 
   collect-results:
     name: Hermetic Test Results
