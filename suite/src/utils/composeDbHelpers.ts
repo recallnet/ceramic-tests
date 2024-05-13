@@ -43,23 +43,58 @@ export async function waitForDocument(
 
 /**
  * Loads a document from a ceramic node with a timeout.
- * @param ceramicNode : Ceramic client to load teh document from
+ * @param ceramicNode : Ceramic client to load the document from
  * @param documentId : ID of the document to load
  * @param timeoutMs : Timeout in milliseconds
- * @returns 
+ * @returns The document if found, throws error on timeout
  */
-export async function loadDocumentOrTimeout(ceramicNode: CeramicClient, documentId: StreamID, timeoutMs: number) {
-  const startTime = Date.now()
-  while (true) {
+export async function loadDocumentOrTimeout(
+  ceramicNode: CeramicClient,
+  documentId: StreamID,
+  timeoutMs: number,
+) {
+  let now = Date.now()
+  const expirationTime = now + timeoutMs
+  while (now < expirationTime) {
     try {
-      const doc = await ModelInstanceDocument.load(ceramicNode, documentId);
-      return doc; 
+      const doc = await ModelInstanceDocument.load(ceramicNode, documentId)
+      return doc
     } catch (error) {
       console.log(`Error loading document : ${documentId} retrying`, error)
-      if (Date.now() - startTime > timeoutMs) {
-        throw new Error('Timeout waiting for document')
-      }
-      await delay(1)
+      await delay(10)
+      now = Date.now()
     }
   }
+  throw Error('Timeout waiting for document')
+}
+
+/**
+ * Waits for indexing to complete on both nodes or a timeout.
+ * @param ceramicNode1 : Ceramic client to check indexing on
+ * @param ceramicNode2 : Ceramic client to check indexing on
+ * @param modelId : ID of the model to check indexing for
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns True if indexing is complete on both nodes, throws error on timeout
+ */
+export async function waitForIndexingOrTimeout(
+  ceramicNode1: CeramicClient,
+  ceramicNode2: CeramicClient,
+  modelId: StreamID,
+  timeoutMs: number,
+) {
+  let now = Date.now()
+  const expirationTime = now + timeoutMs
+  while (now < expirationTime) {
+    const indexedModels1 = await ceramicNode1.admin.getIndexedModels()
+    const indexedModels2 = await ceramicNode2.admin.getIndexedModels()
+    if (indexedModels1.includes(modelId) && indexedModels2.includes(modelId)) {
+      return true
+    }
+    await delay(100)
+    now = Date.now()
+    console.log(
+      `Waiting for indexing model: ${modelId}, indexed on node1: ${indexedModels1.toString()}, indexed on node2: ${indexedModels2.toString()}`,
+    )
+  }
+  throw Error(`Timeout waiting for indexing model: ${modelId}`)
 }

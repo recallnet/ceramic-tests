@@ -7,11 +7,12 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { newModel, basicModelDocumentContent } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { loadDocumentOrTimeout } from '../../utils/composeDbHelpers.js'
+import { loadDocumentOrTimeout, waitForIndexingOrTimeout } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeMin = 2
+const nodeSyncWaitTimeSec = 5
+const indexWaitTimeMin = 1
 
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
@@ -39,21 +40,23 @@ describe('Model Integration Test', () => {
   })
 
   test('Create a ModelInstanceDocument on one node and read it from another', async () => {
-    const isIndexed = await TestUtils.waitForConditionOrTimeout(async () => {
-      const indexedModels1 = await ceramicNode1.admin.getIndexedModels();
-      const indexedModels2 = await ceramicNode2.admin.getIndexedModels();
-      return indexedModels1.includes(modelId) && indexedModels2.includes(modelId);
-    }, 1000 * 60 * nodeSyncWaitTimeMin); // 1 minute timeout in millseconds
-    if (!isIndexed) {
-      throw new Error('Timeout reached: Failed to index the model')
-    }
+    await waitForIndexingOrTimeout(
+      ceramicNode1,
+      ceramicNode2,
+      modelId,
+      1000 * 60 * indexWaitTimeMin,
+    )
     const modelInstanceDocumentMetadata = { model: modelId }
     const document1 = await ModelInstanceDocument.create(
       ceramicNode1,
       basicModelDocumentContent,
       modelInstanceDocumentMetadata,
     )
-    const document2 = await loadDocumentOrTimeout(ceramicNode2, document1.id, 1000 * 60 * nodeSyncWaitTimeMin)
+    const document2 = await loadDocumentOrTimeout(
+      ceramicNode2,
+      document1.id,
+      1000 * nodeSyncWaitTimeSec,
+    )
     expect(document2.id).toEqual(document1.id)
   })
 })
