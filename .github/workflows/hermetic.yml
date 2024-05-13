@@ -126,19 +126,13 @@ jobs:
       - name: End timer
         id: end_time
         run: echo "::set-output name=end_time::$(date +%s)"
-          
-  print-duration:
-    name: Print Job Duration
-    runs-on: ubuntu-latest
-    needs: run-tests
-    steps:
       - name: Calculate duration
-        run: |
-          start_time=${{ steps.start_time.outputs.start_time }}
-          end_time=${{ steps.end_time.outputs.end_time }}
-          duration=$((end_time - start_time))
-          echo "Job duration: $duration seconds"
-        
+      run: |
+        start_time=${{ steps.start_time.outputs.start_time }}
+        end_time=${{ steps.end_time.outputs.end_time }}
+        duration=$((end_time - start_time))
+        echo "Job duration: $duration seconds"
+
   collect-results:
     name: Hermetic Test Results
     if: ${{ always() }}
