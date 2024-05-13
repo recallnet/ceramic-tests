@@ -96,18 +96,18 @@ publish-tests-property:
 
 .PHONY: hermetic-tests
 hermetic-tests:
-    @echo "Starting hermetic-tests..."
-    @start=$$(date +%s); \
-    ${HERMETIC_CMD} test \
-        --network "${TEST_NETWORK}" \
-        --flavor correctness \
-        --suffix "${HERMETIC_SUFFIX}" \
-        --network-ttl ${HERMETIC_TTL} \
-        --test-image "${TEST_SUITE_IMAGE}" \
-        --test-selector "${TEST_SELECTOR}"; \
-    end=$$(date +%s); \
-    duration=$$((end - start)); \
-    echo "hermetic-tests completed in $$duration seconds"
+	@echo "Starting hermetic-tests..."
+	@start=$$(date +%s); \
+	${HERMETIC_CMD} test \
+		--network "${TEST_NETWORK}" \
+		--flavor correctness \
+		--suffix "${HERMETIC_SUFFIX}" \
+		--network-ttl ${HERMETIC_TTL} \
+		--test-image "${TEST_SUITE_IMAGE}" \
+		--test-selector "${TEST_SELECTOR}"; \
+	end=$$(date +%s); \
+	duration=$$((end - start)); \
+	echo "hermetic-tests completed in $$duration seconds"
 
 .PHONY: performance-tests
 performance-tests:
