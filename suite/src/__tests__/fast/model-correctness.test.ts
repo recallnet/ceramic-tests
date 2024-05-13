@@ -7,13 +7,11 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { newModel, basicModelDocumentContent } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { utilities } from '../../utils/common.js'
 import { loadDocumentOrTimeout } from '../../utils/composeDbHelpers.js'
 
-const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 2
+const nodeSyncWaitTimeMin = 2
 
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
@@ -45,7 +43,7 @@ describe('Model Integration Test', () => {
       const indexedModels1 = await ceramicNode1.admin.getIndexedModels();
       const indexedModels2 = await ceramicNode2.admin.getIndexedModels();
       return indexedModels1.includes(modelId) && indexedModels2.includes(modelId);
-    }, 1000 * 60 * nodeSyncWaitTimeSec); // 3 minute timeout in millseconds
+    }, 1000 * 60 * nodeSyncWaitTimeMin); // 1 minute timeout in millseconds
     if (!isIndexed) {
       throw new Error('Timeout reached: Failed to index the model')
     }
@@ -55,9 +53,7 @@ describe('Model Integration Test', () => {
       basicModelDocumentContent,
       modelInstanceDocumentMetadata,
     )
-    // We have to wait for some time for sync to happen
-    await delay(nodeSyncWaitTimeSec)
-    const document2 = await loadDocumentOrTimeout(ceramicNode2, document1.id, 1000 * nodeSyncWaitTimeSec)
+    const document2 = await loadDocumentOrTimeout(ceramicNode2, document1.id, 1000 * 60 * nodeSyncWaitTimeMin)
     expect(document2.id).toEqual(document1.id)
   })
 })

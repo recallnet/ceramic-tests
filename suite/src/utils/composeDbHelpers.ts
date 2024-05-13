@@ -1,7 +1,7 @@
 import { ComposeClient } from '@composedb/client'
 import { utilities } from './common'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { ModelInstanceDocument } from '@ceramicnetwork/model-instance-document'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 const delay = utilities.delay
@@ -41,6 +41,13 @@ export async function waitForDocument(
   }
 }
 
+/**
+ * Loads a document from a ceramic node with a timeout.
+ * @param ceramicNode : Ceramic client to load teh document from
+ * @param documentId : ID of the document to load
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns 
+ */
 export async function loadDocumentOrTimeout(ceramicNode: CeramicClient, documentId: StreamID, timeoutMs: number) {
   const startTime = Date.now()
   while (true) {
