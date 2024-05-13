@@ -113,26 +113,53 @@ jobs:
       - name: Start timer
         id: start_time
         run: echo "::set-output name=start_time::$(date +%s)"
-      - name: Test ${{ matrix.networks }}
+      - name: Export BUILD_TAG
+        id: build_tag_time
         run: |
+          echo "::set-output name=start_time::$(date +%s)"
           export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
+          echo "::set-output name=end_time::$(date +%s)"
+      - name: Export TEST_NETWORK
+        id: test_network_time
+        run: |
+          echo "::set-output name=start_time::$(date +%s)"
           export TEST_NETWORK=./networks/${{ matrix.networks }}.yaml
+          echo "::set-output name=end_time::$(date +%s)"
+      # Add more steps for other commands as needed
+      - name: Run Test Step
+        id: test_step
+        run: |
+          echo "::set-output name=start_time::$(date +%s)"
           chmod +x ./bin/hermetic-driver
           test_selector=${{ github.event.inputs.test_selector || '.' }}
           if [[ ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }} == 'true' ]]; then
               test_selector="fast"
           fi
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+          echo "::set-output name=end_time::$(date +%s)"
       - name: End timer
         id: end_time
         run: echo "::set-output name=end_time::$(date +%s)"
-      - name: Calculate duration
+      - name: Calculate duration for Export BUILD_TAG
         run: |
-          start_time=${{ steps.start_time.outputs.start_time }}
-          end_time=${{ steps.end_time.outputs.end_time }}
+          start_time=${{ steps.build_tag_time.outputs.start_time }}
+          end_time=${{ steps.build_tag_time.outputs.end_time }}
           duration=$((end_time - start_time))
-          echo "Job duration: $duration seconds"
-
+          echo "Export BUILD_TAG duration: $duration seconds"
+      - name: Calculate duration for Export TEST_NETWORK
+        run: |
+          start_time=${{ steps.test_network_time.outputs.start_time }}
+          end_time=${{ steps.test_network_time.outputs.end_time }}
+          duration=$((end_time - start_time))
+          echo "Export TEST_NETWORK duration: $duration seconds"
+      # Add more steps to calculate durations for other commands as needed
+      - name: Calculate duration for Test Step
+        run: |
+          start_time=${{ steps.test_step.outputs.start_time }}
+          end_time=${{ steps.test_step.outputs.end_time }}
+          duration=$((end_time - start_time))
+          echo "Test step duration: $duration seconds"
+  
   collect-results:
     name: Hermetic Test Results
     if: ${{ always() }}
