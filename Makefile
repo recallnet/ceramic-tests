@@ -3,13 +3,7 @@
 # uses the specific targets within the file.
 # Therefore may be useful in ensuring a change
 # is ready to pass CI checks.
-define timestamp_and_measure_duration
-    start=$$(date +%s)
-    $1
-    end=$$(date +%s)
-    duration=$((end - start))
-    echo "Command '$1' took ${duration} seconds"
-endef
+
 # Set Rust build profile, one of release or dev.
 BUILD_PROFILE ?= release
 # Unique identifier for builds and tags.
@@ -102,13 +96,18 @@ publish-tests-property:
 
 .PHONY: hermetic-tests
 hermetic-tests:
-    $(call timestamp_and_measure_duration, ${HERMETIC_CMD} test \
+    @echo "Starting hermetic-tests..."
+    @start=$$(date +%s); \
+    ${HERMETIC_CMD} test \
         --network "${TEST_NETWORK}" \
         --flavor correctness \
         --suffix "${HERMETIC_SUFFIX}" \
         --network-ttl ${HERMETIC_TTL} \
         --test-image "${TEST_SUITE_IMAGE}" \
-        --test-selector "${TEST_SELECTOR}")
+        --test-selector "${TEST_SELECTOR}"; \
+    end=$$(date +%s); \
+    duration=$$((end - start)); \
+    echo "hermetic-tests completed in $$duration seconds"
 
 .PHONY: performance-tests
 performance-tests:
