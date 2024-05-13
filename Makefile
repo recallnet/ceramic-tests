@@ -105,6 +105,7 @@ hermetic-tests:
 		--network-ttl ${HERMETIC_TTL} \
 		--test-image "${TEST_SUITE_IMAGE}" \
 		--test-selector "${TEST_SELECTOR}"; \
+		--profiling \
 	end=$$(date +%s); \
 	duration=$$((end - start)); \
 	echo "hermetic-tests completed in $$duration seconds"
