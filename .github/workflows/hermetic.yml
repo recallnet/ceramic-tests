@@ -163,11 +163,11 @@ jobs:
           echo "if Job duration: $if_duration seconds"
           make_start_time=${{ steps.run_test.outputs.make_start_time }}
           make_end_time=${{ steps.run_test.outputs.make_end_time }}
-          make_duration=$((make_start_time - make_end_time))
+          make_duration=$((make_end_time - make_start_time))
           echo "make Job duration: $make_duration seconds"
           full_start_time=${{ steps.start_time.outputs.start_time }}
           full_end_time=${{ steps.end_time.outputs.end_time }}
-          full_duration=$((full_end_time - full_start_time))
+          full_duration=$((full_start_time - full_end_time))
           echo "Full Job duration: $full_duration seconds"
 
   collect-results:
