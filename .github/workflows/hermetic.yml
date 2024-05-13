@@ -126,7 +126,7 @@ jobs:
       - name: End timer
         id: end_time
         run: echo "::set-output name=end_time::$(date +%s)"
-
+          
   print-duration:
     name: Print Job Duration
     runs-on: ubuntu-latest
