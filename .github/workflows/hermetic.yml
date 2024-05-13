@@ -132,12 +132,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: run-tests
     steps:
-      - name: Get job start time
-        id: start_time
-        run: echo "::set-output name=start_time::$(date +%s)"
-      - name: Get job end time
-        id: end_time
-        run: echo "::set-output name=end_time::$(date +%s)"
       - name: Calculate duration
         run: |
           start_time=${{ steps.start_time.outputs.start_time }}
