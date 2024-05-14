@@ -210,7 +210,7 @@ describe('Datafeed SSE Api Test', () => {
       //accumulator.start(resumeTokens.pop())
       // By waiting for the expected events we confirm the api delivers all events
       //await accumulator.waitForEvents(expectedEvents, 1000 * 60)
-      accumulator2.stop()
+      //accumulator2.stop()
     } finally {
       source.close()
     }
