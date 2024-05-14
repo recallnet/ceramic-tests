@@ -41,10 +41,20 @@ export class EventAccumulator<T> {
   #parseEventData: (eventData: any) => T
   readonly allEvents: Set<T> = new Set()
 
-  constructor(source: EventSource, parseEventData?: (event: MessageEvent) => T) {
+  constructor(source: EventSource, parseEventData?: (event: MessageEvent) => T, resumeToken?: string) {
     this.#source = source
     this.#parseEventData = parseEventData || ((eventData) => eventData.toString())
-    this.start()
+    if(resumeToken) {
+      const afterQueryParam = "after=" + encodeURIComponent(resumeToken)
+      const newUrl = new URL(this.#source.url)
+      newUrl.search = afterQueryParam
+      this.#source = new EventSource(newUrl.toString())
+    }
+
+    this.#source.addEventListener('message', (event) => {
+      const parsedEvent = this.#parseEventData(event.data)
+      this.allEvents.add(parsedEvent)
+    })
   }
 
   async waitForEvents(expected: Set<T>, timeoutMs?: number): Promise<void> {
@@ -64,19 +74,5 @@ export class EventAccumulator<T> {
 
   stop() {
     this.#source.close()
-  }
-
-  start(resumeToken?: string) {
-    if(resumeToken) {
-      const afterQueryParam = "after=" + encodeURIComponent(resumeToken)
-      const newUrl = new URL(this.#source.url)
-      newUrl.search = afterQueryParam
-      this.#source = new EventSource(newUrl.toString())
-    }
-
-    this.#source.addEventListener('message', (event) => {
-      const parsedEvent = this.#parseEventData(event.data)
-      this.allEvents.add(parsedEvent)
-    })
   }
 }
