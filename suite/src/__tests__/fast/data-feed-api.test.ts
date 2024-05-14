@@ -24,7 +24,7 @@ async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMe
   )
 }
 
-describe.skip('Datafeed SSE Api Test', () => {
+describe('Datafeed SSE Api Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
@@ -144,7 +144,7 @@ describe.skip('Datafeed SSE Api Test', () => {
     }
   })
 
-  test('time commits are delivered', async () => {
+  test.skip('time commits are delivered', async () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
