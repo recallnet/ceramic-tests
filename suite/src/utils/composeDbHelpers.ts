@@ -90,11 +90,11 @@ export async function waitForIndexingOrTimeout(
     const indexedModels2 = await ceramicNode2.admin.getIndexedModels()
     console.log(
       'Indexed models on node1',
-      indexedModels1.map((m) => m.toString()),
+      indexedModels1.map((m) => m.baseID.toString()),
     )
     console.log(
       'Indexed models on node2',
-      indexedModels2.map((m) => m.toString()),
+      indexedModels2.map((m) => m.baseID.toString()),
     )
     if (indexedModels1.includes(modelId) && indexedModels2.includes(modelId)) {
       return true
