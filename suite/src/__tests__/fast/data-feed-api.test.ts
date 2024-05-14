@@ -193,7 +193,7 @@ describe('Datafeed SSE Api Test', () => {
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
-      console.log("Sent genesis:",Date.now())
+      console.log("Sent genesis:", doc.tip.toString(), Date.now())
       // wait for latest event and disconnect  
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
       accumulator.stop()
