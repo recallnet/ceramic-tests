@@ -48,6 +48,8 @@ const MAX_KUBE_WATCH_TIMEOUT: u32 = 290;
 
 const DID_PRIVATE_KEY: &str = "c864a33033626b448912a19509992552283fd463c143bdc4adc75f807b7a4dce";
 
+const NODE_INSPECTION_PORT: i32 = 9229;
+
 #[derive(Debug, Clone)]
 pub struct TestConfig {
     pub network: PathBuf,
@@ -592,6 +594,12 @@ fn correctness_test(namespace: &str, image: Option<String>, test_selector: Strin
                         name: "tests".to_owned(),
                         image,
                         image_pull_policy,
+                        ports: Some(vec![ContainerPort {
+                            container_port: NODE_INSPECTION_PORT,
+                            name: Some("inspect".to_owned()),
+                            protocol: Some("TCP".to_owned()),
+                            ..Default::default()
+                        }]),
                         resources: Some(ResourceRequirements {
                             limits: Some(BTreeMap::from_iter([
                                 ("cpu".to_owned(), Quantity("500m".to_owned())),
@@ -639,6 +647,11 @@ fn correctness_test(namespace: &str, image: Option<String>, test_selector: Strin
                             EnvVar {
                                 name: "NETWORK".to_owned(),
                                 value: Some("local".to_owned()),
+                                ..Default::default()
+                            },
+                            EnvVar {
+                                name: "NODE_OPTIONS".to_owned(),
+                                value: Some("--inspect".to_owned()),
                                 ..Default::default()
                             },
                         ]),
