@@ -182,7 +182,7 @@ describe('Datafeed SSE Api Test', () => {
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
       resumeTokens.push(decoded.resumeToken)
-      console.log("Just In:", decoded.commitId)
+      console.log("Just In:", decoded.commitId, Date.now())
       return decoded.commitId.commit.toString()
     }
 
@@ -193,6 +193,7 @@ describe('Datafeed SSE Api Test', () => {
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
+      console.log("Sent genesis:",Date.now())
       // wait for latest event and disconnect  
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
       accumulator.stop()
@@ -204,8 +205,8 @@ describe('Datafeed SSE Api Test', () => {
       expectedEvents.add(doc.tip.toString())
       
       // connection after events using latest resumeToken
-      const accumulator2 = new EventAccumulator(source, parseEventData, resumeTokens.pop())
-      console.log("the second accumulator was activated", accumulator2)
+      /*const accumulator2 = new EventAccumulator(source, parseEventData, resumeTokens.pop())
+      console.log("the second accumulator was activated", accumulator2)*/
       //accumulator.start(resumeTokens.pop())
       // By waiting for the expected events we confirm the api delivers all events
       //await accumulator.waitForEvents(expectedEvents, 1000 * 60)
