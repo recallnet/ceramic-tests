@@ -201,8 +201,10 @@ describe('Datafeed SSE Api Test', () => {
 
       await doc.replace({ myData: 42 })
       expectedEvents.add(doc.tip.toString())
-
+      
       // connection after events using latest resumeToken
+      const accumulator2 = new EventAccumulator(source, parseEventData, resumeTokens.pop())
+      console.log("the second accumulator was activated", accumulator2)
       //accumulator.start(resumeTokens.pop())
       // By waiting for the expected events we confirm the api delivers all events
       //await accumulator.waitForEvents(expectedEvents, 1000 * 60)
