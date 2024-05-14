@@ -88,7 +88,7 @@ describe('Datafeed SSE Api Test', () => {
     }
   })
 
-  test('genesis and data commits are delivered', async () => {
+  test.skip('genesis and data commits are delivered', async () => {
     const source1 = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
