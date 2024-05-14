@@ -11,8 +11,6 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
-import * as helpers from '../../utils/dynamoDbHelpers.js'
-import { AnchorStatus } from '@ceramicnetwork/common'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
@@ -147,7 +145,6 @@ describe('Datafeed SSE Api Test', () => {
   })
 
   test.only('time commits are delivered', async () => {
-    await helpers.createTestTable()
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
@@ -163,23 +160,19 @@ describe('Datafeed SSE Api Test', () => {
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, true)
       expectedEvents.add(doc.tip.toString())
-      const anchorReqs = await helpers.fetchUnanchoredStreamReqs()
-      console.log(`Identified ${anchorReqs.length} streams pending anchor status check, and ${doc.id} or  ${doc.tip} is the expected one`)
+      console.log(doc.id, "this is the oneee", Date.now())
       // time commit
-      // await helpers.markStreamReqAsAnchored(tile.id) UNcomment this on second iteration
       await waitForAnchor(doc).catch(async (errStr) => {
-        // If the anchoring failed, we don't want to leave this stream in the database,
-        // as it will cause all future test executions to fail as well.
-        await helpers.deleteStreamReq(doc.id)
         throw new Error(errStr)
       })
-      console.log(`${doc.id}: anchor status = ${AnchorStatus[doc.state.anchorStatus]}`)
+      console.log("this is the oneee post anchoring", Date.now())
+      expect(doc.state.log.length).toEqual(2)
+
       expectedEvents.add(doc.tip.toString())
       // By waiting for the expected events we confirm the api delivers all events)
       await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
       source.close()
-      await helpers.cleanup()
     }
   })
   // this wont be tested until the feature its ready
