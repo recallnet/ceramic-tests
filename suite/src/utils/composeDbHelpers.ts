@@ -70,6 +70,23 @@ export async function loadDocumentOrTimeout(
 }
 
 /**
+ * Checks if a model is indexed on a Ceramic node.
+ * @param ceramicNode : Ceramic client to check indexing on
+ * @param modelId : ID of the model to check indexing for
+ * @returns True if the model is indexed on the node, false otherwise
+ */
+async function isModelIndexed(ceramicNode: CeramicClient, modelId: StreamID): Promise<boolean> {
+  const indexedModels = await ceramicNode.admin.getIndexedModelData()
+  for (const m of indexedModels) {
+    const streamId = m.streamID
+    if (streamId.toString() === modelId.toString()) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * Waits for indexing to complete on both nodes or a timeout.
  * @param ceramicNode1 : Ceramic client to check indexing on
  * @param ceramicNode2 : Ceramic client to check indexing on
@@ -82,26 +99,21 @@ export async function waitForIndexingOrTimeout(
   ceramicNode2: CeramicClient,
   modelId: StreamID,
   timeoutMs: number,
-) {
-  let now = Date.now()
-  const expirationTime = now + timeoutMs
-  while (now < expirationTime) {
-    const indexedModels1 = await ceramicNode1.admin.getIndexedModels()
-    const indexedModels2 = await ceramicNode2.admin.getIndexedModels()
-    console.log(
-      'Indexed models on node1',
-      indexedModels1.map((m) => m.baseID.toString()),
-    )
-    console.log(
-      'Indexed models on node2',
-      indexedModels2.map((m) => m.baseID.toString()),
-    )
-    if (indexedModels1.includes(modelId) && indexedModels2.includes(modelId)) {
+): Promise<boolean> {
+  const startTime = Date.now()
+  const expirationTime = startTime + timeoutMs
+
+  while (Date.now() < expirationTime) {
+    const isIndexedOnNode1 = await isModelIndexed(ceramicNode1, modelId)
+    const isIndexedOnNode2 = await isModelIndexed(ceramicNode2, modelId)
+
+    if (isIndexedOnNode1 && isIndexedOnNode2) {
       return true
     }
+
     await delayMs(100)
-    now = Date.now()
     console.log(`Waiting for indexing model: ${modelId} on both ceramic nodes`)
   }
-  throw Error(`Timeout waiting for indexing model: ${modelId}`)
+
+  throw new Error(`Timeout waiting for indexing model: ${modelId}`)
 }
