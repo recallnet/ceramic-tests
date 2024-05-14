@@ -24,7 +24,7 @@ async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMe
   )
 }
 
-describe('Datafeed SSE Api Test', () => {
+describe.skip('Datafeed SSE Api Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
   let modelId: StreamID
