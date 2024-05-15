@@ -36,12 +36,8 @@ describe('Model Integration Test', () => {
     )
     await ceramicNode1.admin.startIndexingModels([model.id])
     await ceramicNode2.admin.startIndexingModels([model.id])
-    await waitForIndexingOrTimeout(
-      ceramicNode1,
-      ceramicNode2,
-      modelId,
-      1000 * 60 * indexWaitTimeMin,
-    )
+    await waitForIndexingOrTimeout(ceramicNode1, modelId, 1000 * 60 * indexWaitTimeMin)
+    await waitForIndexingOrTimeout(ceramicNode2, modelId, 1000 * 60 * indexWaitTimeMin)
     modelId = model.id
   })
 

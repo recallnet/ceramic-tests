@@ -89,14 +89,12 @@ async function isModelIndexed(ceramicNode: CeramicClient, modelId: StreamID): Pr
 /**
  * Waits for indexing to complete on both nodes or a timeout.
  * @param ceramicNode1 : Ceramic client to check indexing on
- * @param ceramicNode2 : Ceramic client to check indexing on
  * @param modelId : ID of the model to check indexing for
  * @param timeoutMs : Timeout in milliseconds
- * @returns True if indexing is complete on both nodes, throws error on timeout
+ * @returns True if indexing is complete, throws error on timeout
  */
 export async function waitForIndexingOrTimeout(
-  ceramicNode1: CeramicClient,
-  ceramicNode2: CeramicClient,
+  ceramicNode: CeramicClient,
   modelId: StreamID,
   timeoutMs: number,
 ): Promise<boolean> {
@@ -104,10 +102,9 @@ export async function waitForIndexingOrTimeout(
   const expirationTime = startTime + timeoutMs
 
   while (Date.now() < expirationTime) {
-    const isIndexedOnNode1 = await isModelIndexed(ceramicNode1, modelId)
-    const isIndexedOnNode2 = await isModelIndexed(ceramicNode2, modelId)
+    const isIndexedOnNode1 = await isModelIndexed(ceramicNode, modelId)
 
-    if (isIndexedOnNode1 && isIndexedOnNode2) {
+    if (isIndexedOnNode1) {
       return true
     }
 
