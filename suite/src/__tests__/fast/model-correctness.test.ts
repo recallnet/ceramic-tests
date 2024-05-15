@@ -36,16 +36,16 @@ describe('Model Integration Test', () => {
     )
     await ceramicNode1.admin.startIndexingModels([model.id])
     await ceramicNode2.admin.startIndexingModels([model.id])
-    modelId = model.id
-  })
-
-  test('Create a ModelInstanceDocument on one node and read it from another', async () => {
     await waitForIndexingOrTimeout(
       ceramicNode1,
       ceramicNode2,
       modelId,
       1000 * 60 * indexWaitTimeMin,
     )
+    modelId = model.id
+  })
+
+  test('Create a ModelInstanceDocument on one node and read it from another', async () => {
     const modelInstanceDocumentMetadata = { model: modelId }
     const document1 = await ModelInstanceDocument.create(
       ceramicNode1,
