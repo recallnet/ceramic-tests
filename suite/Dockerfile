@@ -17,4 +17,4 @@ COPY src/ ./src
 # Select all tests by default
 ENV TEST_SELECTOR "."
 
-ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--detectOpenHandles","--testPathPattern", "$TEST_SELECTOR"]
+ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--detectOpenHandles","--forceExit","--testPathPattern", "$TEST_SELECTOR"]
