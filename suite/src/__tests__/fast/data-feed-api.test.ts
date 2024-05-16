@@ -1,4 +1,4 @@
-import { describe, test, beforeAll, expect, afterAll } from '@jest/globals'
+import { describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { EventAccumulator } from '../../utils/common.js'
