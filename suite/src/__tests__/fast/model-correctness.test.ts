@@ -36,9 +36,9 @@ describe('Model Integration Test', () => {
     )
     await ceramicNode1.admin.startIndexingModels([model.id])
     await ceramicNode2.admin.startIndexingModels([model.id])
+    modelId = model.id
     await waitForIndexingOrTimeout(ceramicNode1, modelId, 1000 * 60 * indexWaitTimeMin)
     await waitForIndexingOrTimeout(ceramicNode2, modelId, 1000 * 60 * indexWaitTimeMin)
-    modelId = model.id
   })
 
   test('Create a ModelInstanceDocument on one node and read it from another', async () => {
