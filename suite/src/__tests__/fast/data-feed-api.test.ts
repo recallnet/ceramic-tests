@@ -1,4 +1,4 @@
-import { describe, test, beforeAll, expect } from '@jest/globals'
+import { describe, test, beforeAll, expect, afterAll } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { EventAccumulator } from '../../utils/common.js'
@@ -24,6 +24,14 @@ async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMe
   )
 }
 
+function logActiveHandles() {
+  const handles = process._getActiveHandles();
+  console.log('Active handles count:', handles.length)
+  handles.forEach((handle: any, index: any) => {
+    console.log(`Handle ${index + 1}:`, handle)
+  });
+}
+
 describe('Datafeed SSE Api Test', () => {
   let ceramicNode1: CeramicClient
   let ceramicNode2: CeramicClient
@@ -31,6 +39,8 @@ describe('Datafeed SSE Api Test', () => {
   let modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs
   let Codec: any
   beforeAll(async () => {
+    console.log(`Handle @ BeforeAll start`)
+    logActiveHandles()
     if(!ComposeDbUrls)
     throw new Error(
       'ComposeDbUrls expects a minimum of 2 urls, but none were found',
@@ -57,7 +67,15 @@ describe('Datafeed SSE Api Test', () => {
 
     modelInstanceDocumentMetadata = { model: modelId }
     Codec = JsonAsString.pipe(AggregationDocument)
+    console.log(`Handle @ BeforeAll end`)
+    logActiveHandles()
   })
+
+  afterAll(async () => {
+    console.log(`Handle @ AfterAll end`)
+    logActiveHandles()
+    }
+  )
 
   test('event format is as expected', async () => {
     let event: any
@@ -145,6 +163,8 @@ describe('Datafeed SSE Api Test', () => {
   })
 
   test.skip('time commits are delivered', async () => {
+    console.log(`Handle @ time start`)
+    logActiveHandles()
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
@@ -171,6 +191,8 @@ describe('Datafeed SSE Api Test', () => {
     } finally {
       source.close()
     }
+    console.log(`Handle @ time end`)
+    logActiveHandles()
   })
   // this wont be tested until the feature its ready
   test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
