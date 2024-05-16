@@ -33,6 +33,8 @@ export const utilities = {
   },
   delay: async (seconds: number): Promise<void> =>
     new Promise((resolve) => setTimeout(() => resolve(), seconds * 1000)),
+  delayMs: async (ms: number): Promise<void> =>
+    new Promise((resolve) => setTimeout(() => resolve(), ms)),
 }
 
 export class EventAccumulator<T> {

@@ -1,7 +1,11 @@
 import { ComposeClient } from '@composedb/client'
 import { utilities } from './common'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const delay = utilities.delay
+const delayMs = utilities.delayMs
 
 /**
  * Waits for a specific document to be available by repeatedly querying the ComposeDB until the document is found or a timeout occurs.
@@ -36,4 +40,77 @@ export async function waitForDocument(
     }
     await delay(1)
   }
+}
+
+/**
+ * Loads a document from a ceramic node with a timeout.
+ * @param ceramicNode : Ceramic client to load the document from
+ * @param documentId : ID of the document to load
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns The document if found, throws error on timeout
+ */
+export async function loadDocumentOrTimeout(
+  ceramicNode: CeramicClient,
+  documentId: StreamID,
+  timeoutMs: number,
+) {
+  let now = Date.now()
+  const expirationTime = now + timeoutMs
+  while (now < expirationTime) {
+    try {
+      const doc = await ModelInstanceDocument.load(ceramicNode, documentId)
+      return doc
+    } catch (error) {
+      console.log(`Error loading document : ${documentId} retrying`, error)
+      await delayMs(10)
+      now = Date.now()
+    }
+  }
+  throw Error('Timeout waiting for document')
+}
+
+/**
+ * Checks if a model is indexed on a Ceramic node.
+ * @param ceramicNode : Ceramic client to check indexing on
+ * @param modelId : ID of the model to check indexing for
+ * @returns True if the model is indexed on the node, false otherwise
+ */
+async function isModelIndexed(ceramicNode: CeramicClient, modelId: StreamID): Promise<boolean> {
+  const indexedModels = await ceramicNode.admin.getIndexedModelData()
+  for (const m of indexedModels) {
+    const streamId = m.streamID
+    if (streamId.toString() === modelId.toString()) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Waits for indexing to complete on both nodes or a timeout.
+ * @param ceramicNode1 : Ceramic client to check indexing on
+ * @param modelId : ID of the model to check indexing for
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns True if indexing is complete, throws error on timeout
+ */
+export async function waitForIndexingOrTimeout(
+  ceramicNode: CeramicClient,
+  modelId: StreamID,
+  timeoutMs: number,
+): Promise<boolean> {
+  const startTime = Date.now()
+  const expirationTime = startTime + timeoutMs
+
+  while (Date.now() < expirationTime) {
+    const isIndexedOnNode1 = await isModelIndexed(ceramicNode, modelId)
+
+    if (isIndexedOnNode1) {
+      return true
+    }
+
+    await delayMs(100)
+    console.log(`Waiting for indexing model: ${modelId} on both ceramic nodes`)
+  }
+
+  throw new Error(`Timeout waiting for indexing model: ${modelId}`)
 }
