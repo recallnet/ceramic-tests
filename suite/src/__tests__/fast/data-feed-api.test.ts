@@ -144,7 +144,7 @@ describe('Datafeed SSE Api Test', () => {
     }
   })
 
-  test.skip('time commits are delivered', async () => {
+  test('time commits are delivered', async () => {
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
