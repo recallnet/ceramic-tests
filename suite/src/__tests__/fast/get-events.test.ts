@@ -9,12 +9,16 @@ const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 async function getEventData(url: string, eventCid: string, log = false) {
   const controller = new AbortController()
   const signal = controller.signal
-  let response = await fetch(url + `/ceramic/events/${eventCid}`, { signal })
-  if (log) {
-    console.log(response)
+  try {
+    let response = await fetch(url + `/ceramic/events/${eventCid}`, { signal })
+    if (log) {
+      console.log(response)
+    }
+
+    return response
+  } finally {
+    controller.abort()
   }
-  controller.abort()
-  return response
 }
 
 async function postEvent(url: string, event: ReconEventInput) {
