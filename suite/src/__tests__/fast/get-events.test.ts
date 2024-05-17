@@ -7,10 +7,13 @@ const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
 
 async function getEventData(url: string, eventCid: string, log = false) {
-  let response = await fetch(url + `/ceramic/events/${eventCid}`)
+  const controller = new AbortController()
+  const signal = controller.signal
+  let response = await fetch(url + `/ceramic/events/${eventCid}`, { signal })
   if (log) {
     console.log(response)
   }
+  controller.abort()
   return response
 }
 
