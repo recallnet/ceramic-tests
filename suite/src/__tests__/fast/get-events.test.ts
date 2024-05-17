@@ -14,7 +14,7 @@ async function getEventData(url: string, eventCid: string, log = false) {
     if (log) {
       console.log(response)
     }
-
+    await response.json()
     return response
   } finally {
     controller.abort()
