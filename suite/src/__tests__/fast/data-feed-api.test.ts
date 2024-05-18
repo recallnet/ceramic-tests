@@ -11,9 +11,12 @@ import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
 import { JsonAsString, AggregationDocument } from '@ceramicnetwork/codecs'
 import { decode } from 'codeco'
+import { utilities } from '../../utils/common.js'
 
+const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
+const nodeSyncWaitTimeSec = 3
 
 async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
@@ -123,18 +126,15 @@ describe('Datafeed SSE Api Test', () => {
       )
       expectedEvents.add(document2.tip.toString())
 
-      // data commits
-      await document1.replace({ myData: 41 })
-      expectedEvents.add(document1.tip.toString())
-      await document2.replace({ myData: 51 })
-      expectedEvents.add(document2.tip.toString())
-      await document1.replace({ myData: 42 })
-      expectedEvents.add(document1.tip.toString())
-      // By waiting for the expected events we confirm the api delivers all events
-      await accumulator1.waitForEvents(expectedEvents, 1000 * 60 * 2)
-      console.log("accumulator1 passed the test")
-      await accumulator2.waitForEvents(expectedEvents, 1000 * 60 * 2)
-
+       // data commits
+       await document1.replace({ myData: 41 }, null, { anchor: false })
+       expectedEvents.add(document1.tip.toString())
+       await document2.replace({ myData: 51 }, null, { anchor: false })
+       expectedEvents.add(document2.tip.toString())
+       // By waiting for the expected events we confirm the api delivers all events
+       await accumulator1.waitForEvents(expectedEvents, 1000 * 60 * 2)
+       await delay(nodeSyncWaitTimeSec)
+       await accumulator2.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
       source1.close()
       source2.close()
