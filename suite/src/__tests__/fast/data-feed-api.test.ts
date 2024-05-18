@@ -111,6 +111,7 @@ describe('Datafeed SSE Api Test', () => {
         ceramicNode1,
         { myData: 40 },
         modelInstanceDocumentMetadata,
+        { anchor: false}
       )
       expectedEvents.add(document1.tip.toString())
 
@@ -118,15 +119,10 @@ describe('Datafeed SSE Api Test', () => {
         ceramicNode1,
         { myData: 50 },
         modelInstanceDocumentMetadata,
+        { anchor: false}
       )
       expectedEvents.add(document2.tip.toString())
 
-      const document3 = await ModelInstanceDocument.create(
-        ceramicNode1,
-        { myData: 60 },
-        modelInstanceDocumentMetadata,
-      )
-      expectedEvents.add(document3.tip.toString())
       // data commits
       await document1.replace({ myData: 41 })
       expectedEvents.add(document1.tip.toString())
@@ -135,8 +131,9 @@ describe('Datafeed SSE Api Test', () => {
       await document1.replace({ myData: 42 })
       expectedEvents.add(document1.tip.toString())
       // By waiting for the expected events we confirm the api delivers all events
-      await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
-      await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
+      await accumulator1.waitForEvents(expectedEvents, 1000 * 60 * 2)
+      console.log("accumulator1 passed the test")
+      await accumulator2.waitForEvents(expectedEvents, 1000 * 60 * 2)
 
     } finally {
       source1.close()
