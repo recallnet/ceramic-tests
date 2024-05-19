@@ -16,7 +16,7 @@ import { utilities } from '../../utils/common.js'
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 3
+const nodeSyncWaitTimeSec = 5
 
 async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
@@ -114,7 +114,7 @@ describe('Datafeed SSE Api Test', () => {
         ceramicNode1,
         { myData: 40 },
         modelInstanceDocumentMetadata,
-        { anchor: false}
+        { anchor: false }
       )
       expectedEvents.add(document1.tip.toString())
 
@@ -122,7 +122,7 @@ describe('Datafeed SSE Api Test', () => {
         ceramicNode1,
         { myData: 50 },
         modelInstanceDocumentMetadata,
-        { anchor: false}
+        { anchor: false }
       )
       expectedEvents.add(document2.tip.toString())
 
