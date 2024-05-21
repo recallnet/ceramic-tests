@@ -16,7 +16,7 @@ import { utilities } from '../../utils/common.js'
 const delay = utilities.delay
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 10
+const nodeSyncWaitTimeSec = 9
 
 async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
   return await ModelInstanceDocument.create(
@@ -57,7 +57,7 @@ describe('Datafeed SSE Api Test', () => {
     await ceramicNode1.admin.startIndexingModels([model.id])
     await ceramicNode2.admin.startIndexingModels([model.id])
     modelId = model.id
-
+    console.log(`${modelId} is the model id used in the data feed tests`)
     modelInstanceDocumentMetadata = { model: modelId }
     Codec = JsonAsString.pipe(AggregationDocument)
   })
@@ -117,6 +117,7 @@ describe('Datafeed SSE Api Test', () => {
         { anchor: false }
       )
       expectedEvents.add(document1.tip.toString())
+      console.log(`${document1.id} is the stream id for document 1 and ${document1.tip.toString()} is the genesis for it`)
 
       const document2 = await ModelInstanceDocument.create(
         ceramicNode1,
@@ -125,14 +126,19 @@ describe('Datafeed SSE Api Test', () => {
         { anchor: false }
       )
       expectedEvents.add(document2.tip.toString())
+      console.log(`${document2.id} is the stream id for document 2 and ${document2.tip.toString()} is the genesis for it`)
 
        // data commits
        await document1.replace({ myData: 41 }, null, { anchor: false })
        expectedEvents.add(document1.tip.toString())
+       console.log(`${document1.tip.toString()} is the update for doc1`)
        await document2.replace({ myData: 51 }, null, { anchor: false })
        expectedEvents.add(document2.tip.toString())
+       console.log(`${document2.tip.toString()} is the update for doc2`)
        // By waiting for the expected events we confirm the api delivers all events
+       const start =  Date.now()
        await accumulator1.waitForEvents(expectedEvents, 1000 * 60 * 2)
+       console.log(`${Date.now() - start} is the time we used getting the events for node 1`)
        await delay(nodeSyncWaitTimeSec)
        await accumulator2.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
