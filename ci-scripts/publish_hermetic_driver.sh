@@ -23,7 +23,7 @@ else
     fi
 fi
 
-IMAGE_NAME=${IMAGE_NAME-public.ecr.aws/r5b3e0r5/3box/hermetic-driver}
+IMAGE_NAME=${IMAGE_NAME-public.ecr.aws/r5b3e0r5/3box/js-ceramic:jd-latest}
 
 PUSH_ARGS="--push"
 if [ "$NO_PUSH" = "true" ]
