@@ -8,7 +8,7 @@ spec:
   ceramic:
     - env:
         CERAMIC_RECON_MODE: "true"
-      image: "ceramicnetwork/composedb:dev"
+      image: "public.ecr.aws/r5b3e0r5/3box/js-ceramic:jd-latest"
       imagePullPolicy: Always # Ensures the image is always pulled before starting the pod
       ipfs:
         rust:
