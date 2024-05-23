@@ -1,6 +1,5 @@
 import { AnchorStatus, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 
 import { newCeramic } from '../../utils/ceramicHelpers.js'
@@ -34,35 +33,35 @@ describe('longevity', () => {
       const ceramic = await newCeramic(apiUrl)
       for (const streamId of streamIds) {
         console.log(`Loading stream ${streamId} on ${apiUrl}`)
-        const tile = await TileDocument.load(ceramic, streamId)
+        const doc = await ceramic.loadStream(streamId)
         try {
-          expect(tile.content).toEqual(expectedContent)
-          expect(tile.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+          expect(doc.content).toEqual(expectedContent)
+          expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
           // Now load the same stream but at a specific CommitID. Loading at a CommitID
           // means the Ceramic node can't get the state from the state store, but has
           // to actually load and apply the commits from IPFS, so it lets us check that the
           // underlying ipfs blocks are still available.
-          const commitIds = tile.allCommitIds
+          const commitIds = doc.allCommitIds
           const prevCommitId = commitIds[commitIds.length - 2]
           console.log(
             `Loading commit ${prevCommitId} on ${apiUrl} for stream state:\n${JSON.stringify(
-              StreamUtils.serializeState(tile.state),
+              StreamUtils.serializeState(doc.state),
               null,
               2,
             )}`,
           )
-          const tileAtPrevCommitId = await TileDocument.load(ceramic, prevCommitId)
+          const docAtPrevCommitId = await ceramic.loadStream(prevCommitId)
 
           // The last commit is an anchor commit, so the second to last commit will actually
           // have the same content as the current state with the most recent commit, it just
           // won't have the anchor information.
-          expect(tileAtPrevCommitId.content).toEqual(expectedContent)
-          expect(tileAtPrevCommitId.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
+          expect(docAtPrevCommitId.content).toEqual(expectedContent)
+          expect(docAtPrevCommitId.state.anchorStatus).not.toEqual(AnchorStatus.ANCHORED)
         } catch (err) {
           console.error(
-            `Test failed. StreamID: ${tile.id.toString()}, state:\n${JSON.stringify(
-              StreamUtils.serializeState(tile.state),
+            `Test failed. StreamID: ${doc.id.toString()}, state:\n${JSON.stringify(
+              StreamUtils.serializeState(doc.state),
               null,
               2,
             )}`,
@@ -70,7 +69,7 @@ describe('longevity', () => {
 
           // If the test failed, we don't want to leave this stream in the database,
           // as it will cause all future test executions to fail as well.
-          await helpers.deleteStreamReq(tile.id)
+          await helpers.deleteStreamReq(doc.id)
 
           throw err
         }
