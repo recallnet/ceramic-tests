@@ -13,23 +13,21 @@ const did = new DID({ provider, resolver })
 
 // 30 minutes for anchors to happen and be noticed (including potential failures and retries)
 export const DEFAULT_ANCHOR_TIMEOUT = 60 * 30
-export const metadata = { controllers: [] }
 
 export const newCeramic = async (apiUrl: string, didOverride?: DID) => {
   const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
   const effectiveDID = didOverride || did
   if (!effectiveDID.authenticated) {
     await effectiveDID.authenticate()
-    ;(metadata.controllers as string[]) = [effectiveDID.id]
   }
-  await ceramic.setDID(effectiveDID)
+  ceramic.did = effectiveDID
   return ceramic
 }
 
 function defaultMsgGenerator(stream: Stream) {
   const curTime = new Date().toISOString()
   return `Waiting for stream ${stream.id.toString()} to hit a specific stream state. Current time: ${curTime}. Current stream state: ${JSON.stringify(
-    StreamUtils.serializeState(stream.state)
+    StreamUtils.serializeState(stream.state),
   )}`
 }
 
@@ -39,7 +37,7 @@ async function withTimeout(prom: Promise<any>, timeoutSecs: number) {
     setTimeout(() => {
       const curTime = new Date().toISOString()
       reject(
-        `Timed out after ${timeoutSecs} seconds. Current time: ${curTime}, start time: ${startTime}`
+        `Timed out after ${timeoutSecs} seconds. Current time: ${curTime}, start time: ${startTime}`,
       )
     }, timeoutSecs * 1000)
     prom.then(resolve)
@@ -59,7 +57,7 @@ export async function waitForCondition(
   stream: Stream,
   condition: (stream: StreamState) => boolean,
   timeoutSecs: number,
-  msgGenerator?: (stream: Stream) => string
+  msgGenerator?: (stream: Stream) => string,
 ): Promise<void> {
   const waiter = stream
     .pipe(
@@ -71,7 +69,7 @@ export async function waitForCondition(
         console.debug(msg)
         return false
       }),
-      take(1)
+      take(1),
     )
     .toPromise()
 
@@ -82,19 +80,19 @@ export async function waitForCondition(
 
   console.debug(
     `Stream ${stream.id.toString()} successfully reached desired state. Current stream state: ${JSON.stringify(
-      StreamUtils.serializeState(stream.state)
-    )}`
+      StreamUtils.serializeState(stream.state),
+    )}`,
   )
 }
 
 export async function waitForAnchor(
   stream: any,
-  timeoutSecs: number = DEFAULT_ANCHOR_TIMEOUT
+  timeoutSecs: number = DEFAULT_ANCHOR_TIMEOUT,
 ): Promise<void> {
   const msgGenerator = function (stream: Stream) {
     const curTime = new Date().toISOString()
     return `Waiting for stream ${stream.id.toString()} to be anchored. Current time: ${curTime}. Current stream state: ${JSON.stringify(
-      StreamUtils.serializeState(stream.state)
+      StreamUtils.serializeState(stream.state),
     )}`
   }
   await waitForCondition(
@@ -103,6 +101,6 @@ export async function waitForAnchor(
       return state.anchorStatus == AnchorStatus.ANCHORED
     },
     timeoutSecs,
-    msgGenerator
+    msgGenerator,
   )
 }

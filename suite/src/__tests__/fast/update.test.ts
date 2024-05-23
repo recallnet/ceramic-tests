@@ -1,27 +1,55 @@
 import { StreamReaderWriter, SyncOptions } from '@ceramicnetwork/common'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { afterAll, beforeAll, expect, test, describe } from '@jest/globals'
 
 import * as helpers from '../../utils/dynamoDbHelpers.js'
 import { utilities } from '../../utils/common.js'
-import { newCeramic, metadata } from '../../utils/ceramicHelpers.js'
+import { newCeramic } from '../../utils/ceramicHelpers.js'
+import { createDid } from '../../utils/didHelper.js'
+import { newModel } from '../../models/modelConstants.js'
+import { Model } from '@ceramicnetwork/stream-model'
+import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 
 const delay = utilities.delay
 
 // Environment variables
-const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const composeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-describe.skip('update', () => {
-  beforeAll(async () => await helpers.createTestTable())
+let modelId: StreamID
+
+describe('update', () => {
+  beforeAll(async () => {
+    await helpers.createTestTable()
+
+    if (adminSeeds.length < composeDbUrls.length) {
+      throw new Error(
+        `Must provide an admin DID seed for each node. Number of nodes: ${composeDbUrls.length}, number of seeds: ${adminSeeds.length}`,
+      )
+    }
+
+    const did0 = await createDid(adminSeeds[0])
+    const ceramicNode0 = await newCeramic(composeDbUrls[0], did0)
+    const model = await Model.create(ceramicNode0, newModel)
+    modelId = model.id
+    await indexModelOnNode(ceramicNode0, model.id)
+
+    for (let i = 1; i < composeDbUrls.length; i++) {
+      const did = await createDid(adminSeeds[i])
+      const node = await newCeramic(composeDbUrls[i], did)
+      await indexModelOnNode(node, model.id)
+    }
+  })
   afterAll(async () => await helpers.cleanup())
 
   // Run tests with each node being the node where a stream is created
-  generateUrlCombinations(ComposeDbUrls).forEach(testUpdate)
+  generateUrlCombinations(composeDbUrls).forEach(testUpdate)
 })
 
 function generateUrlCombinations(urls: string[]): string[][] {
@@ -33,24 +61,30 @@ function testUpdate(composeDbUrls: string[]) {
   const firstNodeUrl = composeDbUrls[0]
   const content = { step: 0 }
   let firstCeramic: CeramicClient.CeramicClient
-  let firstTile: TileDocument
+  let firstDocument: ModelInstanceDocument
 
   // Create and update on first node
   test(`create stream on ${firstNodeUrl}`, async () => {
     firstCeramic = await newCeramic(firstNodeUrl)
-    firstTile = await TileDocument.create(firstCeramic as StreamReaderWriter, content, metadata, {
-      anchor: false,
-    })
+    const metadata = { controllers: [firstCeramic.did!.id], model: modelId }
+    firstDocument = await ModelInstanceDocument.create(
+      firstCeramic as StreamReaderWriter,
+      content,
+      metadata,
+      {
+        anchor: false,
+      },
+    )
     console.log(
-      `Created stream on ${firstNodeUrl}: ${firstTile.id.toString()} with step ${content.step}`,
+      `Created stream on ${firstNodeUrl}: ${firstDocument.id.toString()} with step ${content.step}`,
     )
   })
 
   test(`update stream on ${firstNodeUrl}`, async () => {
     content.step++
-    await firstTile.update(content, undefined, { anchor: false })
+    await firstDocument.replace(content, undefined, { anchor: false })
     console.log(
-      `Updated stream on ${firstNodeUrl}: ${firstTile.id.toString()} with step ${content.step}`,
+      `Updated stream on ${firstNodeUrl}: ${firstDocument.id.toString()} with step ${content.step}`,
     )
   })
 
@@ -58,17 +92,17 @@ function testUpdate(composeDbUrls: string[]) {
   // Skip first url because it was already handled in the previous tests
   for (let idx = 1; idx < composeDbUrls.length; idx++) {
     const apiUrl = composeDbUrls[idx]
-    let tile: TileDocument
+    let doc: ModelInstanceDocument
     test(`load stream on ${apiUrl}`, async () => {
       await delay(5)
       const ceramic = await newCeramic(apiUrl)
       console.log(
-        `Loading stream ${firstTile.id.toString()} on ${apiUrl} with step ${content.step}`,
+        `Loading stream ${firstDocument.id.toString()} on ${apiUrl} with step ${content.step}`,
       )
-      tile = await TileDocument.load(ceramic, firstTile.id)
-      expect(tile.content).toEqual(content)
+      doc = await ModelInstanceDocument.load(ceramic, firstDocument.id)
+      expect(doc.content).toEqual(content)
       console.log(
-        `Loaded stream on ${apiUrl}: ${firstTile.id.toString()} successfully with step ${
+        `Loaded stream on ${apiUrl}: ${firstDocument.id.toString()} successfully with step ${
           content.step
         }`,
       )
@@ -81,25 +115,25 @@ function testUpdate(composeDbUrls: string[]) {
       // Update on first node and wait for update to propagate to other nodes via pubsub
       // Only anchor on the final write to avoid writes conflicting with anchors.
       console.log(
-        `Updating stream ${firstTile.id.toString()} on ${firstNodeUrl} so we can sync it on ${apiUrl} with step ${
+        `Updating stream ${firstDocument.id.toString()} on ${firstNodeUrl} so we can sync it on ${apiUrl} with step ${
           content.step
         }`,
       )
-      await firstTile.update(content, undefined, { anchor: isFinalWriter })
+      await firstDocument.replace(content, undefined, { anchor: isFinalWriter })
       console.log(`Updating complete, sleeping 5 seconds before syncing`)
       await delay(5)
       console.log(`Sleep complete, syncing`)
-      await tile.sync({ sync: SyncOptions.NEVER_SYNC })
-      expect(tile.content).toEqual(firstTile.content)
+      await doc.sync({ sync: SyncOptions.NEVER_SYNC })
+      expect(doc.content).toEqual(firstDocument.content)
       console.log(
-        `Synced stream on ${apiUrl}: ${firstTile.id.toString()} successfully with step ${
+        `Synced stream on ${apiUrl}: ${firstDocument.id.toString()} successfully with step ${
           content.step
         }`,
       )
 
       if (isFinalWriter) {
         // Store the anchor request in the DB
-        await helpers.storeStreamReq(firstTile.id)
+        await helpers.storeStreamReq(firstDocument.id)
       }
     })
   }

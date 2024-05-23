@@ -7,7 +7,7 @@ export const newModel: ModelDefinition = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      myData: {
+      step: {
         type: 'integer',
         minimum: 0,
         maximum: 10000,

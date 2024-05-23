@@ -7,12 +7,11 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { newModel } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { loadDocumentOrTimeout, waitForIndexingOrTimeout } from '../../utils/composeDbHelpers.js'
+import { indexModelOnNode, loadDocumentOrTimeout } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 const nodeSyncWaitTimeSec = 5
-const indexWaitTimeMin = 1
 
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
@@ -28,24 +27,17 @@ describe('Model Integration Test', () => {
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
     const model = await Model.create(ceramicNode1, newModel)
-    await TestUtils.waitForConditionOrTimeout(async () =>
-      ceramicNode2
-        .loadStream(model.id)
-        .then((_) => true)
-        .catch((_) => false),
-    )
-    await ceramicNode1.admin.startIndexingModels([model.id])
-    await ceramicNode2.admin.startIndexingModels([model.id])
     modelId = model.id
-    await waitForIndexingOrTimeout(ceramicNode1, modelId, 1000 * 60 * indexWaitTimeMin)
-    await waitForIndexingOrTimeout(ceramicNode2, modelId, 1000 * 60 * indexWaitTimeMin)
+
+    await indexModelOnNode(ceramicNode1, model.id)
+    await indexModelOnNode(ceramicNode2, model.id)
   })
 
   test('ModelInstanceDocuments sync between nodes', async () => {
     const modelInstanceDocumentMetadata = { model: modelId }
     const document1 = await ModelInstanceDocument.create(
       ceramicNode1,
-      { myData: 1 },
+      { step: 1 },
       modelInstanceDocumentMetadata,
       { anchor: false },
     )
@@ -58,10 +50,10 @@ describe('Model Integration Test', () => {
     expect(document1.content).toEqual(document2.content)
 
     // Now update on the second node and ensure update syncs back to the first node.
-    await document2.replace({ myData: 2 }, null, { anchor: false })
+    await document2.replace({ step: 2 }, null, { anchor: false })
     await TestUtils.waitForConditionOrTimeout(async () => {
       await document1.sync()
-      return document1.content?.myData == 2
+      return document1.content?.step == 2
     })
     expect(document1.content).toEqual(document2.content)
     expect(document1.state.log.length).toEqual(2)
