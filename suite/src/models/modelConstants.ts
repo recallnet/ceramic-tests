@@ -18,7 +18,3 @@ export const newModel: ModelDefinition = {
     type: 'list',
   },
 }
-
-export const basicModelDocumentContent = {
-  myData: 2,
-}

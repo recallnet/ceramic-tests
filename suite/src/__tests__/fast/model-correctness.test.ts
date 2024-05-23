@@ -4,7 +4,7 @@ import { createDid } from '../../utils/didHelper.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { newModel, basicModelDocumentContent } from '../../models/modelConstants'
+import { newModel } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { loadDocumentOrTimeout, waitForIndexingOrTimeout } from '../../utils/composeDbHelpers.js'
@@ -41,12 +41,13 @@ describe('Model Integration Test', () => {
     await waitForIndexingOrTimeout(ceramicNode2, modelId, 1000 * 60 * indexWaitTimeMin)
   })
 
-  test('Create a ModelInstanceDocument on one node and read it from another', async () => {
+  test('ModelInstanceDocuments sync between nodes', async () => {
     const modelInstanceDocumentMetadata = { model: modelId }
     const document1 = await ModelInstanceDocument.create(
       ceramicNode1,
-      basicModelDocumentContent,
+      { myData: 1 },
       modelInstanceDocumentMetadata,
+      { anchor: false },
     )
     const document2 = await loadDocumentOrTimeout(
       ceramicNode2,
@@ -54,5 +55,16 @@ describe('Model Integration Test', () => {
       1000 * nodeSyncWaitTimeSec,
     )
     expect(document2.id).toEqual(document1.id)
+    expect(document1.content).toEqual(document2.content)
+
+    // Now update on the second node and ensure update syncs back to the first node.
+    await document2.replace({ myData: 2 }, null, { anchor: false })
+    await TestUtils.waitForConditionOrTimeout(async () => {
+      await document1.sync()
+      return document1.content?.myData == 2
+    })
+    expect(document1.content).toEqual(document2.content)
+    expect(document1.state.log.length).toEqual(2)
+    expect(document2.state.log.length).toEqual(2)
   })
 })
