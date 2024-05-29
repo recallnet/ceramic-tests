@@ -1,8 +1,9 @@
 import { ComposeClient } from '@composedb/client'
-import { utilities } from './common'
+import { utilities } from './common.js'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
 const delay = utilities.delay
 const delayMs = utilities.delayMs
@@ -113,4 +114,19 @@ export async function waitForIndexingOrTimeout(
   }
 
   throw new Error(`Timeout waiting for indexing model: ${modelId}`)
+}
+
+export async function indexModelOnNode(
+  node: CeramicClient,
+  modelId: StreamID,
+  timeoutMs = 1000 * 10,
+): Promise<void> {
+  await TestUtils.waitForConditionOrTimeout(async () =>
+    node
+      .loadStream(modelId)
+      .then((_) => true)
+      .catch((_) => false),
+  )
+  await node.admin.startIndexingModels([modelId])
+  await waitForIndexingOrTimeout(node, modelId, timeoutMs)
 }
