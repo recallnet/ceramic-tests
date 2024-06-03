@@ -1,6 +1,7 @@
 'use strict'
 
 import { CommonTestUtils } from '@ceramicnetwork/common-test-utils'
+import { EventSource } from 'cross-eventsource'
 
 export const utilities = {
   valid: (exp: any) => {
@@ -67,7 +68,14 @@ export class EventAccumulator<T> {
     this.#source.close()
   }
 
-  start() {
+  start(resumeToken?: string) {
+    if(resumeToken) {
+      const afterQueryParam = "after=" + encodeURIComponent(resumeToken)
+      const newUrl = new URL(this.#source.url)
+      newUrl.search = afterQueryParam
+      this.#source = new EventSource(newUrl.toString())
+    }
+
     this.#source.addEventListener('message', (event) => {
       const parsedEvent = this.#parseEventData(event.data)
       this.allEvents.add(parsedEvent)

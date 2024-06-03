@@ -83,6 +83,7 @@ describe.skip('Datafeed SSE Api Test', () => {
       expect(event).toHaveProperty("content")
       expect(event).toHaveProperty("metadata")
       expect(event).toHaveProperty("eventType")
+      expect(event).toHaveProperty("resumeToken")
     } finally {
       source.close()
     }
@@ -166,19 +167,21 @@ describe.skip('Datafeed SSE Api Test', () => {
         throw new Error(errStr)
       })
       expectedEvents.add(doc.tip.toString())
-      // By waiting for the expected events we confirm the api delivers all events)
+      // By waiting for the expected events we confirm the api delivers all events
       await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
     } finally {
       source.close()
     }
   })
-  // this wont be tested until the feature its ready
-  test.skip('if a connection goes offline can resume the missed events upon reconnection', async () => {
+  
+  test('if a connection goes offline can resume the missed events upon reconnection', async () => {
+    const resumeTokens: string[] = []
     const source = new EventSource(
       new URL('/api/v0/feed/aggregation/documents', ComposeDbUrls[0]).toString(),
     )
     const parseEventData = (eventData: any) => {
       const decoded: any = decode(Codec, eventData)
+      resumeTokens.push(decoded.resumeToken)
       return decoded.commitId.commit.toString()
     }
 
@@ -189,18 +192,20 @@ describe.skip('Datafeed SSE Api Test', () => {
       // genesis commit
       const doc = await genesisCommit(ceramicNode1, modelInstanceDocumentMetadata, false)
       expectedEvents.add(doc.tip.toString())
-      // disconnect
+      // wait for latest event and disconnect  
+      await accumulator.waitForEvents(expectedEvents, 1000 * 60)
       accumulator.stop()
-      // data commit offline
+      // data commits offline
       await doc.replace({ myData: 41 })
       expectedEvents.add(doc.tip.toString())
 
-      // connection after events
-      accumulator.start()
+      await doc.replace({ myData: 42 })
+      expectedEvents.add(doc.tip.toString())
 
+      // connection after events using latest resumeToken
+      accumulator.start(resumeTokens.pop())
+      // By waiting for the expected events we confirm the api delivers all events
       await accumulator.waitForEvents(expectedEvents, 1000 * 60)
-
-      expect(accumulator.allEvents).toBe(expectedEvents)
     } finally {
       source.close()
     }
