@@ -2,7 +2,7 @@ name: Schedule Durable tests
 
 on:
   schedule:
-    - cron: "0 * * * *" # Every hour on the hour
+    - cron: "0 0/8 * * *" # Every hour on the hour
   workflow_dispatch:
     inputs:
       environment:
