@@ -74,8 +74,11 @@ async function readEvents(url: string, resumeToken: String, model: StreamID, num
     expect(response.status).toEqual(200)
     const data = await response.json();
     resumeToken = data.resumeToken
-    const eventsBatch = await Promise.all(data.events.map((e: ReconEvent) => getEventData(url, e.id)))
-    events.push(...eventsBatch)
+
+    for (const event of data.events) {
+      const eventWithData = await getEventData(url, event.id)
+      events.push(eventWithData)
+    }
   }
   return sortModelEvents(events) // sort so that tests are stable
 }
