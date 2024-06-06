@@ -28,6 +28,15 @@ async function getStartingToken(url: string): Promise<string> {
   return token.resumeToken
 }
 
+async function getResumeTokens(urls: string[]): Promise<string[]> {
+  const resumeTokens = []
+  for (const url of urls) {
+    const token = await getStartingToken(url)
+    resumeTokens.push(token)
+  }
+  return resumeTokens
+}
+
 async function writeEvents(url: string, events: ReconEventInput[]) {
   for (const event of events) {
     let response = await fetch(url + '/ceramic/events', {
@@ -111,18 +120,17 @@ describe('sync events', () => {
   test(`linear sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
     let modelEvents = randomEvents(modelID, 10);
+    const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
 
     // Write all data to one node before subscribing on the other nodes.
     // This way the other nodes to a linear download of the data from the first node.
     await registerInterest(firstNodeUrl, modelID)
     await writeEvents(firstNodeUrl, modelEvents)
 
-    const resumeTokens: string[] = []
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
       await registerInterest(url, modelID)
-      resumeTokens[idx] = await getStartingToken(url)
     }
     const sortedModelEvents = sortModelEvents(modelEvents)
     await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
@@ -140,12 +148,12 @@ describe('sync events', () => {
   test(`active write sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
     let modelEvents = randomEvents(modelID, 10);
+    const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
+
     // Subscribe on all nodes then write the data
-    const resumeTokens: string[] = []
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
       await registerInterest(url, modelID)
-      resumeTokens[idx] = await getStartingToken(url)
     }
     await writeEvents(firstNodeUrl, modelEvents)
 
@@ -164,6 +172,8 @@ describe('sync events', () => {
   test(`half and half sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
     let modelEvents = randomEvents(modelID, 20);
+    const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
+
     // Write half the data before other nodes subscribe
     await registerInterest(firstNodeUrl, modelID)
     let half = Math.ceil(modelEvents.length / 2);
@@ -171,12 +181,10 @@ describe('sync events', () => {
     let secondHalf = modelEvents.slice(half, modelEvents.length)
     await writeEvents(firstNodeUrl, firstHalf)
 
-    const resumeTokens: string[] = []
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
       await registerInterest(url, modelID)
-      resumeTokens[idx] = await getStartingToken(url)
     }
     // Write the second half of the data
     await writeEvents(firstNodeUrl, secondHalf)
@@ -200,12 +208,12 @@ describe('sync events', () => {
     let firstHalf = modelEvents.slice(0, half)
     let secondHalf = modelEvents.slice(half, modelEvents.length)
 
-    const resumeTokens: string[] = []
+    const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
+
     // Subscribe on all nodes then write the data
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
       await registerInterest(url, modelID)
-      resumeTokens[idx] = await getStartingToken(url)
     }
 
     // Write to both node simultaneously
@@ -239,14 +247,13 @@ describe('sync events', () => {
       })
     }
 
-    const resumeTokens: string[] = []
+    const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
     // Subscribe on all nodes to all models then write the data
     for (let m in models) {
       let model = models[m]
       for (let idx in CeramicUrls) {
         let url = CeramicUrls[idx]
         await registerInterest(url, model.id)
-        resumeTokens[idx] = await getStartingToken(url)
       }
     }
 
