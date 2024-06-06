@@ -4,7 +4,7 @@
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
     "esModuleInterop": true,
-    "lib": ["es2017"],
+    "lib": ["ESNext", "DOM"],
     "module": "ES2020",
     "moduleResolution": "Node",
     "noImplicitAny": true,
