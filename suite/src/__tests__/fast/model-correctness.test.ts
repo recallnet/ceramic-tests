@@ -11,7 +11,7 @@ import { indexModelOnNode, loadDocumentOrTimeout } from '../../utils/composeDbHe
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 5
+const nodeSyncWaitTimeSec = process.env.NODE_SYNC_WAIT_TIME ? parseInt(process.env.NODE_SYNC_WAIT_TIME) : 30
 
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
