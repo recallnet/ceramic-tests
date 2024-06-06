@@ -12,7 +12,7 @@ async function registerInterest(url: string, model: StreamID): Promise<void> {
   const response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
   if (response.status !== 204) {
     const data = await response.text()
-    console.warn(`registerInterest: ${data}`)
+    console.warn(`registerInterest: node: ${url}, model: ${model.toString()}, result: ${data}`)
   }
   expect(response.status).toEqual(204)
 }
@@ -21,7 +21,7 @@ async function getStartingToken(url: string): Promise<string> {
   const tokenResponse = await fetch(url + `/ceramic/feed/resumeToken`, { method: 'GET' })
   if (tokenResponse.status !== 200) {
     const data = await tokenResponse.text()
-    console.warn(`resumeToken: ${data}`)
+    console.warn(`resumeToken: node: ${url}, result: ${data}`)
   }
   expect(tokenResponse.status).toEqual(200)
   const token = await tokenResponse.json()
@@ -45,7 +45,7 @@ async function writeEvents(url: string, events: ReconEventInput[]) {
     })
     if (response.status !== 204) {
       const data = await response.text()
-      console.warn(`writeEvents: ${data}`)
+      console.warn(`writeEvents: node ${url}, result: ${data}`)
     }
     expect(response.status).toEqual(204)
   }
@@ -58,9 +58,9 @@ async function getEventData(url: string, eventId: string): Promise<ReconEvent> {
   return response.json();
 }
 
-async function readEvents(url: string, resumeToken: String, model: StreamID, numExpectedEvents: number) {
+async function readEvents(url: string, resumeToken: String, numExpectedEvents: number) {
   const events = []
-  console.log(`readEvents: ${url} ${model.toString()} ${resumeToken}`)
+  console.log(`readEvents: ${url} starting at ${resumeToken}, waiting for ${numExpectedEvents} events`)
   var startTime = Date.now();
   while (events.length < numExpectedEvents) {
     if ((Date.now() - startTime) > 60000) {
@@ -96,7 +96,7 @@ function sortModelEvents(events: ReconEvent[]): ReconEvent[] {
 }
 
 // Wait up till retries seconds for all urls to have at least count events
-async function waitForEventCount(urls: string[], model: StreamID, count: number, retries: number, resumeTokens: string[]) {
+async function waitForEventCount(urls: string[], count: number, retries: number, resumeTokens: string[]) {
   if (urls.length !== resumeTokens.length) {
     throw new Error('The lengths of urls and resumeTokens arrays must be equal');
   }
@@ -104,7 +104,7 @@ async function waitForEventCount(urls: string[], model: StreamID, count: number,
     let all_good = true;
     for (let i = 0; i < urls.length; i++) {
       let url = urls[i];
-      let events = await readEvents(url, resumeTokens[i], model, count)
+      let events = await readEvents(url, resumeTokens[i], count)
       if (events.length < count) {
         all_good = false;
         break;
@@ -144,13 +144,13 @@ describe('sync events', () => {
       await registerInterest(url, modelID)
     }
     const sortedModelEvents = sortModelEvents(modelEvents)
-    await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
+    await waitForEventCount(CeramicUrls, modelEvents.length, 10, resumeTokens)
 
     // Use a sorted expected value for stable tests
     // Validate each node got the events, including the first node
     for (let i = 0; i < CeramicUrls.length; i++) {
       const url = CeramicUrls[i]
-      const events = await readEvents(url, resumeTokens[i], modelID, modelEvents.length)
+      const events = await readEvents(url, resumeTokens[i], modelEvents.length)
 
       expect(events).toEqual(sortedModelEvents)
     }
@@ -168,14 +168,14 @@ describe('sync events', () => {
     }
     await writeEvents(firstNodeUrl, modelEvents)
 
-    await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
+    await waitForEventCount(CeramicUrls, modelEvents.length, 10, resumeTokens)
 
     // Use a sorted expected value for stable tests
     const sortedModelEvents = sortModelEvents(modelEvents)
     // Validate each node got the events, including the first node
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      let events = await readEvents(url, resumeTokens[idx], modelID, modelEvents.length)
+      let events = await readEvents(url, resumeTokens[idx], modelEvents.length)
 
       expect(events).toEqual(sortedModelEvents)
     }
@@ -200,14 +200,14 @@ describe('sync events', () => {
     // Write the second half of the data
     await writeEvents(firstNodeUrl, secondHalf)
 
-    await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
+    await waitForEventCount(CeramicUrls, modelEvents.length, 10, resumeTokens)
 
     // Use a sorted expected value for stable tests
     const sortedModelEvents = sortModelEvents(modelEvents)
     // Validate each node got the events, including the first node
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      let events = await readEvents(url, resumeTokens[idx], modelID, modelEvents.length)
+      let events = await readEvents(url, resumeTokens[idx], modelEvents.length)
 
       expect(events).toEqual(sortedModelEvents)
     }
@@ -230,14 +230,14 @@ describe('sync events', () => {
     // Write to both node simultaneously
     await Promise.all([writeEvents(firstNodeUrl, firstHalf), writeEvents(secondNodeUrl, secondHalf)])
 
-    await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
+    await waitForEventCount(CeramicUrls, modelEvents.length, 10, resumeTokens)
 
     // Use a sorted expected value for stable tests
     const sortedModelEvents = sortModelEvents(modelEvents)
     // Validate each node got the events, including the first node
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      let events = await readEvents(url, resumeTokens[idx], modelID, modelEvents.length)
+      let events = await readEvents(url, resumeTokens[idx], modelEvents.length)
 
       expect(events).toEqual(sortedModelEvents)
     }
@@ -282,14 +282,14 @@ describe('sync events', () => {
     }
     await Promise.all(writes)
 
-    await waitForEventCount(CeramicUrls, models[0].id, allEvents.length, 20, resumeTokens)
+    await waitForEventCount(CeramicUrls, allEvents.length, 20, resumeTokens)
 
     // Use a sorted expected value for stable tests
     const sortedModelEvents = sortModelEvents(allEvents)
     // Validate each node got the events, including the first node
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      const foundEvents = await readEvents(url, resumeTokens[idx], models[0].id, allEvents.length)
+      const foundEvents = await readEvents(url, resumeTokens[idx], allEvents.length)
 
       expect(foundEvents).toEqual(sortedModelEvents)
     }
