@@ -64,7 +64,7 @@ describe('All Event Types', () => {
   //time events are covered through the anchor test
 
   test('did:key signed', async () => {
-    // key did
+    // did:key
     const did = await createDid()
     ceramic.did = did
 
@@ -86,6 +86,7 @@ describe('All Event Types', () => {
   })
 
   test('cacao signed', async () => {
+    // did:pkh + cacao
     const wallet = Wallet.createRandom()
     const provider = new MockProvider(wallet)
     const accountId = new AccountId({
