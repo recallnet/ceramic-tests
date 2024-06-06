@@ -51,6 +51,13 @@ async function writeEvents(url: string, events: ReconEventInput[]) {
   }
 }
 
+async function getEventData(url: string, eventId: string): Promise<ReconEvent> {
+  const fullUrl = url + `/ceramic/events/${eventId}`
+  const response = await fetch(fullUrl)
+  expect(response.status).toEqual(200)
+  return response.json();
+}
+
 async function readEvents(url: string, resumeToken: String, model: StreamID, numExpectedEvents: number) {
   const events = []
   console.log(`readEvents: ${url} ${model.toString()} ${resumeToken}`)
@@ -67,8 +74,8 @@ async function readEvents(url: string, resumeToken: String, model: StreamID, num
     expect(response.status).toEqual(200)
     const data = await response.json();
     resumeToken = data.resumeToken
-    console.log(`Got data: ${JSON.stringify(data, null, 2)}`)
-    events.push(...data.events)
+    const eventsBatch = await Promise.all(data.events.map((e: ReconEvent) => getEventData(url, e.id)))
+    events.push(...eventsBatch)
   }
   return sortModelEvents(events) // sort so that tests are stable
 }
