@@ -8,13 +8,16 @@ const delay = utilities.delay
 // Environment variables
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
-async function registerInterest(url: string, model: StreamID): Promise<string> {
+async function registerInterest(url: string, model: StreamID): Promise<void> {
   const response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
   if (response.status !== 204) {
     const data = await response.text()
     console.warn(`registerInterest: ${data}`)
   }
   expect(response.status).toEqual(204)
+}
+
+async function getStartingToken(url: string): Promise<string> {
   const tokenResponse = await fetch(url + `/ceramic/feed/resumeToken`, { method: 'GET' })
   if (tokenResponse.status !== 200) {
     const data = await tokenResponse.text()
@@ -118,8 +121,8 @@ describe('sync events', () => {
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
-      const token = await registerInterest(url, modelID)
-      resumeTokens[idx] = token
+      await registerInterest(url, modelID)
+      resumeTokens[idx] = await getStartingToken(url)
     }
     const sortedModelEvents = sortModelEvents(modelEvents)
     await waitForEventCount(CeramicUrls, modelID, modelEvents.length, 10, resumeTokens)
@@ -141,8 +144,8 @@ describe('sync events', () => {
     const resumeTokens: string[] = []
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      const token = await registerInterest(url, modelID)
-      resumeTokens[idx] = token
+      await registerInterest(url, modelID)
+      resumeTokens[idx] = await getStartingToken(url)
     }
     await writeEvents(firstNodeUrl, modelEvents)
 
@@ -172,8 +175,8 @@ describe('sync events', () => {
     // Now subscribe on the other nodes
     for (let idx = 1; idx < CeramicUrls.length; idx++) {
       let url = CeramicUrls[idx]
-      const token = await registerInterest(url, modelID)
-      resumeTokens[idx] = token
+      await registerInterest(url, modelID)
+      resumeTokens[idx] = await getStartingToken(url)
     }
     // Write the second half of the data
     await writeEvents(firstNodeUrl, secondHalf)
@@ -201,8 +204,8 @@ describe('sync events', () => {
     // Subscribe on all nodes then write the data
     for (let idx in CeramicUrls) {
       let url = CeramicUrls[idx]
-      const token = await registerInterest(url, modelID)
-      resumeTokens[idx] = token
+      await registerInterest(url, modelID)
+      resumeTokens[idx] = await getStartingToken(url)
     }
 
     // Write to both node simultaneously
@@ -242,8 +245,8 @@ describe('sync events', () => {
       let model = models[m]
       for (let idx in CeramicUrls) {
         let url = CeramicUrls[idx]
-        const token = await registerInterest(url, model.id)
-        resumeTokens[idx] = token
+        await registerInterest(url, model.id)
+        resumeTokens[idx] = await getStartingToken(url)
       }
     }
 
