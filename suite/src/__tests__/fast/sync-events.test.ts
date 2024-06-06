@@ -61,6 +61,7 @@ async function readEvents(url: string, model: StreamID, resumeToken: String) {
     const response = await fetch(fullUrl)
     expect(response.status).toEqual(200)
     const data = await response.json();
+    resumeToken = data.resumeToken
     events.push(...data.events)
     complete = data.isComplete
     if (!complete && (Date.now() - startTime) > 60000) {
