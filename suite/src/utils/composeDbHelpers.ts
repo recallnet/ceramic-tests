@@ -56,18 +56,23 @@ export async function loadDocumentOrTimeout(
   timeoutMs: number,
 ) {
   let now = Date.now()
+  let count = 0
   const expirationTime = now + timeoutMs
+  let lastError = null;
   while (now < expirationTime) {
     try {
-      const doc = await ModelInstanceDocument.load(ceramicNode, documentId)
-      return doc
+      count += 1
+      return await ModelInstanceDocument.load(ceramicNode, documentId)
     } catch (error) {
-      console.log(`Error loading document : ${documentId} retrying`, error)
-      await delayMs(10)
+      lastError = error
+      if (count % 10 === 0) {
+        console.log(`Error loading document : ${documentId} retrying`, error)
+      }
+      await delayMs(100)
       now = Date.now()
     }
   }
-  throw Error('Timeout waiting for document')
+  throw Error(`Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`)
 }
 
 /**
