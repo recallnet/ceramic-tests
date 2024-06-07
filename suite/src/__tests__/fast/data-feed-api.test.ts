@@ -4,7 +4,10 @@ import { createDid } from '../../utils/didHelper.js'
 import { EventAccumulator } from '../../utils/common.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
-import { ModelInstanceDocument, ModelInstanceDocumentMetadataArgs } from '@ceramicnetwork/stream-model-instance'
+import {
+  ModelInstanceDocument,
+  ModelInstanceDocumentMetadataArgs,
+} from '@ceramicnetwork/stream-model-instance'
 import { newModel } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
@@ -15,12 +18,16 @@ import { decode } from 'codeco'
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS)?.split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
-async function genesisCommit(ceramicNode: CeramicClient, modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs, anchor: boolean) {
+async function genesisCommit(
+  ceramicNode: CeramicClient,
+  modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs,
+  anchor: boolean,
+) {
   return await ModelInstanceDocument.create(
     ceramicNode,
-    { myData: Math.floor(Math.random() * (100)) + 1},
+    { myData: Math.floor(Math.random() * 100) + 1 },
     modelInstanceDocumentMetadata,
-    { anchor }
+    { anchor },
   )
 }
 
@@ -31,10 +38,8 @@ describe.skip('Datafeed SSE Api Test', () => {
   let modelInstanceDocumentMetadata: ModelInstanceDocumentMetadataArgs
   let Codec: any
   beforeAll(async () => {
-    if(!ComposeDbUrls)
-    throw new Error(
-      'ComposeDbUrls expects a minimum of 2 urls, but none were found',
-    )
+    if (!ComposeDbUrls)
+      throw new Error('ComposeDbUrls expects a minimum of 2 urls, but none were found')
 
     const did1 = await createDid(adminSeeds[0])
     if (!adminSeeds[1])
@@ -79,10 +84,10 @@ describe.skip('Datafeed SSE Api Test', () => {
 
       await accumulator.waitForEvents(expectedEvents, 1000 * 60 * 2)
 
-      expect(event).toHaveProperty("commitId")
-      expect(event).toHaveProperty("content")
-      expect(event).toHaveProperty("metadata")
-      expect(event).toHaveProperty("eventType")
+      expect(event).toHaveProperty('commitId')
+      expect(event).toHaveProperty('content')
+      expect(event).toHaveProperty('metadata')
+      expect(event).toHaveProperty('eventType')
     } finally {
       source.close()
     }
@@ -137,7 +142,6 @@ describe.skip('Datafeed SSE Api Test', () => {
       // By waiting for the expected events we confirm the api delivers all events
       await accumulator1.waitForEvents(expectedEvents, 1000 * 60)
       await accumulator2.waitForEvents(expectedEvents, 1000 * 60)
-
     } finally {
       source1.close()
       source2.close()

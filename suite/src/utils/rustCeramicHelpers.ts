@@ -1,10 +1,10 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
-import * as dagJson from "@ipld/dag-json";
+import * as dagJson from '@ipld/dag-json'
 import * as dagCbor from '@ipld/dag-cbor'
-import { sha256 } from "multihashes-sync/sha2";
-import { GenesisHeader, GenesisCommit } from '@ceramicnetwork/common';
-import { randomBytes } from 'crypto';
+import { sha256 } from 'multihashes-sync/sha2'
+import { GenesisHeader, GenesisCommit } from '@ceramicnetwork/common'
+import { randomBytes } from 'crypto'
 
 export interface ReconEventInput {
   /// The car file multibase encoded
@@ -12,8 +12,8 @@ export interface ReconEventInput {
 }
 
 export interface ReconEvent {
-  id: string, // event CID
-  data: string, // car file
+  id: string // event CID
+  data: string // car file
 }
 
 export function generateRandomEvent(modelId: StreamID, controller: string): ReconEvent {
@@ -43,7 +43,6 @@ export function generateRandomEvent(modelId: StreamID, controller: string): Reco
 
 export function randomEvents(modelID: StreamID, count: number): ReconEvent[] {
   let modelEvents = []
-
 
   for (let i = 0; i < count; i++) {
     const event = generateRandomEvent(modelID, 'did:key:faketestcontroller')
