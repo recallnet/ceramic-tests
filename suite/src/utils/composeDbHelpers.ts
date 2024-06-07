@@ -1,7 +1,6 @@
 import { ComposeClient } from '@composedb/client'
 import { utilities } from './common.js'
 import { CeramicClient } from '@ceramicnetwork/http-client'
-import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 
@@ -44,40 +43,6 @@ export async function waitForDocument(
 }
 
 /**
- * Loads a document from a ceramic node with a timeout.
- * @param ceramicNode : Ceramic client to load the document from
- * @param documentId : ID of the document to load
- * @param timeoutMs : Timeout in milliseconds
- * @returns The document if found, throws error on timeout
- */
-export async function loadDocumentOrTimeout(
-  ceramicNode: CeramicClient,
-  documentId: StreamID,
-  timeoutMs: number,
-) {
-  let now = Date.now()
-  let count = 0
-  const expirationTime = now + timeoutMs
-  let lastError = null
-  while (now < expirationTime) {
-    try {
-      count += 1
-      return await ModelInstanceDocument.load(ceramicNode, documentId)
-    } catch (error) {
-      lastError = error
-      if (count % 10 === 0) {
-        console.log(`Error loading document : ${documentId} retrying`, error)
-      }
-      await delayMs(100)
-      now = Date.now()
-    }
-  }
-  throw Error(
-    `Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`,
-  )
-}
-
-/**
  * Checks if a model is indexed on a Ceramic node.
  * @param ceramicNode : Ceramic client to check indexing on
  * @param modelId : ID of the model to check indexing for
@@ -96,7 +61,7 @@ async function isModelIndexed(ceramicNode: CeramicClient, modelId: StreamID): Pr
 
 /**
  * Waits for indexing to complete on both nodes or a timeout.
- * @param ceramicNode1 : Ceramic client to check indexing on
+ * @param ceramicNode : Ceramic client to check indexing on
  * @param modelId : ID of the model to check indexing for
  * @param timeoutMs : Timeout in milliseconds
  * @returns True if indexing is complete, throws error on timeout

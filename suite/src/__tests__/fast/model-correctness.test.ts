@@ -1,5 +1,5 @@
 import { describe, test, beforeAll, expect } from '@jest/globals'
-import { newCeramic } from '../../utils/ceramicHelpers.js'
+import { loadDocumentOrTimeout, newCeramic } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
@@ -7,7 +7,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 import { LIST_MODEL_DEFINITION } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
-import { indexModelOnNode, loadDocumentOrTimeout } from '../../utils/composeDbHelpers.js'
+import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
@@ -41,11 +41,11 @@ describe('Model Integration Test', () => {
       modelInstanceDocumentMetadata,
       { anchor: false },
     )
-    const document2 = await loadDocumentOrTimeout(
+    const document2 = (await loadDocumentOrTimeout(
       ceramicNode2,
       document1.id,
       1000 * nodeSyncWaitTimeSec,
-    )
+    )) as ModelInstanceDocument
     expect(document2.id).toEqual(document1.id)
     expect(document1.content).toEqual(document2.content)
 

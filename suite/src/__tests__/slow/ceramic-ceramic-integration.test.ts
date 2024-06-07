@@ -3,7 +3,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { jest, describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor, waitForCondition } from '../../utils/ceramicHelpers.js'
 
-const UPDATE_TIMEOUT = 60 // 60 seconds for regular updates to propagate from one node to another
+const UPDATE_TIMEOUT_MS = 60 * 1000 // 60 seconds for regular updates to propagate from one node to another
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
 const createWithOneLoadWithTheOther = async (
@@ -53,7 +53,7 @@ const updatesAreShared = async (
     function (state) {
       return state.next?.content.foo == content1.foo || state.content.foo == content1.foo
     },
-    UPDATE_TIMEOUT,
+    UPDATE_TIMEOUT_MS,
   ).catch((errStr) => {
     throw new Error(errStr)
   })
@@ -74,7 +74,7 @@ const updatesAreShared = async (
     function (state) {
       return state.next?.content.foo == content2.foo || state.content.foo == content2.foo
     },
-    UPDATE_TIMEOUT,
+    UPDATE_TIMEOUT_MS,
   )
 
   expect(doc2.content).toEqual(content2)

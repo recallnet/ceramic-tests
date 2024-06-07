@@ -5,6 +5,10 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyDidResolver from 'key-did-resolver'
 import { AnchorStatus, Stream, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { filter, take } from 'rxjs/operators'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { utilities } from './common.js'
+
+const delayMs = utilities.delayMs
 
 const seed = randomBytes(32)
 const provider = new Ed25519Provider(seed)
@@ -45,18 +49,52 @@ async function withTimeout(prom: Promise<any>, timeoutSecs: number) {
 }
 
 /**
+ * Loads a document from a ceramic node with a timeout.
+ * @param ceramicNode : Ceramic client to load the document from
+ * @param documentId : ID of the document to load
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns The document if found, throws error on timeout
+ */
+export async function loadDocumentOrTimeout(
+  ceramicNode: CeramicClient,
+  documentId: StreamID,
+  timeoutMs: number,
+): Promise<Stream> {
+  let now = Date.now()
+  let count = 0
+  const expirationTime = now + timeoutMs
+  let lastError = null
+  while (now < expirationTime) {
+    try {
+      count += 1
+      return await ceramicNode.loadStream(documentId)
+    } catch (error) {
+      lastError = error
+      if (count % 10 === 0) {
+        console.log(`Error loading document : ${documentId} retrying`, error)
+      }
+      await delayMs(100)
+      now = Date.now()
+    }
+  }
+  throw Error(
+    `Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`,
+  )
+}
+
+/**
  * Waits for 'timeoutSecs' for the given 'condition' to evaluate to try when applied to the current
  * stream state for 'stream'.
  * @param stream
  * @param condition
- * @param timeoutSecs
+ * @param timeoutMs
  * @param msgGenerator - Function that takes a stream and returns a string to log every time
  *   a new state is found that *doesn't* satisfy 'condition'
  */
 export async function waitForCondition(
   stream: Stream,
   condition: (stream: StreamState) => boolean,
-  timeoutSecs: number,
+  timeoutMs: number,
   msgGenerator?: (stream: Stream) => string,
 ): Promise<void> {
   const waiter = stream
@@ -75,7 +113,7 @@ export async function waitForCondition(
 
   if (!condition(stream.state)) {
     // Only wait if condition isn't already true
-    await withTimeout(waiter, timeoutSecs)
+    await withTimeout(waiter, Math.floor(timeoutMs / 1000))
   }
 
   console.debug(
@@ -100,7 +138,7 @@ export async function waitForAnchor(
     function (state) {
       return state.anchorStatus == AnchorStatus.ANCHORED
     },
-    timeoutSecs,
+    timeoutSecs * 1000,
     msgGenerator,
   )
 }
