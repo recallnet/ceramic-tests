@@ -5,7 +5,6 @@ import { StreamID, randomCID } from '@ceramicnetwork/streamid'
 
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
-
 async function getEventData(url: string, eventCid: string, log = false) {
   let response = await fetch(url + `/ceramic/events/${eventCid}`)
   if (log) {

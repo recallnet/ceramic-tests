@@ -9,7 +9,9 @@ const delay = utilities.delay
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
 
 async function registerInterest(url: string, model: StreamID): Promise<void> {
-  const response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, { method: 'POST' })
+  const response = await fetch(url + `/ceramic/interests/model/${model.toString()}`, {
+    method: 'POST',
+  })
   if (response.status !== 204) {
     const data = await response.text()
     console.warn(`registerInterest: node: ${url}, model: ${model.toString()}, result: ${data}`)
@@ -55,15 +57,17 @@ async function getEventData(url: string, eventId: string): Promise<ReconEvent> {
   const fullUrl = url + `/ceramic/events/${eventId}`
   const response = await fetch(fullUrl)
   expect(response.status).toEqual(200)
-  return response.json();
+  return response.json()
 }
 
 async function readEvents(url: string, resumeToken: String, numExpectedEvents: number) {
   const events = []
-  console.log(`readEvents: ${url} starting at ${resumeToken}, waiting for ${numExpectedEvents} events`)
-  var startTime = Date.now();
+  console.log(
+    `readEvents: ${url} starting at ${resumeToken}, waiting for ${numExpectedEvents} events`,
+  )
+  var startTime = Date.now()
   while (events.length < numExpectedEvents) {
-    if ((Date.now() - startTime) > 60000) {
+    if (Date.now() - startTime > 60000) {
       // if it took more than a minute, quit
       console.warn(`readEvents: timeout after 60 seconds`)
       break
@@ -72,7 +76,7 @@ async function readEvents(url: string, resumeToken: String, numExpectedEvents: n
     const fullUrl = url + `/ceramic/feed/events?resumeAt=${resumeToken}`
     const response = await fetch(fullUrl)
     expect(response.status).toEqual(200)
-    const data = await response.json();
+    const data = await response.json()
     resumeToken = data.resumeToken
 
     for (const event of data.events) {
@@ -86,9 +90,9 @@ async function readEvents(url: string, resumeToken: String, numExpectedEvents: n
 function sortModelEvents(events: ReconEvent[]): ReconEvent[] {
   if (events && events.length > 0) {
     return JSON.parse(JSON.stringify(events)).sort((a: any, b: any) => {
-      if (a.id > b.id) return 1;
-      if (a.id < b.id) return -1;
-      return 0;
+      if (a.id > b.id) return 1
+      if (a.id < b.id) return -1
+      return 0
     })
   } else {
     return []
@@ -96,18 +100,23 @@ function sortModelEvents(events: ReconEvent[]): ReconEvent[] {
 }
 
 // Wait up till retries seconds for all urls to have at least count events
-async function waitForEventCount(urls: string[], count: number, retries: number, resumeTokens: string[]) {
+async function waitForEventCount(
+  urls: string[],
+  count: number,
+  retries: number,
+  resumeTokens: string[],
+) {
   if (urls.length !== resumeTokens.length) {
-    throw new Error('The lengths of urls and resumeTokens arrays must be equal');
+    throw new Error('The lengths of urls and resumeTokens arrays must be equal')
   }
   for (let r = 0; r < retries; r++) {
-    let all_good = true;
+    let all_good = true
     for (let i = 0; i < urls.length; i++) {
-      let url = urls[i];
+      let url = urls[i]
       let events = await readEvents(url, resumeTokens[i], count)
       if (events.length < count) {
-        all_good = false;
-        break;
+        all_good = false
+        break
       }
     }
     if (all_good) {
@@ -130,7 +139,7 @@ describe('sync events', () => {
 
   test(`linear sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
-    let modelEvents = randomEvents(modelID, 10);
+    let modelEvents = randomEvents(modelID, 10)
     const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
 
     // Write all data to one node before subscribing on the other nodes.
@@ -158,7 +167,7 @@ describe('sync events', () => {
 
   test(`active write sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
-    let modelEvents = randomEvents(modelID, 10);
+    let modelEvents = randomEvents(modelID, 10)
     const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
 
     // Subscribe on all nodes then write the data
@@ -182,12 +191,12 @@ describe('sync events', () => {
   })
   test(`half and half sync on ${firstNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
-    let modelEvents = randomEvents(modelID, 20);
+    let modelEvents = randomEvents(modelID, 20)
     const resumeTokens: string[] = await getResumeTokens(CeramicUrls)
 
     // Write half the data before other nodes subscribe
     await registerInterest(firstNodeUrl, modelID)
-    let half = Math.ceil(modelEvents.length / 2);
+    let half = Math.ceil(modelEvents.length / 2)
     let firstHalf = modelEvents.slice(0, half)
     let secondHalf = modelEvents.slice(half, modelEvents.length)
     await writeEvents(firstNodeUrl, firstHalf)
@@ -214,8 +223,8 @@ describe('sync events', () => {
   })
   test(`active write sync on two nodes ${firstNodeUrl} ${secondNodeUrl}`, async () => {
     const modelID = new StreamID('model', randomCID())
-    let modelEvents = randomEvents(modelID, 20);
-    let half = Math.ceil(modelEvents.length / 2);
+    let modelEvents = randomEvents(modelID, 20)
+    let half = Math.ceil(modelEvents.length / 2)
     let firstHalf = modelEvents.slice(0, half)
     let secondHalf = modelEvents.slice(half, modelEvents.length)
 
@@ -228,7 +237,10 @@ describe('sync events', () => {
     }
 
     // Write to both node simultaneously
-    await Promise.all([writeEvents(firstNodeUrl, firstHalf), writeEvents(secondNodeUrl, secondHalf)])
+    await Promise.all([
+      writeEvents(firstNodeUrl, firstHalf),
+      writeEvents(secondNodeUrl, secondHalf),
+    ])
 
     await waitForEventCount(CeramicUrls, modelEvents.length, 10, resumeTokens)
 
@@ -256,8 +268,8 @@ describe('sync events', () => {
         allEvents.push(...newEvents)
       }
       models.push({
-        'id': modelID,
-        'events': events,
+        id: modelID,
+        events: events,
       })
     }
 

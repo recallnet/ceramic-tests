@@ -58,7 +58,7 @@ export async function loadDocumentOrTimeout(
   let now = Date.now()
   let count = 0
   const expirationTime = now + timeoutMs
-  let lastError = null;
+  let lastError = null
   while (now < expirationTime) {
     try {
       count += 1
@@ -72,7 +72,9 @@ export async function loadDocumentOrTimeout(
       now = Date.now()
     }
   }
-  throw Error(`Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`)
+  throw Error(
+    `Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`,
+  )
 }
 
 /**
