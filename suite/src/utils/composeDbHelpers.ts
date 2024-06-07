@@ -62,7 +62,7 @@ export async function loadDocumentOrTimeout(
   while (now < expirationTime) {
     try {
       count += 1
-      return ModelInstanceDocument.load(ceramicNode, documentId)
+      return await ModelInstanceDocument.load(ceramicNode, documentId)
     } catch (error) {
       lastError = error
       if (count % 10 === 0) {
