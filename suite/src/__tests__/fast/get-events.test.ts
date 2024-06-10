@@ -1,10 +1,14 @@
 import { describe, expect, test } from '@jest/globals'
 import fetch from 'cross-fetch'
-import { ReconEventInput, generateRandomEvent } from '../../utils/rustCeramicHelpers'
+import {
+  ReconEventInput,
+  generateRandomEvent,
+  generateRandomRawEvent,
+  encodeRawEvent,
+} from '../../utils/rustCeramicHelpers'
 import { StreamID, randomCID } from '@ceramicnetwork/streamid'
 
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')
-
 
 async function getEventData(url: string, eventCid: string, log = false) {
   let response = await fetch(url + `/ceramic/events/${eventCid}`)
@@ -23,7 +27,10 @@ async function postEvent(url: string, event: ReconEventInput) {
     body: JSON.stringify(event),
   })
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`)
+    const message = await response.text()
+    throw new Error(
+      `Error posting event data to C1: ${response.status} ${response.statusText}: ${message}`,
+    )
   }
 }
 
@@ -38,6 +45,18 @@ describe('rust-ceramic e2e test', () => {
     const getResponse = await getEventData(ceramicUrl, event.id)
     expect(getResponse.status).toEqual(200)
     expect(await getResponse.json()).toEqual(event)
+  })
+
+  test('Cannot store event with unexpected metadata', async () => {
+    const modelId = new StreamID('model', randomCID())
+    const rawEvent = generateRandomRawEvent(modelId, 'did:key:faketestcontroller')
+    rawEvent.header.unexpected = "this field isn't a valid metadata field!"
+
+    const event = encodeRawEvent(rawEvent)
+    // publishing the event to rust-ceramic
+    await expect(postEvent(ceramicUrl, { data: event.data })).rejects.toThrow(
+      /Event bytes do not round-trip. This most likely means the event contains unexpected fields./,
+    )
   })
 
   test('get event data for non-existing event', async () => {

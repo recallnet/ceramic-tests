@@ -1,10 +1,10 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CARFactory } from 'cartonne'
-import * as dagJson from "@ipld/dag-json";
+import * as dagJson from '@ipld/dag-json'
 import * as dagCbor from '@ipld/dag-cbor'
-import { sha256 } from "multihashes-sync/sha2";
-import { GenesisHeader, GenesisCommit } from '@ceramicnetwork/common';
-import { randomBytes } from 'crypto';
+import { sha256 } from 'multihashes-sync/sha2'
+import { GenesisCommit, GenesisHeader } from '@ceramicnetwork/common'
+import { randomBytes } from 'crypto'
 
 export interface ReconEventInput {
   /// The car file multibase encoded
@@ -12,15 +12,11 @@ export interface ReconEventInput {
 }
 
 export interface ReconEvent {
-  id: string, // event CID
-  data: string, // car file
+  id: string // event CID
+  data: string // car file
 }
 
-export function generateRandomEvent(modelId: StreamID, controller: string): ReconEvent {
-  const carFactory = new CARFactory()
-  carFactory.codecs.add(dagJson)
-  carFactory.hashers.add(sha256)
-  const car = carFactory.build().asV1()
+export function generateRandomRawEvent(modelId: StreamID, controller: string): GenesisCommit {
   const header: GenesisHeader = {
     controllers: [controller],
     model: modelId.bytes,
@@ -28,10 +24,17 @@ export function generateRandomEvent(modelId: StreamID, controller: string): Reco
     // make the events different so they don't get deduped. is this spec compliant?
     unique: randomBytes(12),
   }
-  const commit: GenesisCommit = {
+  return {
     header,
     data: null, // deterministic commit has no data and requires no signature
   }
+}
+
+export function encodeRawEvent(commit: GenesisCommit): ReconEvent {
+  const carFactory = new CARFactory()
+  carFactory.codecs.add(dagJson)
+  carFactory.hashers.add(sha256)
+  const car = carFactory.build().asV1()
   dagCbor.encode(commit)
   car.put(commit, { isRoot: true })
   const cid = car.roots[0]
@@ -41,9 +44,13 @@ export function generateRandomEvent(modelId: StreamID, controller: string): Reco
   }
 }
 
+export function generateRandomEvent(modelId: StreamID, controller: string): ReconEvent {
+  const commit = generateRandomRawEvent(modelId, controller)
+  return encodeRawEvent(commit)
+}
+
 export function randomEvents(modelID: StreamID, count: number): ReconEvent[] {
   let modelEvents = []
-
 
   for (let i = 0; i < count; i++) {
     const event = generateRandomEvent(modelID, 'did:key:faketestcontroller')
