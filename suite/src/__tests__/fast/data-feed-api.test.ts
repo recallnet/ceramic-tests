@@ -4,11 +4,8 @@ import { createDid } from '../../utils/didHelper.js'
 import { EventAccumulator } from '../../utils/common.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
-import {
-  ModelInstanceDocument,
-  ModelInstanceDocumentMetadataArgs,
-} from '@ceramicnetwork/stream-model-instance'
-import { newModel } from '../../models/modelConstants'
+import { ModelInstanceDocument, ModelInstanceDocumentMetadataArgs } from '@ceramicnetwork/stream-model-instance'
+import { LIST_MODEL_DEFINITION } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { EventSource } from 'cross-eventsource'
@@ -49,7 +46,7 @@ describe.skip('Datafeed SSE Api Test', () => {
     const did2 = await createDid(adminSeeds[1])
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
-    const model = await Model.create(ceramicNode1, newModel)
+    const model = await Model.create(ceramicNode1, LIST_MODEL_DEFINITION)
     await TestUtils.waitForConditionOrTimeout(async () =>
       ceramicNode2
         .loadStream(model.id)
