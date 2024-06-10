@@ -4,7 +4,7 @@ import { createDid } from '../../utils/didHelper.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Model } from '@ceramicnetwork/stream-model'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
-import { MODEL_DEFINITION_LIST } from '../../models/modelConstants'
+import { LIST_MODEL_DEFINITION } from '../../models/modelConstants'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CommonTestUtils as TestUtils } from '@ceramicnetwork/common-test-utils'
 import { indexModelOnNode, loadDocumentOrTimeout } from '../../utils/composeDbHelpers.js'
@@ -26,7 +26,7 @@ describe('Model Integration Test', () => {
     const did2 = await createDid(adminSeeds[1])
     ceramicNode1 = await newCeramic(ComposeDbUrls[0], did1)
     ceramicNode2 = await newCeramic(ComposeDbUrls[1], did2)
-    const model = await Model.create(ceramicNode1, MODEL_DEFINITION_LIST)
+    const model = await Model.create(ceramicNode1, LIST_MODEL_DEFINITION)
     modelId = model.id
 
     await indexModelOnNode(ceramicNode1, model.id)

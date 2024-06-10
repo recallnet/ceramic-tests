@@ -6,7 +6,7 @@ import * as helpers from '../../utils/dynamoDbHelpers.js'
 import { utilities } from '../../utils/common.js'
 import { newCeramic } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
-import { MODEL_DEFINITION_LIST } from '../../models/modelConstants.js'
+import { LIST_MODEL_DEFINITION } from '../../models/modelConstants.js'
 import { Model } from '@ceramicnetwork/stream-model'
 import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -36,7 +36,7 @@ describe('update', () => {
 
     const did0 = await createDid(adminSeeds[0])
     const ceramicNode0 = await newCeramic(composeDbUrls[0], did0)
-    const model = await Model.create(ceramicNode0, MODEL_DEFINITION_LIST)
+    const model = await Model.create(ceramicNode0, LIST_MODEL_DEFINITION)
     modelId = model.id
     await indexModelOnNode(ceramicNode0, model.id)
 

@@ -11,7 +11,7 @@ import * as u8s from 'uint8arrays'
 
 import { newCeramic } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
-import { MODEL_DEFINITION_SINGLE, MODEL_DEFINITION_LIST } from '../../models/modelConstants.js'
+import { SINGLE_MODEL_DEFINITION, LIST_MODEL_DEFINITION } from '../../models/modelConstants.js'
 import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
 
 // Environment variables
@@ -52,11 +52,11 @@ describe('All Event Types', () => {
     const did = await createDid(adminSeeds[0])
     ceramic = await newCeramic(composeDbUrls[0], did)
 
-    const singleModel = await Model.create(ceramic, MODEL_DEFINITION_SINGLE)
+    const singleModel = await Model.create(ceramic, SINGLE_MODEL_DEFINITION)
     singleModelId = singleModel.id
     await indexModelOnNode(ceramic, singleModelId)
 
-    const listModel = await Model.create(ceramic, MODEL_DEFINITION_LIST)
+    const listModel = await Model.create(ceramic, LIST_MODEL_DEFINITION)
     listModelId = listModel.id
     await indexModelOnNode(ceramic, listModelId)
   })

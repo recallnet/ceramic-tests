@@ -1,6 +1,6 @@
 import { type ModelDefinition } from '@ceramicnetwork/stream-model'
 
-export const MODEL_DEFINITION_LIST: ModelDefinition = {
+export const LIST_MODEL_DEFINITION: ModelDefinition = {
   name: 'CDITModel',
   version: '1.0',
   schema: {
@@ -19,7 +19,7 @@ export const MODEL_DEFINITION_LIST: ModelDefinition = {
   },
 }
 
-export const MODEL_DEFINITION_SINGLE: ModelDefinition = {
+export const SINGLE_MODEL_DEFINITION: ModelDefinition = {
   name: 'ceramic-tests-single-model',
   version: '1.0',
   schema: {
