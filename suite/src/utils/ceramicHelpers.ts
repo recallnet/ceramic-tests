@@ -16,7 +16,7 @@ const resolver = KeyDidResolver.getResolver()
 const did = new DID({ provider, resolver })
 
 // 30 minutes for anchors to happen and be noticed (including potential failures and retries)
-export const DEFAULT_ANCHOR_TIMEOUT = 60 * 30
+export const DEFAULT_ANCHOR_TIMEOUT_MS = 60 * 30 * 1000
 
 export const newCeramic = async (apiUrl: string, didOverride?: DID) => {
   const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
@@ -35,22 +35,22 @@ function defaultMsgGenerator(stream: Stream) {
   )}`
 }
 
-async function withTimeout(prom: Promise<any>, timeoutSecs: number) {
+async function withTimeout(prom: Promise<any>, timeoutMs: number) {
   const startTime = new Date().toISOString()
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const curTime = new Date().toISOString()
       reject(
-        `Timed out after ${timeoutSecs} seconds. Current time: ${curTime}, start time: ${startTime}`,
+        `Timed out after ${timeoutMs} millis. Current time: ${curTime}, start time: ${startTime}`,
       )
-    }, timeoutSecs * 1000)
+    }, timeoutMs)
     prom.then(resolve)
   })
 }
 
 /**
  * Loads a document from a ceramic node with a timeout.
- * @param ceramicNode : Ceramic client to load the document from
+ * @param ceramicNode : CeramicClient to load the document from
  * @param documentId : ID of the document to load
  * @param timeoutMs : Timeout in milliseconds
  * @returns The document if found, throws error on timeout
@@ -113,7 +113,7 @@ export async function waitForCondition(
 
   if (!condition(stream.state)) {
     // Only wait if condition isn't already true
-    await withTimeout(waiter, Math.floor(timeoutMs / 1000))
+    await withTimeout(waiter, timeoutMs)
   }
 
   console.debug(
@@ -125,7 +125,7 @@ export async function waitForCondition(
 
 export async function waitForAnchor(
   stream: any,
-  timeoutSecs: number = DEFAULT_ANCHOR_TIMEOUT,
+  timeoutMs: number = DEFAULT_ANCHOR_TIMEOUT_MS,
 ): Promise<void> {
   const msgGenerator = function (stream: Stream) {
     const curTime = new Date().toISOString()
@@ -138,7 +138,7 @@ export async function waitForAnchor(
     function (state) {
       return state.anchorStatus == AnchorStatus.ANCHORED
     },
-    timeoutSecs * 1000,
+    timeoutMs,
     msgGenerator,
   )
 }
