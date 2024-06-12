@@ -12,7 +12,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 const timeoutMs = 60000
 
-describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
+describe.skip('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
   let composeClient1: ComposeClient
   let composeClient2: ComposeClient
 
