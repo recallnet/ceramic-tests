@@ -1,24 +1,36 @@
-import { AnchorStatus, StreamReaderWriter } from '@ceramicnetwork/common'
-import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { jest, describe, test, beforeAll, expect } from '@jest/globals'
+import { AnchorStatus } from '@ceramicnetwork/common'
+import { describe, test, beforeAll, expect } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
+import { createDid } from '../../utils/didHelper.js'
+import { Model } from '@ceramicnetwork/stream-model'
+import { LIST_MODEL_DEFINITION } from '../../models/modelConstants.js'
+import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
+const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
 // Skipped https://linear.app/3boxlabs/issue/WS1-1460/unskip-ceramic-cas-basic-integration
-describe.skip('Ceramic<->CAS basic integration', () => {
-  jest.setTimeout(1000 * 60 * 60) // 1 hour
-  let ceramic: StreamReaderWriter
+describe('Ceramic<->CAS basic integration', () => {
+  let ceramic: CeramicClient
+  let modelId: StreamID
 
   beforeAll(async () => {
-    ceramic = await newCeramic(ComposeDbUrls[0])
+    const did = await createDid(adminSeeds[0])
+    ceramic = await newCeramic(ComposeDbUrls[0], did)
+    const model = await Model.create(ceramic, LIST_MODEL_DEFINITION)
+    modelId = model.id
+    await indexModelOnNode(ceramic, model.id)
   })
 
   test('basic crud is anchored properly, single update per anchor batch', async () => {
     // Test document creation
     console.log('Creating document')
-    const initialContent = { foo: 'bar' }
-    const doc = await TileDocument.create<any>(ceramic, initialContent)
+    const initialContent = { step: 0 }
+    const metadata = { controllers: [ceramic.did!.id], model: modelId }
+    const doc = await ModelInstanceDocument.create(ceramic, initialContent, metadata)
     expect(doc.content).toEqual(initialContent)
 
     // Test document creation is anchored correctly
@@ -30,8 +42,8 @@ describe.skip('Ceramic<->CAS basic integration', () => {
 
     // Test document update
     console.log('Updating document')
-    const newContent = { bar: 'baz' }
-    await doc.update(newContent)
+    const newContent = { step: 1 }
+    await doc.replace(newContent)
     expect(doc.content).toEqual(newContent)
 
     // Test document update is anchored correctly
@@ -44,18 +56,19 @@ describe.skip('Ceramic<->CAS basic integration', () => {
   })
 
   test('multiple documents are anchored properly, multiple updates per anchor batch', async () => {
-    const content0 = { state: 0 }
-    const content1 = { state: 1 }
-    const content2 = { state: 2 }
-    const content3 = { state: 3 }
-    const content4 = { state: 4 }
+    const content0 = { step: 0 }
+    const content1 = { step: 1 }
+    const content2 = { step: 2 }
+    const content3 = { step: 3 }
+    const content4 = { step: 4 }
+    const metadata = { controllers: [ceramic.did!.id], model: modelId }
 
     // Create some documents
     console.log('Creating documents')
-    const doc1 = await TileDocument.create(ceramic, content0)
-    const doc2 = await TileDocument.create(ceramic, content0)
-    const doc3 = await TileDocument.create(ceramic, content0)
-    const doc4 = await TileDocument.create(ceramic, content0)
+    const doc1 = await ModelInstanceDocument.create(ceramic, content0, metadata)
+    const doc2 = await ModelInstanceDocument.create(ceramic, content0, metadata)
+    const doc3 = await ModelInstanceDocument.create(ceramic, content0, metadata)
+    const doc4 = await ModelInstanceDocument.create(ceramic, content0, metadata)
     expect(doc1.content).toEqual(content0)
     expect(doc2.content).toEqual(content0)
     expect(doc3.content).toEqual(content0)
@@ -87,19 +100,19 @@ describe.skip('Ceramic<->CAS basic integration', () => {
 
     // Test document updates
     console.log('Updating documents')
-    await doc1.update(content1, undefined, { anchor: true })
-    await doc2.update(content1, undefined, { anchor: false })
-    await doc3.update(content1, undefined, { anchor: false })
-    await doc4.update(content1, undefined, { anchor: false })
+    await doc1.replace(content1, undefined, { anchor: true })
+    await doc2.replace(content1, undefined, { anchor: false })
+    await doc3.replace(content1, undefined, { anchor: false })
+    await doc4.replace(content1, undefined, { anchor: false })
 
-    await doc2.update(content2, undefined, { anchor: true })
-    await doc3.update(content2, undefined, { anchor: false })
-    await doc4.update(content2, undefined, { anchor: false })
+    await doc2.replace(content2, undefined, { anchor: true })
+    await doc3.replace(content2, undefined, { anchor: false })
+    await doc4.replace(content2, undefined, { anchor: false })
 
-    await doc3.update(content3, undefined, { anchor: true })
-    await doc4.update(content3, undefined, { anchor: false })
+    await doc3.replace(content3, undefined, { anchor: true })
+    await doc4.replace(content3, undefined, { anchor: false })
 
-    await doc4.update(content4, undefined, { anchor: true })
+    await doc4.replace(content4, undefined, { anchor: true })
 
     expect(doc1.content).toEqual(content1)
     expect(doc2.content).toEqual(content2)
