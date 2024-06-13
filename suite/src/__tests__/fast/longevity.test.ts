@@ -12,9 +12,9 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
  * accessible days later, possibly even after a new version of Ceramic is released and deployed.
  */
 describe('longevity', () => {
-  // `step` is incremented once for each r/w node during the `update` test, so use
-  // the length of the r/w URL array to test the content.
-  const expectedContent = { step: ComposeDbUrls.length }
+  // `step` is incremented once for the first r/w node and twice for each subsequent node,
+  // during the `update` test, so use the length of the r/w URL array to test the content.
+  const expectedContent = { step: 1 + (ComposeDbUrls.length - 1) * 2 }
   let streamIds: Array<StreamID> = []
 
   beforeAll(async () => {

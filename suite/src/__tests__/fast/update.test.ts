@@ -111,23 +111,42 @@ function testUpdate(composeDbUrls: string[]) {
       )
     })
     test(`sync stream on ${apiUrl}`, async () => {
-      const isFinalWriter = idx == composeDbUrls.length - 1
       // Update the content as we iterate through the list of node URLs so that each step includes some change
       // from the previous step.
       content.step++
-      // Update on first node and wait for update to propagate to other nodes via pubsub
-      // Only anchor on the final write to avoid writes conflicting with anchors.
+      // Update on first node and wait for update to propagate to other nodes
       console.log(
         `Updating stream ${firstDocument.id.toString()} on ${firstNodeUrl} so we can sync it on ${apiUrl} with step ${
           content.step
         }`,
       )
-      await firstDocument.replace(content, undefined, { anchor: isFinalWriter })
+      await firstDocument.replace(content, undefined, { anchor: false })
       await waitForCondition(doc, (state) => state.content.step == content.step, SYNC_TIMEOUT_MS)
       await doc.sync({ sync: SyncOptions.NEVER_SYNC })
       expect(doc.content).toEqual(firstDocument.content)
       console.log(
         `Synced stream on ${apiUrl}: ${firstDocument.id.toString()} successfully with step ${
+          content.step
+        }`,
+      )
+    })
+    test(`update on ${apiUrl}, sync on ${firstNodeUrl}`, async () => {
+      const isFinalWriter = idx == composeDbUrls.length - 1
+      // Now Update the stream on the non-first-node and check that the write syncs back to the
+      // first node. This way we ensure writes are syncing in both directions.
+      content.step++
+      console.log(
+        `Updating stream ${doc.id.toString()} on ${apiUrl} so we can sync it on ${firstNodeUrl} with step ${
+          content.step
+        }`,
+      )
+      // Only anchor on the final write to avoid writes conflicting with anchors.
+      await doc.replace(content, undefined, { anchor: isFinalWriter })
+      await waitForCondition(doc, (state) => state.content.step == content.step, SYNC_TIMEOUT_MS)
+      await firstDocument.sync({ sync: SyncOptions.NEVER_SYNC })
+      expect(firstDocument.content).toEqual(doc.content)
+      console.log(
+        `Synced stream on ${firstNodeUrl}: ${firstDocument.id.toString()} successfully with step ${
           content.step
         }`,
       )
