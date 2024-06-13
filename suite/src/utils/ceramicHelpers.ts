@@ -5,6 +5,10 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyDidResolver from 'key-did-resolver'
 import { AnchorStatus, Stream, StreamState, StreamUtils } from '@ceramicnetwork/common'
 import { filter, take } from 'rxjs/operators'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { utilities } from './common.js'
+
+const delayMs = utilities.delayMs
 
 const seed = randomBytes(32)
 const provider = new Ed25519Provider(seed)
@@ -12,7 +16,7 @@ const resolver = KeyDidResolver.getResolver()
 const did = new DID({ provider, resolver })
 
 // 30 minutes for anchors to happen and be noticed (including potential failures and retries)
-export const DEFAULT_ANCHOR_TIMEOUT = 60 * 30
+export const DEFAULT_ANCHOR_TIMEOUT_MS = 60 * 30 * 1000
 
 export const newCeramic = async (apiUrl: string, didOverride?: DID) => {
   const ceramic = new CeramicClient(apiUrl, { syncInterval: 500 })
@@ -31,17 +35,51 @@ function defaultMsgGenerator(stream: Stream) {
   )}`
 }
 
-async function withTimeout(prom: Promise<any>, timeoutSecs: number) {
+async function withTimeout(prom: Promise<any>, timeoutMs: number) {
   const startTime = new Date().toISOString()
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const curTime = new Date().toISOString()
       reject(
-        `Timed out after ${timeoutSecs} seconds. Current time: ${curTime}, start time: ${startTime}`,
+        `Timed out after ${timeoutMs} millis. Current time: ${curTime}, start time: ${startTime}`,
       )
-    }, timeoutSecs * 1000)
+    }, timeoutMs)
     prom.then(resolve)
   })
+}
+
+/**
+ * Loads a document from a ceramic node with a timeout.
+ * @param ceramicNode : CeramicClient to load the document from
+ * @param documentId : ID of the document to load
+ * @param timeoutMs : Timeout in milliseconds
+ * @returns The document if found, throws error on timeout
+ */
+export async function loadDocumentOrTimeout(
+  ceramicNode: CeramicClient,
+  documentId: StreamID,
+  timeoutMs: number,
+): Promise<Stream> {
+  let now = Date.now()
+  let count = 0
+  const expirationTime = now + timeoutMs
+  let lastError = null
+  while (now < expirationTime) {
+    try {
+      count += 1
+      return await ceramicNode.loadStream(documentId)
+    } catch (error) {
+      lastError = error
+      if (count % 10 === 0) {
+        console.log(`Error loading document : ${documentId} retrying`, error)
+      }
+      await delayMs(100)
+      now = Date.now()
+    }
+  }
+  throw Error(
+    `Timeout waiting for document ${documentId}. Last seen error when trying to load it: ${lastError}`,
+  )
 }
 
 /**
@@ -49,14 +87,14 @@ async function withTimeout(prom: Promise<any>, timeoutSecs: number) {
  * stream state for 'stream'.
  * @param stream
  * @param condition
- * @param timeoutSecs
+ * @param timeoutMs
  * @param msgGenerator - Function that takes a stream and returns a string to log every time
  *   a new state is found that *doesn't* satisfy 'condition'
  */
 export async function waitForCondition(
   stream: Stream,
   condition: (stream: StreamState) => boolean,
-  timeoutSecs: number,
+  timeoutMs: number,
   msgGenerator?: (stream: Stream) => string,
 ): Promise<void> {
   const waiter = stream
@@ -75,7 +113,7 @@ export async function waitForCondition(
 
   if (!condition(stream.state)) {
     // Only wait if condition isn't already true
-    await withTimeout(waiter, timeoutSecs)
+    await withTimeout(waiter, timeoutMs)
   }
 
   console.debug(
@@ -87,7 +125,7 @@ export async function waitForCondition(
 
 export async function waitForAnchor(
   stream: any,
-  timeoutSecs: number = DEFAULT_ANCHOR_TIMEOUT,
+  timeoutMs: number = DEFAULT_ANCHOR_TIMEOUT_MS,
 ): Promise<void> {
   const msgGenerator = function (stream: Stream) {
     const curTime = new Date().toISOString()
@@ -100,7 +138,7 @@ export async function waitForAnchor(
     function (state) {
       return state.anchorStatus == AnchorStatus.ANCHORED
     },
-    timeoutSecs,
+    timeoutMs,
     msgGenerator,
   )
 }

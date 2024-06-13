@@ -3,8 +3,7 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import { afterAll, beforeAll, expect, test, describe } from '@jest/globals'
 
 import * as helpers from '../../utils/dynamoDbHelpers.js'
-import { utilities } from '../../utils/common.js'
-import { newCeramic } from '../../utils/ceramicHelpers.js'
+import { loadDocumentOrTimeout, newCeramic, waitForCondition } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { LIST_MODEL_DEFINITION } from '../../models/modelConstants.js'
 import { Model } from '@ceramicnetwork/stream-model'
@@ -12,11 +11,10 @@ import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 
-const delay = utilities.delay
-
 // Environment variables
 const composeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
+const SYNC_TIMEOUT_MS = 5 * 1000 // 5 seconds
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update Tests
@@ -94,12 +92,17 @@ function testUpdate(composeDbUrls: string[]) {
     const apiUrl = composeDbUrls[idx]
     let doc: ModelInstanceDocument
     test(`load stream on ${apiUrl}`, async () => {
-      await delay(5)
       const ceramic = await newCeramic(apiUrl)
       console.log(
         `Loading stream ${firstDocument.id.toString()} on ${apiUrl} with step ${content.step}`,
       )
-      doc = await ModelInstanceDocument.load(ceramic, firstDocument.id)
+      doc = (await loadDocumentOrTimeout(
+        ceramic,
+        firstDocument.id,
+        SYNC_TIMEOUT_MS,
+      )) as ModelInstanceDocument
+      await waitForCondition(doc, (state) => state.content.step == content.step, SYNC_TIMEOUT_MS)
+      await doc.sync({ sync: SyncOptions.NEVER_SYNC })
       expect(doc.content).toEqual(content)
       console.log(
         `Loaded stream on ${apiUrl}: ${firstDocument.id.toString()} successfully with step ${
@@ -120,9 +123,7 @@ function testUpdate(composeDbUrls: string[]) {
         }`,
       )
       await firstDocument.replace(content, undefined, { anchor: isFinalWriter })
-      console.log(`Updating complete, sleeping 5 seconds before syncing`)
-      await delay(5)
-      console.log(`Sleep complete, syncing`)
+      await waitForCondition(doc, (state) => state.content.step == content.step, SYNC_TIMEOUT_MS)
       await doc.sync({ sync: SyncOptions.NEVER_SYNC })
       expect(doc.content).toEqual(firstDocument.content)
       console.log(
