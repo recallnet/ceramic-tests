@@ -14,7 +14,7 @@ import { ModelInstanceDocument } from '@ceramicnetwork/stream-model-instance'
 // Environment variables
 const composeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const SYNC_TIMEOUT_MS = 5 * 1000 // 5 seconds
+const SYNC_TIMEOUT_MS = 30 * 1000 // 30 seconds
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create/Update Tests

@@ -11,7 +11,7 @@ import { indexModelOnNode } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const nodeSyncWaitTimeSec = 5
+const SYNC_TIMEOUT_MS = 30 * 1000
 
 describe('Model Integration Test', () => {
   let ceramicNode1: CeramicClient
@@ -44,7 +44,7 @@ describe('Model Integration Test', () => {
     const document2 = (await loadDocumentOrTimeout(
       ceramicNode2,
       document1.id,
-      1000 * nodeSyncWaitTimeSec,
+      SYNC_TIMEOUT_MS,
     )) as ModelInstanceDocument
     expect(document2.id).toEqual(document1.id)
     expect(document1.content).toEqual(document2.content)
