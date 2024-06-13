@@ -1,5 +1,5 @@
 import { StreamReaderWriter, SyncOptions } from '@ceramicnetwork/common'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import { afterAll, beforeAll, expect, test, describe } from '@jest/globals'
 
 import * as helpers from '../../utils/dynamoDbHelpers.js'
@@ -58,7 +58,7 @@ function testUpdate(composeDbUrls: string[]) {
   console.log(`test update with urls: ${composeDbUrls}`)
   const firstNodeUrl = composeDbUrls[0]
   const content = { step: 0 }
-  let firstCeramic: CeramicClient.CeramicClient
+  let firstCeramic: CeramicClient
   let firstDocument: ModelInstanceDocument
 
   // Create and update on first node
