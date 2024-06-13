@@ -9,7 +9,7 @@ import { waitForDocument } from '../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
-const timeoutMs = 60000
+const SYNC_TIMEOUT_MS = 60 * 1000
 
 describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () => {
   let composeClient1: ComposeClient
@@ -40,7 +40,7 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
     const modelId = parts[parts.length - 1]
 
     // Wait for model to be available on node 2.
-    await loadDocumentOrTimeout(ceramicInstance2, StreamID.fromString(modelId), 30 * 1000)
+    await loadDocumentOrTimeout(ceramicInstance2, StreamID.fromString(modelId), SYNC_TIMEOUT_MS)
 
     // start indexing for the model on node 2
     await ceramicInstance2.admin.startIndexingModels([StreamID.fromString(modelId)])
@@ -98,7 +98,7 @@ describe('Sync Model and ModelInstanceDocument using ComposeDB GraphQL API', () 
       composeClient2,
       getDocumentByStreamIdQuery,
       getDocumentByStreamIdVariables,
-      timeoutMs,
+      SYNC_TIMEOUT_MS,
     )
     const queryResponseObj = JSON.parse(JSON.stringify(queryResponse))
     const queryResponseid = queryResponseObj?.data?.node?.id
