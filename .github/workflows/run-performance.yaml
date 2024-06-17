@@ -1,0 +1,48 @@
+name: Run Performance test
+
+on:
+  workflow_dispatch: # manually triggered
+    inputs:
+      test_name:
+        type: string
+        description: Folder name containing the performance test yaml
+        required: true
+      js_ceramic_image:
+        type: string
+        description: Image for js-ceramic
+        required: true
+        default: ceramicnetwork/js-ceramic:latest
+      rust_ceramic_image:
+        type: string
+        description: Image for rust-ceramic
+        required: true
+        default: public.ecr.aws/r5b3e0r5/3box/ceramic-one:latest
+      scenario_image:
+        type: string
+        description: Image for scenario
+        required: true
+        default: public.ecr.aws/r5b3e0r5/3box/keramik-runner:latest
+
+env:
+  CARGO_TERM_COLOR: always
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+
+jobs:
+  template-network:
+    name: Template Network
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install jq
+        run: sudo apt-get install jq
+      - name: Template network
+        run: |
+          set -exo pipefail
+          export RUST_CERAMIC_IMAGE=${{ inputs.rust_ceramic_image }}
+          export SCENARIO_IMAGE=${{ inputs.scenario_image }}
+          export JS_CERAMIC_IMAGE=${{ inputs.js_ceramic_image }}
+          export TEST_NAME=${{ inputs.test_name }}
+          ls -l tests/performance/$TEST_NAME.yaml
+
