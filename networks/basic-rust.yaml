@@ -19,6 +19,9 @@ spec:
             memory: "1Gi"
   # Use Kubo with CAS because it still needs pubsub
   cas:
+    casResourceLimits:
+      cpu: "2"
+      memory: "4Gi"
     ipfs:
       go: {}
   monitoring:
