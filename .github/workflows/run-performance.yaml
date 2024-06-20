@@ -23,11 +23,6 @@ on:
         required: true
         default: public.ecr.aws/r5b3e0r5/3box/keramik-runner:latest
 
-env:
-  CARGO_TERM_COLOR: always
-  SCCACHE_GHA_ENABLED: "true"
-  RUSTC_WRAPPER: "sccache"
-
 jobs:
   run-performance-test:
     name: Run Performance Test ${{ github.run_id }}
@@ -61,6 +56,8 @@ jobs:
           # set the network name yaml key to the test names
           yq e '.metadata.name = env(THIS_TEST)' performance/$TEST_NAME/network.yaml \
             > performance/$THIS_TEST/network.yaml
+          yq e '.spec.ceramic[0].image = env(JS_CERAMIC_IMAGE)' -i performance/$THIS_TEST/network.yaml
+          yq e '.spec.ceramic[0].ipfs.rust.image = env(RUST_CERAMIC_IMAGE)' -i performance/$THIS_TEST/network.yaml
           cat performance/$THIS_TEST/network.yaml
           echo "THIS_TEST=$THIS_TEST" >> $GITHUB_ENV
           echo "THIS_TEST_NAMESPACE=keramik-${THIS_TEST}" >> $GITHUB_ENV
