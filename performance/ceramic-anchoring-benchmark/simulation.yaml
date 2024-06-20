@@ -10,5 +10,3 @@ spec:
   runTime: 20
   throttleRequests: 100
   anchorWaitTime: 40
-  image: samika98/runner:cab-v
-  imagePullPolicy: Always

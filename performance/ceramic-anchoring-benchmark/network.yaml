@@ -31,6 +31,4 @@ spec:
   monitoring:
     namespaced: true
   replicas: 2
-  bootstrap:
-    image: samika98/runner:cabv1
-    imagePullPolicy: IfNotPresent
+
