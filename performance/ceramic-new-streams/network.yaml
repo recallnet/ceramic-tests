@@ -6,7 +6,6 @@ spec:
   ceramic:
     - env:
         CERAMIC_RECON_MODE: "true"
-      image: ceramicnetwork/js-ceramic:latest
       imagePullPolicy: Always
       ipfs:
         rust:
@@ -15,7 +14,6 @@ spec:
           resourceLimits:
             cpu: "6"
             memory: 6Gi
-          image: public.ecr.aws/r5b3e0r5/3box/ceramic-one:latest
           imagePullPolicy: Always
       resourceLimits:
         cpu: "4"
