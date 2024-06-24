@@ -61,6 +61,11 @@
     "typescript": "^4.9.5",
     "uint8arrays": "^5.0.1"
   },
+  "pnpm": {
+    "resolutions": {
+      "graphql": "16.9.0"
+    }
+  },
   "prettier": "eslint-config-3box/prettier.config",
   "packageManager": "pnpm@8.8.0"
 }
