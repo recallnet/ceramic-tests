@@ -116,8 +116,9 @@ export async function waitForCondition(
     await withTimeout(waiter, timeoutMs)
   }
 
+  const curTime = new Date().toISOString()
   console.debug(
-    `Stream ${stream.id.toString()} successfully reached desired state. Current stream state: ${JSON.stringify(
+    `Stream ${stream.id.toString()} successfully reached desired state at ${curTime}. Current stream state: ${JSON.stringify(
       StreamUtils.serializeState(stream.state),
     )}`,
   )
@@ -127,7 +128,7 @@ export async function waitForAnchor(
   stream: any,
   timeoutMs: number = DEFAULT_ANCHOR_TIMEOUT_MS,
 ): Promise<void> {
-  const msgGenerator = function (stream: Stream) {
+  const msgGenerator = function(stream: Stream) {
     const curTime = new Date().toISOString()
     return `Waiting for stream ${stream.id.toString()} to be anchored. Current time: ${curTime}. Current stream state: ${JSON.stringify(
       StreamUtils.serializeState(stream.state),
@@ -135,7 +136,7 @@ export async function waitForAnchor(
   }
   await waitForCondition(
     stream,
-    function (state) {
+    function(state) {
       return state.anchorStatus == AnchorStatus.ANCHORED
     },
     timeoutMs,

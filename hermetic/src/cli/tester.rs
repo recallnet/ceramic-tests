@@ -1,4 +1,9 @@
-use std::{collections::BTreeMap, fmt::Display, path::PathBuf};
+use std::{
+    collections::BTreeMap,
+    fmt::Display,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use anyhow::{anyhow, Result};
 use futures::{future::BoxFuture, StreamExt, TryStreamExt};
@@ -32,7 +37,7 @@ use kube::{
 };
 use log::{debug, info, trace};
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::fs;
+use tokio::{fs, time::sleep};
 
 const TESTER_NAME: &str = "ceramic-tester";
 const CERAMIC_ADMIN_DID_SECRET_NAME: &str = "ceramic-admin";
@@ -73,6 +78,8 @@ pub struct TestConfig {
 pub enum Flavor {
     /// Correctness tests
     Correctness,
+    /// Migration tests
+    Migration { wait_secs: u64, migration: PathBuf },
     /// Performance tests
     Performance(PathBuf),
 }
@@ -81,6 +88,7 @@ impl Flavor {
     fn name(&self) -> &'static str {
         match self {
             Flavor::Correctness => "correctness",
+            Flavor::Migration { .. } => "migration",
             Flavor::Performance(_) => "perf",
         }
     }
@@ -92,34 +100,47 @@ impl Display for Flavor {
     }
 }
 
-pub async fn run(opts: TestConfig) -> Result<()> {
-    // Infer the runtime environment and try to create a Kubernetes Client
-    let client = Client::try_default().await?;
-
+async fn parse_network_file(
+    file_path: impl AsRef<Path>,
+    ttl: u64,
+    flavor: &Flavor,
+    suffix: &Option<String>,
+) -> Result<Network> {
     // Parse network file
-    let mut network: Network = serde_yaml::from_str(&fs::read_to_string(&opts.network).await?)?;
+    let mut network: Network = serde_yaml::from_str(&fs::read_to_string(file_path).await?)?;
     debug!("input network {:#?}", network);
 
     // The test driver relies on the Keramik operator network TTL to clean up the network, with an 8 hour default that
     // allows devs to investigate any failures. The TTL can also be extended at any time, if more time is needed.
-    network.spec.ttl_seconds = Some(opts.network_ttl);
+    network.spec.ttl_seconds = Some(ttl);
 
     let mut network_name = format!(
         "{}-{}",
-        opts.flavor,
+        flavor,
         network
             .metadata
             .name
             .as_ref()
             .expect("network should have a defined name in metadata")
     );
-    if let Some(suffix) = &opts.suffix {
+    if let Some(suffix) = &suffix {
         if !suffix.is_empty() {
             network_name = format!("{network_name}-{suffix}");
         }
     }
     network.metadata.name = Some(network_name.clone());
+    Ok(network)
+}
+
+pub async fn run(opts: TestConfig) -> Result<()> {
+    // Infer the runtime environment and try to create a Kubernetes Client
+    let client = Client::try_default().await?;
+
+    // Parse network file
+    let network =
+        parse_network_file(opts.network, opts.network_ttl, &opts.flavor, &opts.suffix).await?;
     debug!("configured network {:#?}", network);
+    let network_name = network.name_unchecked();
 
     let namespace = format!("keramik-{network_name}");
 
@@ -166,7 +187,7 @@ pub async fn run(opts: TestConfig) -> Result<()> {
 
     // Create any dependencies of the job
     match opts.flavor {
-        Flavor::Performance(_) => {}
+        Flavor::Performance(_) | Flavor::Migration { .. } => {}
         Flavor::Correctness => {
             apply_resource_namespaced(
                 client.clone(),
@@ -184,7 +205,7 @@ pub async fn run(opts: TestConfig) -> Result<()> {
 
     // Create the job/simulation
     let job_name = match &opts.flavor {
-        Flavor::Correctness => {
+        Flavor::Correctness | Flavor::Migration { .. } => {
             create_resource_namespaced(
                 client.clone(),
                 &namespace,
@@ -204,6 +225,21 @@ pub async fn run(opts: TestConfig) -> Result<()> {
 
     let results = match opts.flavor {
         Flavor::Correctness => {
+            wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await?
+        }
+        Flavor::Migration {
+            wait_secs,
+            ref migration,
+        } => {
+            // Wait designated time before starting the migration
+            sleep(Duration::from_secs(wait_secs)).await;
+            let migration_network =
+                parse_network_file(migration, opts.network_ttl, &opts.flavor, &opts.suffix).await?;
+
+            // Apply the migration network
+            apply_resource(client.clone(), migration_network).await?;
+
+            // Finally wait for the test job to finish
             wait_for_job(client.clone(), &namespace, &job_name, opts.job_timeout).await?
         }
         Flavor::Performance(_) => {
