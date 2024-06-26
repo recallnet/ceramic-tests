@@ -10,8 +10,6 @@ spec:
         CERAMIC_RECON_MODE: "true"
       ipfs:
         rust:
-          image: "3box/ceramic-one:dev"
-          imagePullPolicy: IfNotPresent
           env:
             CERAMIC_ONE_RECON: "true"
           resourceLimits:
