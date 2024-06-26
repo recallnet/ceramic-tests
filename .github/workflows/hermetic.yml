@@ -35,7 +35,7 @@ jobs:
         name: Generate network matrix
         id: generate-matrix
         run: |
-          NETWORKS=$(ls networks *.yaml| jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
+          NETWORKS=$(ls networks/*.yaml| jq -R -s -c '. | gsub(".yaml"; "") | split("\n")[:-1]')
           echo "Networks:"
           echo ${NETWORKS}
           echo "networks=${NETWORKS}" >> $GITHUB_OUTPUT
