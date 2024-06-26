@@ -1,5 +1,5 @@
 import { AnchorStatus } from '@ceramicnetwork/common'
-import { describe, test, beforeAll, expect } from '@jest/globals'
+import { describe, test, beforeAll, expect, jest } from '@jest/globals'
 import { newCeramic, waitForAnchor } from '../../utils/ceramicHelpers.js'
 import { createDid } from '../../utils/didHelper.js'
 import { Model } from '@ceramicnetwork/stream-model'
@@ -14,6 +14,8 @@ const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
 // Skipped https://linear.app/3boxlabs/issue/WS1-1460/unskip-ceramic-cas-basic-integration
 describe('Ceramic<->CAS basic integration', () => {
+  jest.setTimeout(1000 * 60 * 15) // 15 minutes
+
   let ceramic: CeramicClient
   let modelId: StreamID
 
