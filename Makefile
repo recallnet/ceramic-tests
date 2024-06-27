@@ -11,9 +11,9 @@ BUILD_TAG ?= dev-run
 # Path to network to test against.
 TEST_NETWORK ?= ./networks/basic-rust.yaml
 # Path to migration network to test against.
-TEST_PRE_MIGRATION_NETWORK ?= ./networks/migration/basic-go-rust-pre.yaml
+TEST_PRE_MIGRATION_NETWORK ?= ./migration-networks/basic-go-rust-pre.yaml
 # Path to migration network to test against.
-TEST_POST_MIGRATION_NETWORK ?= ./networks/migration/basic-go-rust-post.yaml
+TEST_POST_MIGRATION_NETWORK ?= ./migration-networks/basic-go-rust-post.yaml
 # Path to performance simulation.
 TEST_SIMULATION ?= ./simulations/basic-simulation.yaml
 # Name for the test suite image, without any tag
