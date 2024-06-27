@@ -40,7 +40,7 @@ Correctness tests live in this repo in the `/suite` directory.
 
 The migration tests run tests specific to migrating from older versions to newer versions of Ceramic.
 These tests assume that when the version of the Ceramic process changes the migration is complete and the test can continue to validate the migration.
-Migrations tests live in this repo in the `/suite/migration` directory.
+Migrations tests live in this repo in the `/suite/src/__tests__/migration` directory.
 
 The performance tests, test at scale.
 These tests do not assume any network topology.
