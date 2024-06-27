@@ -60,12 +60,25 @@ pub struct TestOpts {
     /// Path regex passed to Jest to select which tests to run.
     #[arg(long, default_value = ".")]
     test_selector: String,
+
+    /// Path to migration network yaml file.
+    /// Required with flavor is `migration`.
+    #[arg(long)]
+    migration_network: Option<PathBuf>,
+
+    /// Number of seconds to wait after starting the test job before starting the migration
+    /// network.
+    /// Required with flavor is `migration`.
+    #[arg(long)]
+    migration_wait_secs: Option<u64>,
 }
 
 #[derive(Debug, Clone)]
 pub enum FlavorOpts {
     /// Correctness tests
     Correctness,
+    /// Migration tests
+    Migration,
     /// Performance tests
     Performance,
 }
@@ -74,6 +87,7 @@ impl FlavorOpts {
     fn name(&self) -> &'static str {
         match self {
             FlavorOpts::Correctness => "correctness",
+            FlavorOpts::Migration => "migration",
             FlavorOpts::Performance => "perf",
         }
     }
@@ -81,7 +95,11 @@ impl FlavorOpts {
 
 impl ValueEnum for FlavorOpts {
     fn value_variants<'a>() -> &'a [Self] {
-        &[FlavorOpts::Correctness, FlavorOpts::Performance]
+        &[
+            FlavorOpts::Correctness,
+            FlavorOpts::Migration,
+            FlavorOpts::Performance,
+        ]
     }
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
@@ -109,10 +127,18 @@ impl TryFrom<TestOpts> for TestConfig {
             network_timeout,
             job_timeout,
             test_selector,
+            migration_network,
+            migration_wait_secs,
         } = opts;
 
         let flavor = match flavor {
             FlavorOpts::Correctness => Flavor::Correctness,
+            FlavorOpts::Migration => Flavor::Migration {
+                wait_secs: migration_wait_secs
+                    .ok_or(anyhow!("Migration flavor requires `migration_wait_secs`"))?,
+                migration: migration_network
+                    .ok_or(anyhow!("Migration flavor requires `migration_network`"))?,
+            },
             FlavorOpts::Performance => Flavor::Performance(
                 simulation.ok_or(anyhow!("Simulation file required for performance tests"))?,
             ),

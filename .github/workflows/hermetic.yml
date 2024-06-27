@@ -135,12 +135,46 @@ jobs:
               test_selector="fast"
           fi
           make TEST_SELECTOR="$test_selector" HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+  run-migration-tests:
+    name: Test Migrations
+    runs-on: ubuntu-latest
+    environment: test
+    needs:
+      - build-driver
+      - publish-suite
+      - generate-matrix #Needed to know the BUILD_TAG
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      -
+        name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_ZONE }}
+      - uses: actions/download-artifact@master
+        with:
+          name: hermetic-driver
+          path: ./bin
+      -
+        name: Test ${{ matrix.networks }}
+        run: |
+          set -euxo pipefail
+          export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
+          chmod +x ./bin/hermetic-driver
+          make HERMETIC_CMD=./bin/hermetic-driver migration-tests
 
   collect-results:
     name: Hermetic Test Results
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    needs: [run-tests]
+    needs: [run-tests, run-migration-tests]
     steps:
       - run: exit 1
         # see https://stackoverflow.com/a/67532120/4907315

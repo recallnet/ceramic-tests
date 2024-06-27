@@ -10,6 +10,10 @@ BUILD_PROFILE ?= release
 BUILD_TAG ?= dev-run
 # Path to network to test against.
 TEST_NETWORK ?= ./networks/basic-rust.yaml
+# Path to migration network to test against.
+TEST_PRE_MIGRATION_NETWORK ?= ./migration-networks/basic-go-rust-pre.yaml
+# Path to migration network to test against.
+TEST_POST_MIGRATION_NETWORK ?= ./migration-networks/basic-go-rust-post.yaml
 # Path to performance simulation.
 TEST_SIMULATION ?= ./simulations/basic-simulation.yaml
 # Name for the test suite image, without any tag
@@ -103,6 +107,18 @@ hermetic-tests:
 		--network-ttl ${HERMETIC_TTL} \
 		--test-image "${TEST_SUITE_IMAGE}" \
 		--test-selector "${TEST_SELECTOR}"
+
+.PHONY: migration-tests
+migration-tests:
+	${HERMETIC_CMD} test \
+		--network "${TEST_PRE_MIGRATION_NETWORK}" \
+		--flavor migration \
+		--suffix "${HERMETIC_SUFFIX}" \
+		--network-ttl ${HERMETIC_TTL} \
+		--test-image "${TEST_SUITE_IMAGE}" \
+		--test-selector "migration" \
+		--migration-wait-secs 400 \
+		--migration-network "${TEST_POST_MIGRATION_NETWORK}"
 
 .PHONY: performance-tests
 performance-tests:
