@@ -1,7 +1,7 @@
 import { StreamID } from '@ceramicnetwork/streamid'
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 
-import * as helpers from '../../utils/dynamoDbHelpers.js'
+import * as helpers from '../../../utils/dynamoDbHelpers.js'
 
 const streamID0 = StreamID.fromString(
   'kjzl6cwe1jw149mj7gw90a40vf9qoipv1gthagyzxzjrg8pp9htbdbvu2er1wan',

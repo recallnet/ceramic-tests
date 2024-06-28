@@ -15,6 +15,6 @@ RUN pnpm install
 COPY src/ ./src
 
 # Select all tests by default
-ENV TEST_SELECTOR "."
+ENV TEST_SELECTOR "correctness"
 
 ENTRYPOINT ["/app/entrypoint.sh", "run", "test", "--forceExit", "--testPathPattern", "$TEST_SELECTOR"]

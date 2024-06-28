@@ -1,11 +1,11 @@
 import { ComposeClient } from '@composedb/client'
 import { beforeAll, describe, test, expect } from '@jest/globals'
 import { Composite } from '@composedb/devtools'
-import { loadDocumentOrTimeout, newCeramic } from '../../utils/ceramicHelpers.js'
-import { createDid } from '../../utils/didHelper.js'
-import { BasicSchema } from '../../graphql-schemas/basicSchema'
+import { loadDocumentOrTimeout, newCeramic } from '../../../utils/ceramicHelpers.js'
+import { createDid } from '../../../utils/didHelper.js'
+import { BasicSchema } from '../../../graphql-schemas/basicSchema'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { waitForDocument } from '../../utils/composeDbHelpers.js'
+import { waitForDocument } from '../../../utils/composeDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')

@@ -5,7 +5,7 @@ import {
   generateRandomEvent,
   generateRandomRawEvent,
   encodeRawEvent,
-} from '../../utils/rustCeramicHelpers'
+} from '../../../utils/rustCeramicHelpers'
 import { StreamID, randomCID } from '@ceramicnetwork/streamid'
 
 const CeramicUrls = String(process.env.CERAMIC_URLS).split(',')

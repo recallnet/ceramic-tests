@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, test } from '@jest/globals'
-import { utilities } from '../../utils/common.js'
+import { utilities } from '../../../utils/common.js'
 import fetch from 'cross-fetch'
 import { randomCID, StreamID } from '@ceramicnetwork/streamid'
-import { ReconEvent, ReconEventInput, randomEvents } from '../../utils/rustCeramicHelpers.js'
+import { ReconEvent, ReconEventInput, randomEvents } from '../../../utils/rustCeramicHelpers.js'
 
 const delayMs = utilities.delayMs
 // Environment variables

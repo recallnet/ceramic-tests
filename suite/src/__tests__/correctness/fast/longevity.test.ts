@@ -2,8 +2,8 @@ import { AnchorStatus, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
 
-import { newCeramic } from '../../utils/ceramicHelpers.js'
-import * as helpers from '../../utils/dynamoDbHelpers.js'
+import { newCeramic } from '../../../utils/ceramicHelpers.js'
+import * as helpers from '../../../utils/dynamoDbHelpers.js'
 
 const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
 
