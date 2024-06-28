@@ -7,7 +7,7 @@ ttl=$(date +%s -d "14 days")
 tag=${BUILD_TAG-latest}
 branch=${TEST_BRANCH-main}
 network=${1-dev}
-test_selector=${2-.}
+test_selector=${2-correctness}
 
 docker run --rm -i \
   -e "AWS_REGION=$AWS_REGION" \
