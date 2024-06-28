@@ -44,7 +44,7 @@ DURABLE_ENV ?= dev
 DURABLE_TEST_BRANCH ?= main
 
 # Test selector
-TEST_SELECTOR ?= .
+TEST_SELECTOR ?= correctness
 
 PNPM = pnpm
 

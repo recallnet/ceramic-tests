@@ -9,7 +9,7 @@ on:
         type: string
         description: Path regex passed to Jest to select which tests to run
         required: true
-        default: fast
+        default: correctness/fast
 
 env:
   CARGO_TERM_COLOR: always
@@ -122,17 +122,52 @@ jobs:
           chmod +x ./bin/hermetic-driver
 
           # For scheduled events, "test_selector" will be null, so default to running all tests.
-          test_selector=${{ github.event.inputs.test_selector || '.' }}
+          test_selector=${{ github.event.inputs.test_selector || 'correctness' }}
 
           # Clear the test suffix and set a 2 week TTL so that the latest suite image runs against the same long-lived
           # networks for 2 weeks before the network is cleaned up and recreated.
           make TEST_SELECTOR="$test_selector" HERMETIC_SUFFIX= HERMETIC_TTL=1209600 HERMETIC_CMD=./bin/hermetic-driver hermetic-tests
+  run-migration-tests:
+    name: Test Migrations
+    runs-on: ubuntu-latest
+    environment: test
+    needs:
+      - build-driver
+      - publish-suite
+      - generate-matrix #Needed to know the BUILD_TAG
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Setup GKE auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+      -
+        name: Get GKE credentials
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_ZONE }}
+      - uses: actions/download-artifact@master
+        with:
+          name: hermetic-driver
+          path: ./bin
+      -
+        name: Test ${{ matrix.networks }}
+        run: |
+          set -euxo pipefail
+          export BUILD_TAG=${{ needs.generate-matrix.outputs.build_tag }}
+          chmod +x ./bin/hermetic-driver
+          make HERMETIC_CMD=./bin/hermetic-driver migration-tests
+
 
   collect-results:
     name: Long-Lived Hermetic Test Results
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    needs: [run-tests]
+    needs: [run-tests, run-migration-tests]
     steps:
       - run: exit 1
         # see https://stackoverflow.com/a/67532120/4907315
