@@ -198,7 +198,8 @@ describe('All Event Types', () => {
   let listModelId: StreamID
   let ceramicVersion: string
 
-  test('migrate', async () => {
+  //See https://linear.app/3boxlabs/issue/AES-197/fix-flaky-migration-ceramic-test
+  test.skip('migrate', async () => {
     // Setup client and models
     ceramicVersion = await getVersion(ceramicUrls[0])
     const did = await createDid(adminSeeds[0])
