@@ -1,0 +1,104 @@
+name: Run Durable tests Baremetal
+
+on:
+  # "workflow_dispatch" allows this workflow to be triggered manually or via API through the CD manager
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Durable infrastructure to run tests against
+        required: true
+        default: dev
+        options:
+          - dev
+          - qa
+          - tnet
+          - prod
+      build_tag:
+        type: string
+        description: Build tag for image used for running tests
+        required: true
+        default: latest
+      test_selector:
+        type: string
+        description: Path regex passed to Jest to select which tests to run
+        required: true
+        default: correctness/fast
+      # The "job_id" input is needed for the CD manager to be able to track a workflow run as part of a CD manager job.
+      # The GitHub API does not return the workflow run ID for a run created via the API. In order to track a workflow,
+      # we're forced to inject the CD manager job ID via a tagged job step. This allows the CD manager to lookup
+      # workflow runs and identify which one corresponds to a particular job so that it can be tracked.
+      # Ref: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
+      job_id:
+        type: string
+        description: Test job identifier
+        required: true
+        default: manual
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  run-tests:
+    name: Test
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      -
+        # We're piggybacking on this step to inject the CD manager job ID into this workflow
+        name: ${{ github.event.inputs.job_id }}
+        uses: actions/checkout@v3
+      -
+        name: Login to Public ECR
+        uses: docker/login-action@v2
+        with:
+          registry: public.ecr.aws
+          username: ${{ env.AWS_ACCESS_KEY_ID }}
+          password: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        env:
+          AWS_REGION: us-east-1
+      - name: pull kubeconfig
+        run: |
+          mkdir .kube
+          echo ${{ secrets.BAREMETAL_CLUSTER_KUBECONF }} > .kube/config
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-actions
+      -
+        name: Test ${{ github.event.inputs.environment }}
+        env:
+          BUILD_TAG: ${{ github.event.inputs.build_tag }}
+          TEST_SELECTOR: ${{ github.event.inputs.test_selector }}
+          COMPOSEDB_ADMIN_DID_SEEDS: ${{ secrets.COMPOSEDB_ADMIN_DID_SEEDS }}
+        run: |
+          if [[ -z "$BUILD_TAG" ]]; then
+            BUILD_TAG=latest
+          fi
+          # Expose the Keramik ComposeDB port to the host so that the tests can connect to it
+          # source ./port-forward.sh "keramik-ceramic-v4-${{ github.event.inputs.environment }}"
+          # If we found any Keramik ComposeDB endpoints, we'll also have Ceramic API endpoints. Add them to the config.
+          # if [[ -n "$COMPOSEDB_URLS" ]];
+          # then
+          #   sed -i "s|COMPOSEDB_URLS.*|&$COMPOSEDB_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+          #   sed -i "s|CERAMIC_URLS.*|&$CERAMIC_URLS|" suite/env/.env."${{ github.event.inputs.environment }}"
+          # fi
+          make DURABLE_ENV=${{ github.event.inputs.environment }} durable-tests
+
+  collect-results:
+    name: Durable Test Results
+    if: ${{ github.event.inputs.job_id != null }}
+    runs-on: ubuntu-latest
+    needs: [run-tests]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+               contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+          }}
