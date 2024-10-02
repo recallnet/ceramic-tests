@@ -14,6 +14,7 @@ spec:
         rust:
           env:
             CERAMIC_ONE_RECON: "true"
+            CERAMIC_ONE_ETHEREUM_RPC_URLS: "http://ganache:8545"
           resourceLimits:
             cpu: "4"
             memory: "1Gi"
