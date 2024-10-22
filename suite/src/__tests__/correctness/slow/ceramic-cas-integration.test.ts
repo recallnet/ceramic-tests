@@ -14,7 +14,7 @@ const adminSeeds = String(process.env.COMPOSEDB_ADMIN_DID_SEEDS).split(',')
 
 // Skipped https://linear.app/3boxlabs/issue/WS1-1460/unskip-ceramic-cas-basic-integration
 describe('Ceramic<->CAS basic integration', () => {
-  jest.setTimeout(1000 * 60 * 15) // 15 minutes
+  jest.setTimeout(1000 * 60 * 30) // 30 minutes (default max wait time for an anchor is 30 minutes)
 
   let ceramic: CeramicClient
   let modelId: StreamID
