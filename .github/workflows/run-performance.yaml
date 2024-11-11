@@ -27,7 +27,7 @@ jobs:
   run-performance-test:
     name: Run Performance Test ${{ github.run_id }}
     runs-on: ubuntu-latest
-    environment: cas-scaling-2024
+    environment: dev
     steps:
       - name: Checkout
         uses: actions/checkout@v3
