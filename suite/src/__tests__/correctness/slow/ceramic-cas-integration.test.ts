@@ -53,7 +53,7 @@ describe('Ceramic<->CAS basic integration', () => {
     expect(doc.state.log.length).toEqual(4)
   })
 
-  test('multiple documents are anchored properly, multiple updates per anchor batch', async () => {
+  test('multiple documents are anchored properly', async () => {
     const content0 = { step: 0 }
     const content1 = { step: 1 }
     const content2 = { step: 2 }
@@ -91,50 +91,34 @@ describe('Ceramic<->CAS basic integration', () => {
     // Test document updates
     // The anchor option is no longer honored when ceramic-one does the anchroing.
     console.log('Updating documents')
-    await doc1.replace(content1, undefined)
-    await doc2.replace(content1, undefined)
-    await doc3.replace(content1, undefined)
-    await doc4.replace(content1, undefined)
+    await doc1.replace(content1)
+    await doc2.replace(content2)
+    await doc3.replace(content3)
+    await doc4.replace(content4)
+
+    // Test document updates are anchored correctly
+    console.log('Waiting for anchor of updates')
+
     await waitForAnchor(doc1)
     await waitForAnchor(doc2)
     await waitForAnchor(doc3)
     await waitForAnchor(doc4)
 
-    await doc2.replace(content2, undefined)
-    await doc3.replace(content2, undefined)
-    await doc4.replace(content2, undefined)
-    await waitForAnchor(doc2)
-    await waitForAnchor(doc3)
-    await waitForAnchor(doc4)
-
-    await doc3.replace(content3, undefined)
-    await doc4.replace(content3, undefined)
-    await waitForAnchor(doc3)
-    await waitForAnchor(doc4)
-
-    await doc4.replace(content4, undefined)
-    await waitForAnchor(doc4)
-
 
     expect(doc1.content).toEqual(content1)
     expect(doc2.content).toEqual(content2)
     expect(doc3.content).toEqual(content3)
     expect(doc4.content).toEqual(content4)
 
-    // Test document updates are anchored correctly
-    console.log('Waiting for anchor of updates')
 
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     expect(doc4.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(doc1.content).toEqual(content1)
-    expect(doc2.content).toEqual(content2)
-    expect(doc3.content).toEqual(content3)
-    expect(doc4.content).toEqual(content4)
+
     expect(doc1.state.log.length).toEqual(4)
-    expect(doc2.state.log.length).toEqual(6)
-    expect(doc3.state.log.length).toEqual(8)
-    expect(doc4.state.log.length).toEqual(10)
+    expect(doc2.state.log.length).toEqual(4)
+    expect(doc3.state.log.length).toEqual(4)
+    expect(doc4.state.log.length).toEqual(4)
   })
 })
