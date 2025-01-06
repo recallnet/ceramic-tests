@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, test } from '@jest/globals'
 
 // Internal dependencies
-import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { newCeramic } from '../../../utils/ceramicHelpers.js'
 import * as helpers from '../../../utils/dynamoDbHelpers.js'
@@ -26,7 +26,7 @@ const ComposeDbUrls = String(process.env.COMPOSEDB_URLS).split(',')
  * involves unpinning them from all nodes, and removing the corresponding entry from the database.
  */
 describe.skip('garbage collect old streams created by tests', () => {
-  let ceramicConnections: CeramicClient.CeramicClient[] = []
+  let ceramicConnections: CeramicClient[] = []
 
   beforeAll(async () => {
     await helpers.createTestTable()
