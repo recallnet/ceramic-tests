@@ -64,7 +64,7 @@
   "pnpm": {
     "overrides": {
       "graphql": "16.9.0",
-      "@graphql-tools/utils": "10.7.0"
+      "@graphql-tools/utils": "10.8.3"
     }
   },
   "prettier": "eslint-config-3box/prettier.config",
