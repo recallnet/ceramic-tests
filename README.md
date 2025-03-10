@@ -1,3 +1,5 @@
+> This repo is now archived, its contents are part of the [ceramic repo](https://github.com/ceramicnetwork/rust-ceramic) under the `tests` directory.
+
 # Ceramic End-To-End Tests
 
 This repo contains an end-to-end test suite for the [Ceramic Network](https://github.com/ceramicnetwork/js-ceramic) and
